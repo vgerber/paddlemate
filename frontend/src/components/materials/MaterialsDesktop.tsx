@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Breadcrumb from "@/components/Breadcrumb";
 import DockedAction from "@/components/DockedAction";
 import { HeaderCard } from "@/components/PageFrame";
@@ -21,10 +22,13 @@ import { useUnits } from "@/lib/prefs/units";
 import { humanize, plural, sentenceCase } from "@/lib/text/format";
 import { withAlpha } from "@/lib/theme/alpha";
 import { theme } from "@/lib/theme/theme";
-import { FilterFields } from "./MaterialFiltersSheet";
+import {
+  canResetFilters,
+  FilterFields,
+  RESET_PATCH,
+} from "./MaterialFiltersSheet";
 import { CompareBar, ModelResults } from "./MaterialResults";
 import MaterialTree from "./MaterialTree";
-import SortSelect from "./SortSelect";
 import { type MaterialsViewProps, useWikiList } from "./useWikiList";
 import { wikiTrail } from "./wikiTrail";
 
@@ -63,12 +67,6 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
                 : " "
             }
             onBack={props.onTools}
-            actionButton={
-              <SortSelect
-                value={search.sort}
-                onChange={(sort) => onChange({ sort })}
-              />
-            }
           />
         </HeaderCard>
       </Box>
@@ -130,7 +128,19 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
                 borderTop: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
               }}
             >
-              <SectionHeading first>Filters</SectionHeading>
+              <SectionHeading
+                first
+                action={
+                  <Button
+                    onClick={() => onChange(RESET_PATCH)}
+                    disabled={!canResetFilters(search)}
+                  >
+                    Reset
+                  </Button>
+                }
+              >
+                Filters
+              </SectionHeading>
               <FilterFields search={search} onChange={onChange} sidebar />
             </Box>
           </Box>

@@ -22,9 +22,21 @@ import {
   useUnits,
 } from "@/lib/prefs/units";
 import { humanize, plural, sentenceCase } from "@/lib/text/format";
-/** The filters that are not the tree's levels: construction, availability, the paddler's
- * weight and, in the phone's sheet, the sort. The desktop sidebar shows them
- * under the tree, lighter, and puts the sort in the page header. */
+/** What Reset clears: the filters and the sort, never the tree path. */
+export const RESET_PATCH: Partial<MaterialWikiSearch> = {
+  construction: undefined,
+  availability: undefined,
+  fits: undefined,
+  sort: undefined,
+};
+
+/** Whether Reset has anything to clear. */
+export const canResetFilters = (search: MaterialWikiSearch) =>
+  activeFilterCount(search) > 0 || search.sort != null;
+
+/** The filters that are not the tree's levels: construction, availability,
+ * the paddler's weight and the sort. The desktop sidebar shows them under the
+ * tree, lighter; the phone's sheet at full size. */
 export function FilterFields({
   search,
   onChange,
@@ -32,7 +44,7 @@ export function FilterFields({
 }: {
   search: MaterialWikiSearch;
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
-  /** The quiet look for the desktop sidebar, without the sort. */
+  /** The quiet look for the desktop sidebar. */
   sidebar?: boolean;
 }) {
   const [units] = useUnits();
@@ -92,19 +104,18 @@ export function FilterFields({
           slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 5 } }}
         />
       )}
-      {!sidebar && (
-        <FilterGroup label="Sort by">
-          <ChoiceChips<MaterialSort>
-            options={SORTS}
-            value={search.sort ?? "name"}
-            // Name is the default, so it stays out of the URL.
-            onChange={(sort) =>
-              onChange({ sort: sort === "name" ? undefined : sort })
-            }
-            labelOf={(value) => SORT_LABELS[value]}
-          />
-        </FilterGroup>
-      )}
+      <FilterGroup label="Sort by" compact={sidebar}>
+        <ChoiceChips<MaterialSort>
+          options={SORTS}
+          value={search.sort ?? "name"}
+          // Name is the default, so it stays out of the URL.
+          onChange={(sort) =>
+            onChange({ sort: sort === "name" ? undefined : sort })
+          }
+          labelOf={(value) => SORT_LABELS[value]}
+          compact={sidebar}
+        />
+      </FilterGroup>
     </Box>
   );
 }
@@ -124,7 +135,6 @@ export default function MaterialFiltersSheet({
   total: number;
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
 }) {
-  const count = activeFilterCount(search);
   return (
     <BottomSheet
       state={open ? "open" : "closed"}
@@ -132,15 +142,8 @@ export default function MaterialFiltersSheet({
       label="Filters"
     >
       <FilterSheetFrame
-        canReset={count > 0 || search.sort != null}
-        onReset={() =>
-          onChange({
-            construction: undefined,
-            availability: undefined,
-            fits: undefined,
-            sort: undefined,
-          })
-        }
+        canReset={canResetFilters(search)}
+        onReset={() => onChange(RESET_PATCH)}
         onClose={onClose}
         resultLabel={plural(total, "result")}
       >
