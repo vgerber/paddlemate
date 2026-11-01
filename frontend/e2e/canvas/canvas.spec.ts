@@ -313,6 +313,8 @@ test.describe("canvas foundation", () => {
   test("the expanded cards cover at most 55%, 70% beside a list", async ({
     page,
   }) => {
+    // Six page loads: 19s alone, over 30s under load.
+    test.slow();
     for (const width of [1024, 1280, 1920]) {
       await openDemo(page, { width, height: 800 }, "detail,side");
       const open = page.locator(
