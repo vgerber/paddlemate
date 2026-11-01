@@ -84,7 +84,7 @@ test.describe("compare layout", () => {
     await expect(alike).toContainText("Alike in all 3");
     await expect(alike).toContainText("Creek");
     await expect(alike).toContainText("Plastic");
-    await expect(compareRow(page, "Discipline")).toHaveCount(0);
+    await expect(compareRow(page, "Groups")).toHaveCount(0);
     await expect(compareRow(page, "Construction")).toHaveCount(0);
     await expect(compareRow(page, "Length (cm)")).toHaveCount(1);
     await expectNoHorizontalOverflow(page);

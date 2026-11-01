@@ -4,6 +4,7 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import type { SxProps, Theme } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
 import { type ReactNode, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import PanelHeader from "@/components/PanelHeader";
@@ -20,13 +21,14 @@ import type { MaterialWikiSearch } from "@/lib/materials/search";
 import { disciplineLabel } from "@/lib/materials/specs";
 import {
   CATEGORY_PLURALS,
+  GROUP_COUNT_NOTE,
   pathOf,
   selectedTotals,
   type TreePath,
   treeFilters,
 } from "@/lib/materials/tree";
 import { withAlpha } from "@/lib/theme/alpha";
-import { theme } from "@/lib/theme/theme";
+import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
@@ -190,6 +192,19 @@ function Content({
               )}
             </BrowseRow>
           ))}
+          {at.category && !at.discipline && (
+            <Typography
+              data-testid="browse-group-note"
+              sx={{
+                ...labelSx,
+                color: "text.secondary",
+                px: `${tokens.phone.inner}px`,
+                pt: 1.5,
+              }}
+            >
+              {GROUP_COUNT_NOTE}
+            </Typography>
+          )}
         </List>
       </QueryStates>
     </Box>

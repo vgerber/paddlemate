@@ -31,7 +31,7 @@ export type MaterialFormValues = {
   model: string;
   variant: string;
   size: string;
-  discipline: MaterialDiscipline | "";
+  disciplines: MaterialDiscipline[];
   construction: MaterialConstruction | "";
   description: string;
   product_url: string;
@@ -71,7 +71,7 @@ export function emptyMaterialForm(): MaterialFormValues {
     model: "",
     variant: "",
     size: "",
-    discipline: "",
+    disciplines: [],
     construction: "",
     description: "",
     product_url: "",
@@ -129,7 +129,7 @@ export function materialToForm(
     model: material.model,
     variant: material.variant ?? "",
     size: material.size ?? "",
-    discipline: material.discipline ?? "",
+    disciplines: [...material.disciplines],
     construction: material.construction ?? "",
     description: material.description ?? "",
     product_url: material.product_url ?? "",
@@ -229,7 +229,7 @@ export function materialFormToBody(
     model: values.model.trim(),
     variant: optionalText(values.variant),
     size: optionalText(values.size),
-    discipline: values.discipline || undefined,
+    disciplines: values.disciplines,
     construction: values.construction || undefined,
     description: optionalText(values.description),
     product_url: optionalText(values.product_url),
@@ -249,9 +249,13 @@ export function materialFormToBody(
   };
 }
 
-/** Whether the form can be saved at all. Everything past brand and model is
+/** Whether the form can be saved at all. Everything past brand, model and a group is
  * optional - a wiki entry with only a name is still worth having, and the
  * next reader can fill the rest in. */
 export function canSaveMaterial(values: MaterialFormValues): boolean {
-  return values.brand.trim().length > 0 && values.model.trim().length > 0;
+  return (
+    values.brand.trim().length > 0 &&
+    values.model.trim().length > 0 &&
+    values.disciplines.length > 0
+  );
 }

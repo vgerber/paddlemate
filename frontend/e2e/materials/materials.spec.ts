@@ -4,6 +4,7 @@ import {
   expectNoHorizontalOverflow,
   expectTouchTargets,
 } from "../support/fixture";
+import { pickGroups } from "../support/materialForm";
 
 // The material wiki. Fixture entries 9851-9860: the Testflow Cascade in S, M
 // and L (one model, three sizes), two Riverline boats, Northline, an Alpiner
@@ -144,7 +145,7 @@ test.describe("comparison", () => {
       "Alike in all 3",
     );
     await expect(page.getByTestId("compare-alike")).toContainText("Creek");
-    await expect(table.getByText("Discipline")).toHaveCount(0);
+    await expect(table.getByText("Groups")).toHaveCount(0);
     await expectTouchTargets(
       page.getByRole("button", { name: /Remove .* from the comparison/ }),
     );
@@ -349,13 +350,17 @@ test.describe("entry", () => {
 });
 
 test.describe("adding and correcting", () => {
-  test("the form needs brand and model before it saves", async ({ page }) => {
+  test("the form needs brand, model and a group before it saves", async ({
+    page,
+  }) => {
     await page.goto("/materials/new");
     const save = page.getByRole("button", { name: "Save entry" });
     await expect(save).toBeDisabled();
     await page.getByLabel("Brand").fill("Probe");
     await expect(save).toBeDisabled();
     await page.getByLabel("Model").fill("One");
+    await expect(save).toBeDisabled();
+    await pickGroups(page, "Creek");
     await expect(save).toBeEnabled();
     await expectTouchTargets(save);
   });
@@ -364,6 +369,7 @@ test.describe("adding and correcting", () => {
     await page.goto("/materials/new");
     await page.getByLabel("Brand").fill("Specprobe");
     await page.getByLabel("Model").fill("Alpha");
+    await pickGroups(page, "Creek", "River runner");
     await page.getByLabel("Size", { exact: true }).fill("XL");
     await page.getByLabel(/Length/).fill("301.5");
     await page.getByRole("button", { name: "Save entry" }).click();
@@ -371,11 +377,14 @@ test.describe("adding and correcting", () => {
     await expect(
       page.getByRole("heading", { name: "Specprobe Alpha" }),
     ).toBeVisible();
+    // Both groups are shown, the one picked first leading.
+    await expect(page.getByText("Creek · River runner").first()).toBeVisible();
 
     // The same name again is refused with a message, and the form stays.
     await page.goto("/materials/new");
     await page.getByLabel("Brand").fill("  specprobe");
     await page.getByLabel("Model").fill("ALPHA");
+    await pickGroups(page, "Creek");
     await page.getByLabel("Size", { exact: true }).fill("XL");
     await page.getByRole("button", { name: "Save entry" }).click();
     await expect(page.getByRole("alert")).toContainText("already in the wiki");

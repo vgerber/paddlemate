@@ -15,8 +15,8 @@ Measurements show, and are typed, in the units chosen under Settings > Units
 The list shows models, not single entries: the Pyranha Scorch is one card (on
 a phone, one row) however many sizes it has. Every card has the same parts in
 the same order: the photo (or a quiet icon in the same box when there is
-none), the brand, the model name, one line of what it is ("Creek - Plastic -
-since 2021", "about 2021" when the year is weak), the key specs, then small
+none), the brand, the model name, one line of what it is ("Creek - River runner -
+Plastic - since 2021", the groups first", "about 2021" when the year is weak), the key specs, then small
 tags for the sizes (S, M, L) and "Discontinued". A boat shows length, volume
 and weight; a paddle shows length and weight. A model sold in several sizes
 shows the range they span, in your units, and a figure the model does not state
@@ -33,6 +33,9 @@ at four characters.
 Kayaks, Canoes, Packrafts, SUPs, Paddles; under each the types (creek, river
 runner, ...; paddles are grouped by use instead: whitewater, freestyle, slalom,
 wildwater, touring and sea, canoe, polo, other); under each type the brands, each with its number of models.
+A model filed under several groups (a boat its maker calls both a creeker and a
+river runner) shows under each of them; a note under the tree says so, and a
+category counts every model once.
 Pick a brand and its models list under it, with their sizes; Kayaks, Creek,
 Pyranha shows the nine Pyranha creek boats. The trail above the list
 (Tools, Material wiki, Kayaks, Creek, Pyranha) goes back up a step, the
@@ -96,7 +99,7 @@ values; more than four scroll sideways under a sticky head, with a hint. Each
 head names brand, model and size (a select of the model's sizes changes it in
 place) and has a remove button.
 
-Values every entry shares - the category, the discipline, a width that is the
+Values every entry shares - the category, the groups, a width that is the
 same - sit once in an "Alike in all N" strip of chips, and the table keeps only
 the rows that tell the entries apart. A row shows only when two entries state
 it, so a kayak and a paddle compare the rows both have (a one-line note says
@@ -115,7 +118,7 @@ is a wiki, not a catalog of one person's boats, but a change from anyone but
 an admin is a **proposal**: it waits on the proposals screen, other paddlers
 can vote on it, and an admin approves or rejects it. The wiki changes only on
 approval; the form says "Sent for review" until then. An admin's own change
-applies at once. Brand and model are all that is required; every measurement
+applies at once. Brand, model and at least one group are required; every measurement
 is optional, and the next reader can fill in what is missing. The entry keeps
 who added it and who last edited it - for an approved proposal, the
 paddler who proposed it, not the admin who approved it.
@@ -218,16 +221,59 @@ one of the `*_name_trgm` indexes that a migration changing `search_key` must
 
 ### Paddle classes
 
-A paddle's `discipline` is the use it is built for: `whitewater`, `freestyle`,
+A paddle's groups (`disciplines`) are the uses it is built for: `whitewater`, `freestyle`,
 `slalom`, `wildwater`, `touring` (shown as "Touring and sea"), `canoe` (single
 blade), `polo` or `other`. `whitewater`, `wildwater`, `canoe` and `polo` are
 paddle-only; every other class belongs to boats. The rule is the check
-`chk_materials_discipline` and, ahead of it, a 400 naming `discipline` from
+`chk_materials_disciplines`, applied to every element, and, ahead of it, a 400 naming `disciplines` from
 `MaterialBody::validation_error`. `0063_paddle_use_remap.sql` moved the old
 paddle rows (creek and river runner to whitewater, downriver to wildwater;
 freestyle, slalom, other kept) and the stored bodies of material proposals.
 The form offers `disciplinesFor(category)` and clears a class the new category
 does not have.
+
+### Groups
+
+An entry can be filed under one to three groups: `materials.disciplines` is a
+`material_discipline[]`, NOT NULL, primary group first (migration 0069 replaced
+the single `discipline` column; every row started with its one old group, a row
+with none became `other`). One array column rather than a primary column plus a
+list keeps one source of truth with no way for the two to disagree; the order
+carries "primary". `chk_materials_disciplines` bounds the length (1 to 3), refuses
+NULL elements and applies the category rule to every element; duplicates are
+refused in `MaterialBody::validation_error` (400, target `disciplines`), since
+a CHECK cannot compare elements. A GIN index serves the filter.
+
+`discipline=` on the list, models and tree matches any group of the entry. The
+tree puts a model under each of its groups and counts it once in its category
+(`COUNT(DISTINCT)` over the unnested groups), so group counts can add up to
+more than the category's; the web tree and the phone sheet say so
+(`GROUP_COUNT_NOTE`). A model item's groups are those of its first size; the
+catalogue gives all sizes of a model the same list. Create, update and proposal
+bodies take `disciplines` (stored proposal bodies were rewritten by 0069).
+Cards and the model page show the groups joined with "·"; the form has a Groups
+field (chips, at most three, the first picked is primary).
+
+The groups of the catalogue come from the makers' own category pages
+(`.claude/handoffs/materials-data/groups/*.json`, one file per brand, weak
+sources marked "Weak" in the row's note, which is kept in `notes`):
+`GROUPS_DIR=<dir> python3 -I scripts/materials/build_seed.py --merge-groups`
+copies them into `kayaks.json` (a model's sizes get the union), and
+`--groups-migration` writes the migration (0070 and its completion 0071). They
+touch only rows with `updated_by` NULL.
+
+### Brand names
+
+A brand is its name without the product suffix: Spade, Waka, Fluid, EXO, Zet,
+Jackson, AT, VE, Lendal (migration 0068, which renamed materials, photo
+credits and stored proposal bodies; the brand is a name, so edited rows changed
+too - none had been edited). The data files and the seed use the new names. An
+old link with `?brand=Spade%20Kayaks` still opens the brand
+(`RENAMED_BRANDS` in `lib/materials/search.ts`); the API filter takes the
+current spelling only. `api/tests/sql/catalogue_seed.sql` is the full seed
+(`python3 -I scripts/materials/build_seed.py` with no argument writes it);
+`catalogue_seed.rs` runs it against the migrated database and expects no row
+to change, so data and migrations cannot drift apart.
 
 ### Catalogue storage
 
@@ -240,7 +286,8 @@ key now includes the category. `PUT` replaces every field, the new ones
 included; a client that omits `colors` clears them.
 
 `0057_materials_catalogue_seed.sql` is generated, never edited; so is its
-re-run `0064_materials_paddle_use_reseed.sql`: run
+re-run `0064_materials_paddle_use_reseed.sql` (the current seed, with the
+new columns, is `api/tests/sql/catalogue_seed.sql`): run
 `python3 -I scripts/materials/build_seed.py` on `data/materials/{kayaks,paddles}.json`
 (facts and links only, no images). It upserts by category, brand, model,
 variant and size, owned by the `system-catalogue` user, and only touches rows where
@@ -327,7 +374,7 @@ caller. An admin's write applies (201, 200, 204); anyone else's is stored as a
 | --- | --- | --- |
 | GET | `/materials` | Paginated search - see the filters below |
 | GET | `/materials/models` | Paginated models (category, brand, model, variant) with their sizes - the filters below; `total` counts models, a model lists only the sizes that match; `ids` is ignored |
-| GET | `/materials/tree` | The browse tree: categories, their disciplines, their brands, each with `models` and `entries`; takes the model filters except category, discipline and brand (and ignores paging and sort); entries without a discipline count toward their category only |
+| GET | `/materials/tree` | The browse tree: categories, their groups (a model counts under each of its groups), their brands, each with `models` and `entries`; takes the model filters except category, discipline and brand (and ignores paging and sort) |
 | GET | `/materials/brands` | Brands with entry counts, `category` narrows them |
 | GET | `/materials/{material_id}` | One entry |
 | POST | `/materials` | Add an entry: admin 201, others 202; 409 on a duplicate, 429 over the caps |
@@ -349,7 +396,7 @@ The list takes `q`, `category`, `discipline`, `construction`, `brand`,
 Every entry carries `availability`, `availability_source` and
 `availability_checked`; they are part of the create/update body too (`PUT`
 replaces them, so a client that omits `availability` resets it to `unknown`).
-A model item carries `discipline`, `construction`, the years across its sizes,
+A model item carries `disciplines` (the groups, primary first), `construction`, the years across its sizes,
 `availability` (current if any size is, then unknown, discontinued only when
 every size is) with the source and day of the size that decided it,
 `thumb_url` (first fetched photo of any size) and `sizes[{id, size, length_cm,

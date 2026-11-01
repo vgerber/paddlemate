@@ -87,6 +87,24 @@ export function searchText(raw: unknown): string | undefined {
   return typeof raw === "string" && raw.trim() ? raw : undefined;
 }
 
+/** Brand names before their product suffix was dropped, so an old link or
+ * bookmark (?brand=Spade%20Kayaks) still lands on the brand. */
+const RENAMED_BRANDS: Record<string, string> = {
+  "spade kayaks": "Spade",
+  "waka kayaks": "Waka",
+  "fluid kayaks": "Fluid",
+  "exo kayaks": "EXO",
+  "zet kayaks": "Zet",
+  "jackson kayak": "Jackson",
+  "at paddles": "AT",
+  "ve paddles": "VE",
+  "lendal (celtic paddles)": "Lendal",
+};
+
+export function currentBrand(raw: string | undefined): string | undefined {
+  return raw && (RENAMED_BRANDS[raw.trim().toLowerCase()] ?? raw);
+}
+
 export function parseMaterialSearch(
   raw: Record<string, unknown>,
 ): MaterialWikiSearch {
@@ -97,7 +115,7 @@ export function parseMaterialSearch(
     discipline: oneOf(raw.discipline, DISCIPLINES),
     construction: oneOf(raw.construction, CONSTRUCTIONS),
     availability: oneOf(raw.availability, FILTER_AVAILABILITIES),
-    brand: searchText(raw.brand),
+    brand: currentBrand(searchText(raw.brand)),
     sort: oneOf(raw.sort, SORTS),
     fits:
       Number.isFinite(fits) && fits > 0 && fits <= MAX_FITS_KG

@@ -8,7 +8,7 @@ const SCORCH: MaterialModel = {
   brand: "Pyranha",
   model: "Scorch",
   variant: "PRO",
-  discipline: "creek",
+  disciplines: ["creek", "river_runner"],
   construction: "plastic",
   year_from: 2021,
   year_approximate: false,
@@ -23,7 +23,7 @@ const SCORCH: MaterialModel = {
 const PADDLE: MaterialModel = {
   ...SCORCH,
   category: "paddle",
-  discipline: "whitewater",
+  disciplines: ["whitewater"],
   construction: null,
   sizes: [{ id: 1, lengths_cm: [191, 194], weight_kg: 0.87 }],
 };
@@ -74,9 +74,9 @@ describe("sizeTags", () => {
 });
 
 describe("modelCardFacts", () => {
-  test("the meta line is kind, construction and years", () => {
+  test("the meta line is groups, construction and years", () => {
     const facts = modelCardFacts(SCORCH, METRIC, false);
-    expect(facts.meta).toBe("Creek · Plastic · since 2021");
+    expect(facts.meta).toBe("Creek · River runner · Plastic · since 2021");
     expect(facts.discontinued).toBeUndefined();
   });
 

@@ -30,6 +30,9 @@ test.describe("category tree on a desktop", () => {
   }) => {
     await page.goto("/materials");
     await item(page, /^Kayaks/).click();
+    await expect(page.getByTestId("tree-group-note")).toContainText(
+      "counted in each",
+    );
     await item(page, /^Creek/).click();
     await item(page, /^Pyranha/).click();
     await expect(rows(page)).toHaveCount(9);
