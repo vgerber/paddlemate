@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -65,12 +66,13 @@ export function useMaterial(id: number | undefined) {
 /** The entries a comparison holds, in the order they were picked. The server
  * ignores every other filter when `ids` is given, so this is one request
  * however many columns the table has. */
-export function useMaterialComparison(ids: number[]) {
+export function useMaterialComparison(ids: number[], keepPrevious = false) {
   return useQuery({
     queryKey: materialKeys.compare(ids),
     queryFn: ({ signal }) =>
       materialsApi.list({ ids: serializeCompareIds(ids) }, signal),
     enabled: ids.length > 0,
+    placeholderData: keepPrevious ? keepPreviousData : undefined,
     select: (page) => page.items,
   });
 }

@@ -36,7 +36,7 @@ test.describe("wiki list", () => {
     await expect(rows(page)).toHaveCount(2);
     const cascade = row(page, "Testflow Cascade");
     await expect(cascade).toContainText("Creek");
-    await expect(cascade).toContainText("Since 2022");
+    await expect(cascade).toContainText("since 2022");
     await expect(cascade).toContainText("Length 254-274 cm");
     await expect(cascade).toContainText("Volume 295-345 l");
     await expect(cascade.getByTestId("model-sizes")).toHaveText("S · M · L");
@@ -123,7 +123,7 @@ test.describe("wiki list", () => {
 });
 
 test.describe("comparison", () => {
-  test("two sizes of one model compare, differing rows are accented, a pick can be removed", async ({
+  test("two sizes of one model compare: alike values are chips, differing rows stay, a pick can be removed", async ({
     page,
   }) => {
     await openWiki(page, "?q=Testflow");
@@ -133,24 +133,17 @@ test.describe("comparison", () => {
     await expect(page).toHaveURL(/\/materials\/compare\?ids=/);
     const table = page.getByRole("region", { name: "Comparison table" });
     await expect(table).toBeVisible();
-    await expect(table.getByRole("row", { name: /Volume/ })).toContainText(
-      "295 l",
+    const volume = table.getByTestId("compare-row").filter({
+      hasText: "Volume (l)",
+    });
+    await expect(volume).toContainText("295");
+    await expect(volume).toContainText("345");
+    // Same model, same discipline: the value is in the strip, not the table.
+    await expect(page.getByTestId("compare-alike")).toContainText(
+      "Alike in all 3",
     );
-    await expect(table.getByRole("row", { name: /Volume/ })).toContainText(
-      "345 l",
-    );
-    // Same model, same discipline: that row does not differ and is not accented.
-    const same = table
-      .getByRole("row", { name: /Discipline/ })
-      .getByRole("cell")
-      .first();
-    const differs = table
-      .getByRole("row", { name: /Volume/ })
-      .getByRole("cell")
-      .first();
-    expect(await computed(same.locator("p"), "color")).not.toBe(
-      await computed(differs.locator("p"), "color"),
-    );
+    await expect(page.getByTestId("compare-alike")).toContainText("Creek");
+    await expect(table.getByText("Discipline")).toHaveCount(0);
     await expectTouchTargets(
       page.getByRole("button", { name: /Remove .* from the comparison/ }),
     );
@@ -167,13 +160,32 @@ test.describe("comparison", () => {
     ).toBeVisible();
   });
 
+  test("a model of several sizes asks which size, the bar names the picks", async ({
+    page,
+  }) => {
+    await openWiki(page, FIXTURE);
+    await page.getByLabel("Compare Testflow Cascade").click();
+    // Nothing is picked until a size is: the first one is never taken silently.
+    await expect(page.getByTestId("compare-bar")).toHaveCount(0);
+    const menu = page.getByRole("menu", { name: "Sizes of Testflow Cascade" });
+    await expect(menu.getByRole("menuitemcheckbox")).toHaveCount(3);
+    await menu.getByRole("menuitemcheckbox", { name: "M" }).click();
+    await page.keyboard.press("Escape");
+    const bar = page.getByTestId("compare-bar");
+    await expect(bar).toContainText("1 picked");
+    await expect(bar).toContainText("8 at most");
+    await expect(bar).toContainText("Testflow Cascade M");
+    await expect(page).toHaveURL(/compare=(%22)?9852/);
+  });
+
   test("ticked models of different brands compare through the bar", async ({
     page,
   }) => {
     await openWiki(page, FIXTURE);
-    await page.getByLabel("Compare Testflow Cascade").check();
+    await page.getByLabel("Compare Testflow Tandem").check();
     const bar = page.getByTestId("compare-bar");
-    await expect(bar).toContainText("1 of 8 picked");
+    await expect(bar).toContainText("1 picked");
+    await expect(bar).toContainText("Testflow Tandem");
     await expect(
       bar.getByRole("button", { name: "Compare", exact: true }),
     ).toBeDisabled();
@@ -181,39 +193,69 @@ test.describe("comparison", () => {
       .getByRole("textbox", { name: "Brand or model" })
       .fill("Riverline");
     await page.getByLabel("Compare Riverline Squirt").check();
-    await expect(bar).toContainText("2 of 8 picked");
+    await expect(bar).toContainText("2 picked");
+    await expect(bar).toContainText("Riverline Squirt");
     // The bar's Compare is a text button, not a second primary action.
     const compare = bar.getByRole("button", { name: "Compare", exact: true });
     expect(await computed(compare, "background-color")).toBe(
       "rgba(0, 0, 0, 0)",
     );
+    await expectTouchTargets(bar.getByRole("button"));
     await compare.click();
 
     const table = page.getByRole("region", { name: "Comparison table" });
     await expect(table).toBeVisible();
-    await expect(table).toContainText("Testflow Cascade S");
-    await expect(table).toContainText("Riverline Squirt");
+    await expect(table).toContainText("Tandem");
+    await expect(table).toContainText("Squirt");
+  });
+
+  test("the bar stays at the foot while the list scrolls, above the bottom nav", async ({
+    page,
+  }) => {
+    await page.goto("/materials?compare=9854,9855");
+    const bar = page.getByTestId("compare-bar");
+    await expect(bar).toBeVisible();
+    await page.mouse.wheel(0, 1500);
+    await expect(rows(page).first()).toBeVisible();
+    const box = await bar.boundingBox();
+    const height = page.viewportSize()?.height ?? 0;
+    expect(box && box.y + box.height).toBeLessThanOrEqual(height);
+    expect(box?.y).toBeGreaterThan(height / 3);
+    const nav = page.getByRole("navigation").filter({ visible: true }).last();
+    if ((page.viewportSize()?.width ?? 0) < 768) {
+      const navBox = await nav.boundingBox();
+      expect(box && box.y + box.height).toBeLessThanOrEqual(navBox?.y ?? 0);
+    }
   });
 
   test("the ninth pick is refused", async ({ page }) => {
-    await openWiki(page);
-    const boxes = rows(page).getByRole("checkbox");
-    for (let i = 0; i < 8; i++) await boxes.nth(i).check();
-    await expect(page.getByTestId("compare-bar")).toContainText("8 of 8");
-    await expect(boxes.nth(8)).toBeDisabled();
+    await page.goto(
+      "/materials?compare=9851,9852,9853,9854,9855,9856,9857,9858",
+    );
+    await expect(page.getByTestId("compare-bar")).toContainText("8 picked");
+    const free = page.locator(
+      '[data-testid="material-row"] input[type="checkbox"]:not(:checked)',
+    );
+    await expect(free.first()).toBeDisabled();
   });
 
   test("a single-id link still opens", async ({ page }) => {
     await page.goto("/materials/compare?ids=9853");
     await expect(
-      page.getByRole("region", { name: "Comparison table" }),
-    ).toContainText("Cascade L");
+      page.getByRole("button", {
+        name: "Remove Testflow Cascade L from the comparison",
+      }),
+    ).toBeVisible();
   });
 
   test("a comparison link survives a reload @small", async ({ page }) => {
     await openWiki(page, FIXTURE);
-    await page.getByLabel("Compare Testflow Cascade").check();
     await page.getByLabel("Compare Testflow Tandem").check();
+    await page.getByLabel("Compare Testflow Cascade").click();
+    await page
+      .getByRole("menuitemcheckbox", { name: "S", exact: true })
+      .click();
+    await page.keyboard.press("Escape");
     await page
       .getByTestId("compare-bar")
       .getByRole("button", { name: "Compare", exact: true })

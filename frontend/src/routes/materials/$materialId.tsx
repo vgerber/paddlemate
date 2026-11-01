@@ -31,7 +31,7 @@ import {
   materialTitle,
   materialToForm,
   modelTitle,
-  yearsLabel,
+  sinceLabel,
 } from "@/lib/materials/materials";
 import { currentUnits } from "@/lib/prefs/units";
 import { isProposal } from "@/lib/proposals";
@@ -106,7 +106,7 @@ function MaterialPage() {
   const subtitle = [
     CATEGORY_LABELS[material.category],
     material.discipline && enumLabel(material.discipline),
-    yearsLabel(material),
+    sinceLabel(material),
   ]
     .filter(Boolean)
     .join(" · ");

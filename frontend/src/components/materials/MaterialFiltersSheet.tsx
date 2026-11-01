@@ -9,7 +9,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import type { ReactNode } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import FilterChip from "@/components/search/FilterChip";
-import type { MaterialSort } from "@/lib/api";
+import type { MaterialDiscipline, MaterialSort } from "@/lib/api";
 import { useMaterialBrands } from "@/lib/hooks/useMaterials";
 import { CloseIcon } from "@/lib/icons";
 import {
@@ -17,7 +17,7 @@ import {
   CATEGORIES,
   CATEGORY_LABELS,
   CONSTRUCTIONS,
-  DISCIPLINES,
+  disciplinesFor,
   enumLabel,
   MAX_FITS_KG,
   type MaterialWikiSearch,
@@ -143,13 +143,23 @@ function SheetBody({
           options={CATEGORIES}
           value={search.category}
           // A brand of the old category may not exist in the new one.
-          onChange={(category) => onChange({ category, brand: undefined })}
+          onChange={(category) =>
+            onChange({
+              category,
+              brand: undefined,
+              discipline: disciplinesFor(category).includes(
+                search.discipline as MaterialDiscipline,
+              )
+                ? search.discipline
+                : undefined,
+            })
+          }
           labelOf={(value) => CATEGORY_LABELS[value]}
         />
       </Group>
       <Group label="Discipline">
         <Choice
-          options={DISCIPLINES}
+          options={disciplinesFor(search.category)}
           value={search.discipline}
           onChange={(discipline) => onChange({ discipline })}
           labelOf={enumLabel}

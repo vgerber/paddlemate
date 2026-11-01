@@ -44,6 +44,25 @@ function ComparePage() {
       replace: true,
     });
 
+  const resize = (from: number, to: number) =>
+    navigate({
+      search: {
+        ids: serializeCompareIds(
+          compareIds.includes(to)
+            ? compareIds.filter((v) => v !== from)
+            : compareIds.map((v) => (v === from ? to : v)),
+        ),
+      },
+      replace: true,
+    });
+
+  // The list opens with the picks kept, so adding is one more tick.
+  const add = () =>
+    navigate({
+      to: "/materials",
+      search: { ...EMPTY_MATERIAL_SEARCH, compare: ids || undefined },
+    });
+
   return (
     <WikiPage
       title="Compare"
@@ -68,7 +87,12 @@ function ComparePage() {
               caption: "Pick entries in the wiki list.",
             }}
           >
-            <ComparisonTable materials={materials} onRemove={remove} />
+            <ComparisonTable
+              materials={materials}
+              onRemove={remove}
+              onResize={resize}
+              onAdd={add}
+            />
           </QueryStates>
         )}
       </Box>

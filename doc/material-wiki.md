@@ -44,17 +44,28 @@ link you can send.
 
 ## Comparing
 
-Tick the models you want on the list - up to eight - and press **Compare** in
-the bar above the list (two are the least that compare). A ticked model
-brings its first size; to compare other sizes, open the model and press
-**Compare sizes** under its All sizes table, which compares every size of it.
-The comparison puts one boat per column and one property per row, grouped
-into overview, hull, cockpit and paddler.
+Tick the models you want on the list - up to eight. A model of one size is
+picked at once; a model of several sizes opens a small choice of its sizes
+(tick one or more), so no size is ever picked without you seeing it. The bar
+pinned to the foot of the list names every pick with its size, with the count,
+the cap, **Clear** and **Compare** (two are the least that compare). To compare
+every size of one model, open it and press **Compare sizes**.
 
-Rows where the boats actually differ carry the value color; rows where they
-all say the same thing stay plain, and a row no boat states at all is left
-out. The three sizes of one model, side by side, are the case this is built
-for: what changes between S, M and L is exactly what stands out.
+The comparison puts one entry per column and one property per row, each row
+labelled with its unit ("Length (cm)", in your units). Up to four entries
+share the width, on a phone as well, each row's label on its own line above its
+values; more than four scroll sideways under a sticky head, with a hint. Each
+head names brand, model and size (a select of the model's sizes changes it in
+place) and has a remove button.
+
+Values every entry shares - the category, the discipline, a width that is the
+same - sit once in an "Alike in all N" strip of chips, and the table keeps only
+the rows that tell the entries apart. A row shows only when two entries state
+it, so a kayak and a paddle compare the rows both have (a one-line note says
+so). Numbers get a thin bar from zero where they differ by 5% or more. Paddles
+add blade, shaft and length rows; a paddle's weight reads in grams (ounces in
+imperial). **Add to comparison** in the card above the table opens the list
+with the picks kept.
 
 The comparison is its own link too (`/materials/compare?ids=...`), and a
 column can be dropped from the table without going back to the list.
@@ -306,10 +317,11 @@ gone is a no-op. Tests: `api/tests/material_proposals.rs`, `api/tests/materials.
 
 | Module | Owns |
 | --- | --- |
-| `lib/materials/materials.ts` | `MATERIAL_SPECS` (the one list of comparable measurements), labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
+| `lib/materials/materials.ts` | `MATERIAL_SPECS`, labels, `specSpread`, the comparison's id list, the URL search shape, and the entry form's value conversion |
 | `lib/hooks/useMaterials.ts` | `materialKeys` and every query and mutation; a write answered 202 (`isProposal`) announces "Sent for review" through `announceIfProposal` and leaves the entry caches alone |
 | `lib/materials/materials.ts` | also `materialFieldLabel` / `materialFieldValue`, the wording of a changed field for the proposal diff |
-| `components/materials/` | `MaterialsView` (list), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
+| `lib/materials/compare.ts` | `buildComparison`: the comparable rows (`FIELDS`), the alike chips, the bar ratios |
+| `components/materials/` | `MaterialsView` (list and its compare bar), `ModelRow`, `SizePicker`, `AllSizesTable`, `MaterialFiltersSheet`, `MaterialDetailView`, `ComparisonTable`, `MaterialForm`, `MaterialGallery` (photos and credits), `WikiPage` (the frame) |
 | `routes/materials/` | `index` (list), `$materialId` (detail, `?edit=true` for the form), `compare`, `new` |
 
 The wiki is a normal page, not a map screen: a centred column on a desktop,

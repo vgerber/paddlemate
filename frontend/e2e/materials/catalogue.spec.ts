@@ -67,7 +67,7 @@ test.describe("catalogue detail", () => {
     const colors = page.getByTestId("material-colors");
     await expect(colors).toContainText("Lava Red");
     await expect(colors).toContainText("Glacier Blue");
-    await expect(page.getByText("about 2021-").first()).toBeVisible();
+    await expect(page.getByText("about 2021").first()).toBeVisible();
     await expect(page.getByText("Year from an archive capture.")).toBeVisible();
 
     const source = page.getByRole("link", {
@@ -94,7 +94,7 @@ test.describe("catalogue detail", () => {
     await expect(facts).toContainText("Carbon");
     await expect(facts).toContainText("0, 30, 45°");
     await expect(facts).toContainText("29.5 mm");
-    await expect(facts).toContainText("0.9 kg");
+    await expect(facts).toContainText("860 g");
     await expect(page.getByText("Hull", { exact: true })).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
@@ -107,7 +107,7 @@ test.describe("catalogue detail", () => {
     const facts = page.getByTestId("paddle-facts");
     await expect(facts).toContainText("100 in²");
     await expect(facts).toContainText("75.2, 76.4, 77.6 in");
-    await expect(facts).toContainText("1.9 lb");
+    await expect(facts).toContainText("30.3 oz");
     await expect(facts).not.toContainText("645 cm");
   });
 
@@ -133,10 +133,16 @@ test.describe("catalogue detail", () => {
     await page.getByTestId("filters-chip").click();
     const sheet = page.getByRole("dialog", { name: "Filters" });
     await expect(sheet.getByRole("button", { name: "Paddle" })).toBeVisible();
-    for (const discipline of ["Crossover", "Freestyle", "Other"]) {
+    for (const discipline of ["Freestyle", "Other"]) {
       await expect(
         sheet.getByRole("button", { name: discipline }),
       ).toBeVisible();
+    }
+    // Paddles offer paddle disciplines only.
+    for (const discipline of ["Crossover", "Playboat"]) {
+      await expect(sheet.getByRole("button", { name: discipline })).toHaveCount(
+        0,
+      );
     }
   });
 

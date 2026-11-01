@@ -13,7 +13,10 @@ import FilterChip from "@/components/search/FilterChip";
 import QueryStates from "@/components/states/QueryStates";
 import type { MaterialModel } from "@/lib/api";
 import { useDebouncedValue } from "@/lib/hooks/ui/useDebouncedValue";
-import { useMaterialModels } from "@/lib/hooks/useMaterials";
+import {
+  useMaterialComparison,
+  useMaterialModels,
+} from "@/lib/hooks/useMaterials";
 import { CloseIcon, MaterialIcon, SearchIcon } from "@/lib/icons";
 import {
   activeFilterCount,
@@ -21,11 +24,12 @@ import {
   enumLabel,
   MAX_COMPARE,
   type MaterialWikiSearch,
+  materialTitle,
   modelPicked,
   toMaterialFilters,
 } from "@/lib/materials/materials";
 import { formatQuantity, useUnits } from "@/lib/prefs/units";
-import { theme } from "@/lib/theme/theme";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
 import MaterialFiltersSheet from "./MaterialFiltersSheet";
 import ModelRow from "./ModelRow";
 
@@ -70,48 +74,81 @@ function SearchField({
   );
 }
 
-/** The picked entries as a bar above the list: how many, a way to empty it
- * and the way into the comparison (two are the least that compare). */
+/** The picked entries, pinned to the foot of the list: how many, each one by
+ * name and size with a way to drop it, and the way into the comparison (two
+ * are the least that compare). It sits above the bottom nav and the add
+ * button on a phone. */
 function CompareBar({
-  count,
+  ids,
+  onRemove,
   onClear,
   onCompare,
 }: {
-  count: number;
+  ids: number[];
+  onRemove: (id: number) => void;
   onClear: () => void;
   onCompare: () => void;
 }) {
+  const picked = useMaterialComparison(ids, true);
+  const names = new Map(
+    (picked.data ?? []).map((m) => [m.id, materialTitle(m)]),
+  );
   return (
     <Box
       data-testid="compare-bar"
       sx={{
         ...phoneCardSx,
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-        mb: 0.75,
-        pl: `${tokens.phone.inner}px`,
-        pr: 0.5,
-        minHeight: 52,
+        position: "sticky",
+        bottom: { xs: `calc(${BOTTOM_NAV_SPACE} + 80px)`, md: 12 },
+        zIndex: 2,
+        mt: 1,
+        py: 1,
+        boxShadow: tokens.elevation.e2,
       }}
     >
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 500, flex: 1 }}
-        aria-live="polite"
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          px: `${tokens.phone.inner}px`,
+        }}
       >
-        {count} of {MAX_COMPARE} picked
-      </Typography>
-      <Button onClick={onClear} sx={{ minHeight: tokens.touch.min }}>
-        Clear
-      </Button>
-      <Button
-        disabled={count < 2}
-        onClick={onCompare}
-        sx={{ minHeight: tokens.touch.min }}
-      >
-        Compare
-      </Button>
+        <Typography variant="body2" sx={{ fontWeight: 600 }} aria-live="polite">
+          {ids.length} picked
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {MAX_COMPARE} at most
+        </Typography>
+      </Box>
+      <Box sx={{ px: `${tokens.phone.inner}px`, py: 0.5 }}>
+        <ChipRow>
+          {ids.map((id) => {
+            const name = names.get(id) ?? "Entry";
+            return (
+              <FilterChip
+                key={id}
+                label={name}
+                set
+                onDelete={() => onRemove(id)}
+                deleteLabel={`Remove ${name}`}
+              />
+            );
+          })}
+        </ChipRow>
+      </Box>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", px: 0.5 }}>
+        <Button onClick={onClear} sx={{ minHeight: tokens.touch.min }}>
+          Clear
+        </Button>
+        <Button
+          disabled={ids.length < 2}
+          onClick={onCompare}
+          sx={{ minHeight: tokens.touch.min }}
+        >
+          Compare
+        </Button>
+      </Box>
     </Box>
   );
 }
@@ -125,6 +162,7 @@ export default function MaterialsView({
   onOpen,
   onAdd,
   onToggleCompare,
+  onToggleSize,
   onClearCompare,
   onCompare,
 }: {
@@ -134,6 +172,7 @@ export default function MaterialsView({
   onOpen: (id: number) => void;
   onAdd: () => void;
   onToggleCompare: (model: MaterialModel) => void;
+  onToggleSize: (id: number) => void;
   onClearCompare: () => void;
   onCompare: () => void;
 }) {
@@ -234,13 +273,6 @@ export default function MaterialsView({
           pb: fabRoom,
         }}
       >
-        {compareIds.length > 0 && (
-          <CompareBar
-            count={compareIds.length}
-            onClear={onClearCompare}
-            onCompare={onCompare}
-          />
-        )}
         <QueryStates
           query={query}
           count={items.length}
@@ -267,6 +299,7 @@ export default function MaterialsView({
                 key={`${model.category}-${model.brand}-${model.model}-${model.variant ?? ""}`}
                 model={model}
                 selected={modelPicked(compareIds, model)}
+                pickedIds={compareIds}
                 compareDisabled={
                   compareIds.length >= MAX_COMPARE &&
                   !modelPicked(compareIds, model)
@@ -274,6 +307,7 @@ export default function MaterialsView({
                 showCategory={search.category == null}
                 onOpen={() => onOpen(model.sizes[0].id)}
                 onToggleCompare={() => onToggleCompare(model)}
+                onToggleSize={onToggleSize}
               />
             ))}
           </Box>
@@ -288,6 +322,14 @@ export default function MaterialsView({
             </Button>
           )}
         </QueryStates>
+        {compareIds.length > 0 && (
+          <CompareBar
+            ids={compareIds}
+            onRemove={(id) => onToggleSize(id)}
+            onClear={onClearCompare}
+            onCompare={onCompare}
+          />
+        )}
         <DockedAction label="Add entry" onClick={onAdd} inset={0} />
       </Box>
 

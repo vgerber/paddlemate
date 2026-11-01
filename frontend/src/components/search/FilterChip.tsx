@@ -1,4 +1,5 @@
 import Chip from "@mui/material/Chip";
+import { CloseIcon } from "@/lib/icons";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -9,6 +10,7 @@ export default function FilterChip({
   set,
   onClick,
   onDelete,
+  deleteLabel,
   plain = false,
   testId,
 }: {
@@ -18,6 +20,8 @@ export default function FilterChip({
   /** Absent for a chip that only shows a value and can be removed. */
   onClick?: () => void;
   onDelete?: () => void;
+  /** Names the X for a screen reader when the chip's own label is not enough. */
+  deleteLabel?: string;
   /** A toggle inside the sheet rather than a summary chip. */
   plain?: boolean;
 }) {
@@ -28,6 +32,9 @@ export default function FilterChip({
       clickable={onClick != null}
       onClick={onClick}
       onDelete={onDelete}
+      deleteIcon={
+        deleteLabel ? <CloseIcon titleAccess={deleteLabel} /> : undefined
+      }
       aria-pressed={plain ? set : undefined}
       color={set ? "primary" : "default"}
       // A toggle in the sheet is the thing being tapped: full touch height.

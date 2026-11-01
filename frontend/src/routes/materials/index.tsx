@@ -10,6 +10,7 @@ import {
   parseCompareIds,
   parseMaterialSearch,
   serializeCompareIds,
+  toggleCompareId,
   toggleModelCompare,
 } from "@/lib/materials/materials";
 
@@ -56,6 +57,7 @@ function MaterialWikiPage() {
         onToggleCompare={(model) =>
           setCompare(toggleModelCompare(compareIds, model))
         }
+        onToggleSize={(id) => setCompare(toggleCompareId(compareIds, id))}
         onClearCompare={() => setCompare([])}
         onCompare={() =>
           navigate({
