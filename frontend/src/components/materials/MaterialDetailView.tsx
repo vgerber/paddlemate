@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import DetailCard from "@/components/DetailCard";
@@ -14,6 +15,11 @@ import FilterChip from "@/components/search/FilterChip";
 import type { Material } from "@/lib/api";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { DeleteIcon, EditIcon, PhotoIcon } from "@/lib/icons";
+import {
+  availabilityChecked,
+  availabilityValue,
+  sourceHost,
+} from "@/lib/materials/availability";
 import {
   modelSizes,
   paddleFacts,
@@ -94,6 +100,35 @@ export function materialActions({
   return <RowMenu actions={actions} label="Entry actions" />;
 }
 
+/** "Checked 01 Nov 2026 · nrs.com", the host linking to the page the flag
+ * was read from. */
+function AvailabilityCaption({ material }: { material: Material }) {
+  const checked = availabilityChecked(material);
+  const source = material.availability_source;
+  if (!checked && !source) return null;
+  return (
+    <span data-testid="availability-caption">
+      {checked}
+      {checked && source && " · "}
+      {source && (
+        <Link
+          href={source}
+          target="_blank"
+          rel="noreferrer noopener"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            minHeight: tokens.touch.min,
+            color: "inherit",
+          }}
+        >
+          {sourceHost(source)}
+        </Link>
+      )}
+    </span>
+  );
+}
+
 /** One wiki entry in full: what it is, every measurement it states, where
  * the numbers come from and who put them there. */
 export default function MaterialDetailView({
@@ -107,7 +142,7 @@ export default function MaterialDetailView({
   const [units] = useUnits();
   const sizes = modelSizes(material);
   const siblings = useMaterialComparison(sizes.map((size) => size.id));
-  const facts = [
+  const facts: { label: string; value: ReactNode; caption?: ReactNode }[] = [
     { label: "Category", value: CATEGORY_LABELS[material.category] },
   ];
   if (material.discipline) {
@@ -125,6 +160,11 @@ export default function MaterialDetailView({
   if (sinceLabel(material)) {
     facts.push({ label: "Built", value: sinceLabel(material) });
   }
+  facts.push({
+    label: "Availability",
+    value: availabilityValue(material),
+    caption: <AvailabilityCaption material={material} />,
+  });
   const paddle = paddleFacts(material, units);
   const links: SourceLink[] = [
     ...sourceLinks(material.sources).map((source) => ({
@@ -170,7 +210,12 @@ export default function MaterialDetailView({
           }}
         >
           {facts.map((fact) => (
-            <Fact key={fact.label} label={fact.label} value={fact.value} />
+            <Fact
+              key={fact.label}
+              label={fact.label}
+              value={fact.value}
+              caption={fact.caption}
+            />
           ))}
         </Box>
         {material.description && (

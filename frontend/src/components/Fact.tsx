@@ -27,7 +27,7 @@ export default function Fact({
 }: {
   label: string;
   value: ReactNode;
-  caption?: string;
+  caption?: ReactNode;
 }) {
   return (
     <Box>
@@ -39,6 +39,7 @@ export default function Fact({
       </Typography>
       {caption && (
         <Typography
+          component="div"
           sx={{ ...factLabelSx, fontWeight: 400, fontSize: "0.8125rem" }}
         >
           {caption}

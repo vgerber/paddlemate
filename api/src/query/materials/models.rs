@@ -6,7 +6,9 @@ use sqlx::{PgPool, QueryBuilder, Row};
 use super::{SIZE_ORDER, push_filters, push_name_match, push_score, push_tier};
 use crate::{
     media,
-    models::material::{MaterialFilters, MaterialModel, MaterialSort, ModelSize},
+    models::material::{
+        MaterialAvailability, MaterialFilters, MaterialModel, MaterialSort, ModelSize,
+    },
 };
 
 /// One page of models matching the filters and the total number of matching
@@ -73,6 +75,7 @@ pub async fn list(
     qb.push(
         ") SELECT pg.pos, pg.total_count, m.id, m.category, m.brand, m.model, m.variant, \
          m.size, m.discipline, m.construction, m.year_from, m.year_to, m.year_approximate, \
+         m.availability, m.availability_source, m.availability_checked, \
          m.length_cm, m.weight_kg, m.volume_l, m.paddler_weight_min_kg, \
          m.paddler_weight_max_kg, m.lengths_cm, \
          (SELECT i.file FROM material_images i WHERE i.material_id = ANY(pg.ids) \
@@ -116,6 +119,9 @@ pub async fn list(
                 year_from: None,
                 year_to: None,
                 year_approximate: false,
+                availability: MaterialAvailability::Unknown,
+                availability_source: None,
+                availability_checked: None,
                 thumb_url: thumb.map(|file| media::url_for(&media::thumb_key(&file))),
                 sizes: Vec::new(),
             });
@@ -137,6 +143,7 @@ pub async fn list(
             (Some(a), Some(b)) => Some(a.max(b)),
             (a, b) => a.or(b),
         };
+        merge_availability(model, row)?;
         model.year_approximate |= row.try_get::<bool, _>("year_approximate")?;
         model.sizes.push(size);
     }
@@ -160,4 +167,25 @@ async fn count_models(
          lower(btrim(COALESCE(m.variant, '')))) k",
     );
     qb.build_query_scalar().fetch_one(pool).await
+}
+
+/// Fold one size into the model's availability: current beats unknown beats
+/// discontinued. The source and day come from the size that decided it.
+fn merge_availability(
+    model: &mut MaterialModel,
+    row: &sqlx::postgres::PgRow,
+) -> Result<(), sqlx::Error> {
+    let size: MaterialAvailability = row.try_get("availability")?;
+    let first = model.sizes.is_empty();
+    let rank = |a: MaterialAvailability| match a {
+        MaterialAvailability::Current => 2,
+        MaterialAvailability::Unknown => 1,
+        MaterialAvailability::Discontinued => 0,
+    };
+    if first || rank(size) > rank(model.availability) {
+        model.availability = size;
+        model.availability_source = row.try_get("availability_source")?;
+        model.availability_checked = row.try_get("availability_checked")?;
+    }
+    Ok(())
 }

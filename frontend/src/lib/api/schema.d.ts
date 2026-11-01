@@ -2684,6 +2684,14 @@ export interface components {
          */
         Material: {
             description?: string | null;
+            availability: components["schemas"]["MaterialAvailability"];
+            /**
+             * Format: date
+             * @description The day the availability was last checked.
+             */
+            availability_checked?: string | null;
+            /** @description The page the availability was read from. */
+            availability_source?: string | null;
             /** Format: double */
             blade_area_cm2?: number | null;
             /** Format: double */
@@ -2767,6 +2775,12 @@ export interface components {
             /** Format: int32 */
             year_to?: number | null;
         };
+        /**
+         * @description Whether the maker still sells the entry. A snapshot taken on
+         *      `availability_checked`, not a live feed.
+         * @enum {string}
+         */
+        MaterialAvailability: "current" | "discontinued" | "unknown";
         /** @description A brand with the number of entries filed under it, for the brand filter. */
         MaterialBrand: {
             brand: string;
@@ -2793,6 +2807,7 @@ export interface components {
          *      half-open bound, so a list can be narrowed from one side only.
          */
         MaterialFilters: {
+            availability?: components["schemas"]["MaterialAvailability"] | null;
             /** @description Exact brand, case-insensitive. */
             brand?: string | null;
             category?: components["schemas"]["MaterialCategory"] | null;
@@ -2858,6 +2873,11 @@ export interface components {
          *      per size.
          */
         MaterialModel: {
+            /** @description Current if any size is, discontinued if all are, else unknown. */
+            availability: components["schemas"]["MaterialAvailability"];
+            /** Format: date */
+            availability_checked?: string | null;
+            availability_source?: string | null;
             brand: string;
             category: components["schemas"]["MaterialCategory"];
             construction?: components["schemas"]["MaterialConstruction"] | null;
@@ -3409,6 +3429,11 @@ export interface components {
          */
         Proposable_for_MaterialBody: {
             description?: string | null;
+            /** @default unknown */
+            availability?: components["schemas"]["MaterialAvailability"];
+            /** Format: date */
+            availability_checked?: string | null;
+            availability_source?: string | null;
             /** Format: double */
             blade_area_cm2?: number | null;
             /** Format: double */
@@ -4931,11 +4956,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-11-01T12:09:39.709630204Z",
-                     *         "expires_at": "2027-01-30T12:09:39.709632234Z",
+                     *         "created_at": "2026-11-01T12:49:14.028408107Z",
+                     *         "expires_at": "2027-01-30T12:49:14.028415677Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-11-01T12:09:39.709643864Z",
+                     *         "last_used_at": "2026-11-01T12:49:14.028467737Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -4966,8 +4991,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-11-01T12:09:39.709777464Z",
-                     *       "expires_at": "2027-01-30T12:09:39.709777924Z",
+                     *       "created_at": "2026-11-01T12:49:14.029022717Z",
+                     *       "expires_at": "2027-01-30T12:49:14.029023457Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5633,6 +5658,7 @@ export interface operations {
     list_materials: {
         parameters: {
             query?: {
+                availability?: components["schemas"]["MaterialAvailability"] | null;
                 /** @description Exact brand, case-insensitive. */
                 brand?: string | null;
                 category?: components["schemas"]["MaterialCategory"] | null;
@@ -5781,6 +5807,7 @@ export interface operations {
     list_models: {
         parameters: {
             query?: {
+                availability?: components["schemas"]["MaterialAvailability"] | null;
                 /** @description Exact brand, case-insensitive. */
                 brand?: string | null;
                 category?: components["schemas"]["MaterialCategory"] | null;
@@ -5829,6 +5856,7 @@ export interface operations {
     get_tree: {
         parameters: {
             query?: {
+                availability?: components["schemas"]["MaterialAvailability"] | null;
                 /** @description Exact brand, case-insensitive. */
                 brand?: string | null;
                 category?: components["schemas"]["MaterialCategory"] | null;

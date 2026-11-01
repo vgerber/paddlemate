@@ -72,8 +72,8 @@ water levels, and a shared logbook.
 - **Material wiki** - a shared gear catalog under Tools: models with their
   sizes (S, M, L) as one row each, browsable through a category tree
   (category, type, brand), searchable by brand and model, filterable by
-  construction and the paddler
-  weight they fit, and comparable side by side property for property. It
+  construction, whether the maker still makes them, and the paddler weight
+  they fit, and comparable side by side property for property. It
   comes pre-filled with whitewater kayaks and paddles, with credited photos,
   colourways and source links; admins can take photos down. Any signed-in
   paddler can propose a new entry, a correction or a removal; an admin

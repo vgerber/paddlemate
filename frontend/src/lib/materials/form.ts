@@ -1,5 +1,6 @@
 import {
   type Material,
+  type MaterialAvailability,
   type MaterialBody,
   type MaterialCategory,
   type MaterialConstruction,
@@ -37,6 +38,10 @@ export type MaterialFormValues = {
   year_from: string;
   year_to: string;
   year_approximate: boolean;
+  availability: MaterialAvailability;
+  availability_source: string;
+  /** A day, yyyy-mm-dd, as the date input holds it. */
+  availability_checked: string;
   notes: string;
   /** Colourways, comma separated. */
   colors: string;
@@ -73,6 +78,9 @@ export function emptyMaterialForm(): MaterialFormValues {
     year_from: "",
     year_to: "",
     year_approximate: false,
+    availability: "unknown",
+    availability_source: "",
+    availability_checked: "",
     notes: "",
     colors: "",
     lengths_cm: "",
@@ -128,6 +136,9 @@ export function materialToForm(
     year_from: numberText(material.year_from),
     year_to: numberText(material.year_to),
     year_approximate: material.year_approximate,
+    availability: material.availability,
+    availability_source: material.availability_source ?? "",
+    availability_checked: material.availability_checked ?? "",
     notes: material.notes ?? "",
     colors: material.colors.join(", "),
     lengths_cm: listText(material.lengths_cm, "length", units),
@@ -225,6 +236,9 @@ export function materialFormToBody(
     year_from: optionalNumber(values.year_from),
     year_to: optionalNumber(values.year_to),
     year_approximate: values.year_approximate,
+    availability: values.availability,
+    availability_source: optionalText(values.availability_source),
+    availability_checked: optionalText(values.availability_checked),
     notes: optionalText(values.notes),
     colors: values.colors
       .split(",")

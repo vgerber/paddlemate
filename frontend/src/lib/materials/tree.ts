@@ -230,10 +230,14 @@ export function selectedTotals(
  * own levels (it is what they pick from) and never the sort. */
 export function treeFilters(
   search: MaterialWikiSearch,
-): Pick<MaterialFilters, "q" | "construction" | "fits_paddler_kg"> {
+): Pick<
+  MaterialFilters,
+  "q" | "construction" | "availability" | "fits_paddler_kg"
+> {
   return {
     q: search.q,
     construction: search.construction,
+    availability: search.availability,
     fits_paddler_kg: search.fits,
   };
 }

@@ -7,6 +7,7 @@ import { trailSlotSx } from "@/components/phone/phoneGrid";
 import { ActionMenu, type RowAction } from "@/components/RowMenu";
 import RowOpenTarget from "@/components/RowOpenTarget";
 import type { MaterialModel } from "@/lib/api";
+import { rowAvailabilityLabel } from "@/lib/materials/availability";
 import { MAX_COMPARE } from "@/lib/materials/compare";
 import { modelFigures, modelTitle, sinceLabel } from "@/lib/materials/facts";
 import { CATEGORY_LABELS, disciplineLabel } from "@/lib/materials/specs";
@@ -92,6 +93,7 @@ export default function ModelRow({
       onClick: () => onToggleSize(size.id),
     };
   });
+  const discontinued = rowAvailabilityLabel(model);
   const comparing = pickedIds.length > 0;
 
   return (
@@ -159,9 +161,13 @@ export default function ModelRow({
             {figures && <Typography sx={valueSx}>{figures}</Typography>}
           </Box>
           <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 1.5 }}>
-            {kind && (
+            {(kind || discontinued) && (
               <Typography sx={{ ...metaSx, flex: "1 1 auto", minWidth: 0 }}>
                 {kind}
+                {kind && discontinued && " · "}
+                {discontinued && (
+                  <span data-testid="availability-label">{discontinued}</span>
+                )}
               </Typography>
             )}
             {sizes && (

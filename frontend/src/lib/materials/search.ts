@@ -1,4 +1,5 @@
 import {
+  type MaterialAvailability,
   type MaterialCategory,
   type MaterialConstruction,
   type MaterialDiscipline,
@@ -14,6 +15,8 @@ export interface MaterialWikiSearch {
   category?: MaterialCategory;
   discipline?: MaterialDiscipline;
   construction?: MaterialConstruction;
+  /** Only "current" is offered: the "Still made" filter. */
+  availability?: MaterialAvailability;
   brand?: string;
   sort?: MaterialSort;
   /** Body weight in kg - keeps the boats whose paddler range covers it. */
@@ -31,6 +34,7 @@ export const EMPTY_MATERIAL_SEARCH: {
   category: undefined,
   discipline: undefined,
   construction: undefined,
+  availability: undefined,
   brand: undefined,
   sort: undefined,
   fits: undefined,
@@ -48,6 +52,9 @@ function oneOf<T extends string>(
     ? (raw as T)
     : undefined;
 }
+
+/** The availabilities the list can be narrowed to. */
+export const FILTER_AVAILABILITIES: MaterialAvailability[] = ["current"];
 
 export const SORTS: MaterialSort[] = [
   "name",
@@ -89,6 +96,7 @@ export function parseMaterialSearch(
     category: oneOf(raw.category, CATEGORIES),
     discipline: oneOf(raw.discipline, DISCIPLINES),
     construction: oneOf(raw.construction, CONSTRUCTIONS),
+    availability: oneOf(raw.availability, FILTER_AVAILABILITIES),
     brand: searchText(raw.brand),
     sort: oneOf(raw.sort, SORTS),
     fits:
@@ -107,6 +115,7 @@ export function toMaterialFilters(search: MaterialWikiSearch): MaterialFilters {
     category: search.category,
     discipline: search.discipline,
     construction: search.construction,
+    availability: search.availability,
     brand: search.brand,
     sort: search.sort,
     fits_paddler_kg: search.fits,
@@ -117,6 +126,7 @@ export function toMaterialFilters(search: MaterialWikiSearch): MaterialFilters {
  * The free-text query has its own field, and the category, discipline and
  * brand are the path the tree shows. */
 export function activeFilterCount(search: MaterialWikiSearch): number {
-  return [search.construction, search.fits].filter((value) => value != null)
-    .length;
+  return [search.construction, search.availability, search.fits].filter(
+    (value) => value != null,
+  ).length;
 }

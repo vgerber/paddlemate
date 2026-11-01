@@ -106,6 +106,7 @@ pub async fn tree(pool: &PgPool, filters: &MaterialFilters) -> Result<MaterialTr
 fn clone_measures(f: &MaterialFilters) -> MaterialFilters {
     MaterialFilters {
         construction: f.construction,
+        availability: f.availability,
         min_length_cm: f.min_length_cm,
         max_length_cm: f.max_length_cm,
         min_volume_l: f.min_volume_l,

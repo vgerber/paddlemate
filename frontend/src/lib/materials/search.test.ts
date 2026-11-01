@@ -27,6 +27,7 @@ describe("the URL and the API parameters", () => {
       category: "kayak",
       discipline: "creek",
       construction: "plastic",
+      availability: "current",
       brand: "Pyranha",
       sort: "newest",
       fits: "82.5",
@@ -37,6 +38,7 @@ describe("the URL and the API parameters", () => {
       category: "kayak",
       discipline: "creek",
       construction: "plastic",
+      availability: "current",
       brand: "Pyranha",
       sort: "newest",
       fits_paddler_kg: 82.5,
@@ -48,6 +50,7 @@ describe("the URL and the API parameters", () => {
       category: "boat",
       discipline: "nope",
       construction: "stone",
+      availability: "discontinued",
       sort: "bogus",
       fits: "-3",
       q: "  ",
@@ -57,6 +60,7 @@ describe("the URL and the API parameters", () => {
       category: undefined,
       discipline: undefined,
       construction: undefined,
+      availability: undefined,
       brand: undefined,
       sort: undefined,
       fits_paddler_kg: undefined,
@@ -100,5 +104,15 @@ describe("the URL and the API parameters", () => {
       }),
     ).toBe(2);
     expect(activeFilterCount({ category: "kayak", brand: "Dagger" })).toBe(0);
+  });
+});
+
+describe("the Still made filter", () => {
+  test("is kept in the URL, counted, and reaches the tree and the list", () => {
+    const search = parseMaterialSearch({ availability: "current" });
+    expect(search.availability).toBe("current");
+    expect(activeFilterCount(search)).toBe(1);
+    expect(treeFilters(search).availability).toBe("current");
+    expect(toMaterialFilters(search).availability).toBe("current");
   });
 });
