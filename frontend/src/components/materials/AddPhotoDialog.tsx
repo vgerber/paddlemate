@@ -123,6 +123,7 @@ export default function AddPhotoDialog({
       pendingLabel="Sending..."
       pending={add.isPending}
       confirmDisabled={!file || !rights}
+      alignActions
       onCancel={onClose}
       onConfirm={send}
     >
@@ -205,7 +206,8 @@ export default function AddPhotoDialog({
           fullWidth
         />
         <FormControlLabel
-          sx={{ alignItems: "flex-start", m: 0 }}
+          // The drawn box (12 padding, 3 icon inset) starts on the content column.
+          sx={{ alignItems: "flex-start", m: 0, ml: "-15px" }}
           control={
             <Checkbox
               checked={rights}

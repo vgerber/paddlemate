@@ -54,8 +54,8 @@ a time: tap Kayaks to see its types, a type to see its brands; the top row
 closes. The path shows as chips under the search, each a way back up.
 
 The **Filters** chip on a phone, and the sidebar under the tree on a desktop,
-hold the dimensions that narrow a list of boats (a desktop puts the sort
-beside the heading); each one set shows as a chip that takes itself away:
+hold the dimensions that narrow a list of boats, the sort, and a Reset that
+clears them (not the tree path); each one set shows as a chip that takes itself away:
 
 | Filter | Keeps |
 | --- | --- |

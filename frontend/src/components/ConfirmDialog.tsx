@@ -18,6 +18,9 @@ interface ConfirmDialogProps {
   pending?: boolean;
   /** Holds the confirm button back until the content is filled in. */
   confirmDisabled?: boolean;
+  /** Ends the buttons on the content column (24 in) instead of 8 from the
+   * dialog's edge; for a form body whose fields run to that column. */
+  alignActions?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   /** Extra content between body and actions (a note field, an error alert). */
@@ -35,6 +38,7 @@ export default function ConfirmDialog({
   color = "primary",
   pending = false,
   confirmDisabled = false,
+  alignActions = false,
   onCancel,
   onConfirm,
   children,
@@ -55,7 +59,7 @@ export default function ConfirmDialog({
         )}
         {children}
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={alignActions ? { px: 3 } : undefined}>
         <Button
           onClick={onCancel}
           disabled={pending}
