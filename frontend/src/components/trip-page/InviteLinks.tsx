@@ -66,7 +66,7 @@ export default function InviteLinks({ tripId }: { tripId: number }) {
             <Typography variant="body2">
               Works until {formatDate(invite.expires_at)}
             </Typography>
-            <Typography variant="caption" color="textDisabled">
+            <Typography variant="caption" color="textSecondary">
               By {invite.created_by_username} ·{" "}
               {invite.uses === 1 ? "1 joined" : `${invite.uses} joined`}
             </Typography>
