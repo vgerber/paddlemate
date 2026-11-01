@@ -14,7 +14,7 @@ import { appReady, FIX } from "./fixture";
  * must close. */
 export type SweepScreen = Screen & {
   before?: (page: Page) => Promise<void>;
-  overlay?: (page: Page) => Locator;
+  overlay?: (page: Page) => Locator | undefined;
 };
 
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 768;
@@ -66,11 +66,16 @@ export const EXTRA_SCREENS: SweepScreen[] = [
     name: "materials-filters",
     path: "/materials?q=Testflow",
     ready: text("Testflow Cascade"),
+    // The desktop filters sit in the sidebar: nothing opens there.
     open: async (page) => {
+      if (isDesktop(page)) return;
       await page.getByTestId("filters-chip").click();
       await expect(page.getByRole("dialog", { name: "Filters" })).toBeVisible();
     },
-    overlay: (page) => page.getByRole("dialog", { name: "Filters" }),
+    overlay: (page) =>
+      isDesktop(page)
+        ? undefined
+        : page.getByRole("dialog", { name: "Filters" }),
   },
   {
     name: "materials-model",
@@ -564,8 +569,10 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
         isBody,
         card:
           el
-            .closest("section[data-testid^='canvas-card-']")
-            ?.getAttribute("data-testid") ?? "",
+            .closest("section[data-testid^='canvas-card-'], [data-column]")
+            ?.getAttribute("data-testid") ??
+          el.closest("[data-column]")?.getAttribute("data-column") ??
+          "",
         handle: el.getAttribute("role") === "separator",
         inMap: Boolean(el.closest(".maplibregl-map, [data-testid='map-root']")),
       };
@@ -672,7 +679,8 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
     //   into the map is expected.
     // - A card's resize handle is first in the card but sits on its edge at
     //   mid height, so the step to or from it is a jump by construction.
-    // - Canvas cards are columns: from the foot of one card (its docked
+    // - Canvas cards and `data-column` blocks (the wiki's sidebar and list)
+    //   are columns: from the foot of one card (its docked
     //   action) Tab moves to the card on its right, which starts at the top.
     if (
       // Only a step between two different cards is a column change.

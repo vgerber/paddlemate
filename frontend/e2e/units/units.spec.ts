@@ -89,16 +89,19 @@ test.describe("choosing units", () => {
   }) => {
     await openUnits(page);
     await choose(page, "Weight", "lb");
+    // The desktop chip also names its remove control.
+    const chip = page.getByRole("button", { name: /^Fits 150 lb\b/ });
     await page.goto("/materials?fits=68.04");
-    await expect(
-      page.getByRole("button", { name: "Fits 150 lb", exact: true }),
-    ).toBeVisible();
+    await expect(chip).toBeVisible();
     await page.reload();
-    await expect(
-      page.getByRole("button", { name: "Fits 150 lb", exact: true }),
-    ).toBeVisible();
+    await expect(chip).toBeVisible();
     // The URL stays metric: 150 lb is 68.04 kg.
     await expect(page).toHaveURL(/fits=68\.04/);
+    // The phone edits it in the Filters sheet, the desktop in the sidebar.
+    if (test.info().project.name.startsWith("desktop")) {
+      await expect(page.getByLabel("Fits paddler (lb)")).toHaveValue("150");
+      return;
+    }
     await page.getByTestId("filters-chip").click();
     await expect(
       page
