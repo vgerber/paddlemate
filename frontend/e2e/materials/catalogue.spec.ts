@@ -130,7 +130,7 @@ test.describe("catalogue detail", () => {
 
     await page.goto("/materials?category=paddle");
     await expect(page.getByTestId("material-row").first()).toBeVisible();
-    // The tree offers paddle disciplines only.
+    // The tree offers paddle classes (by use) only.
     const tree = await (
       await page.request.get(ENTRY.replace(/\/9862$/, "/tree"))
     ).json();
@@ -140,8 +140,9 @@ test.describe("catalogue detail", () => {
     const types = paddle.disciplines.map(
       (d: { discipline: string }) => d.discipline,
     );
+    expect(types).toContain("whitewater");
     expect(types).toContain("freestyle");
-    for (const type of ["crossover", "playboat"]) {
+    for (const type of ["creek", "river_runner", "crossover", "playboat"]) {
       expect(types).not.toContain(type);
     }
   });

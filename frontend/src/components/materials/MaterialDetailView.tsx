@@ -24,6 +24,7 @@ import {
 } from "@/lib/materials/facts";
 import {
   CATEGORY_LABELS,
+  disciplineLabel,
   formatSpec,
   MATERIAL_SPECS,
   SPEC_GROUP_LABELS,
@@ -112,7 +113,7 @@ export default function MaterialDetailView({
   if (material.discipline) {
     facts.push({
       label: "Discipline",
-      value: sentenceCase(humanize(material.discipline)),
+      value: disciplineLabel(material.discipline, material.category),
     });
   }
   if (material.construction) {

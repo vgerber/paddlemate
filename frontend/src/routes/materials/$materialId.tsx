@@ -28,10 +28,9 @@ import { MaterialIcon } from "@/lib/icons";
 import { materialTitle, modelTitle, sinceLabel } from "@/lib/materials/facts";
 import { materialToForm } from "@/lib/materials/form";
 import { EMPTY_MATERIAL_SEARCH } from "@/lib/materials/search";
-import { CATEGORY_LABELS } from "@/lib/materials/specs";
+import { CATEGORY_LABELS, disciplineLabel } from "@/lib/materials/specs";
 import { currentUnits } from "@/lib/prefs/units";
 import { isProposal } from "@/lib/proposals";
-import { humanize, sentenceCase } from "@/lib/text/format";
 
 export const Route = createFileRoute("/materials/$materialId")({
   beforeLoad: () => requireMaterials(),
@@ -102,7 +101,8 @@ function MaterialPage() {
 
   const subtitle = [
     CATEGORY_LABELS[material.category],
-    material.discipline && sentenceCase(humanize(material.discipline)),
+    material.discipline &&
+      disciplineLabel(material.discipline, material.category),
     sinceLabel(material),
   ]
     .filter(Boolean)

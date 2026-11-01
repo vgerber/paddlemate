@@ -22,7 +22,8 @@ import {
   CATEGORIES,
   CATEGORY_LABELS,
   CONSTRUCTIONS,
-  DISCIPLINES,
+  disciplineLabel,
+  disciplinesFor,
   MATERIAL_LIMITS,
   MATERIAL_SPECS,
   PADDLE_SPECS,
@@ -233,9 +234,9 @@ export default function MaterialForm({
                 }
               >
                 <MenuItem value="">Unstated</MenuItem>
-                {DISCIPLINES.map((discipline) => (
+                {disciplinesFor(values.category).map((discipline) => (
                   <MenuItem key={discipline} value={discipline}>
-                    {sentenceCase(humanize(discipline))}
+                    {disciplineLabel(discipline, values.category)}
                   </MenuItem>
                 ))}
               </TextField>

@@ -54,6 +54,36 @@ pub enum MaterialDiscipline {
     Crossover,
     Freestyle,
     Other,
+    Whitewater,
+    Wildwater,
+    Canoe,
+    Polo,
+}
+
+impl MaterialDiscipline {
+    /// Classes only a paddle can have; boats never use them.
+    const PADDLE_ONLY: [Self; 4] = [Self::Whitewater, Self::Wildwater, Self::Canoe, Self::Polo];
+    /// Paddles are grouped by use: these are all the classes a paddle may have.
+    const PADDLE_CLASSES: [Self; 8] = [
+        Self::Whitewater,
+        Self::Freestyle,
+        Self::Slalom,
+        Self::Wildwater,
+        Self::Touring,
+        Self::Canoe,
+        Self::Polo,
+        Self::Other,
+    ];
+
+    /// Whether an entry of this category may be filed under the class. Mirrors
+    /// chk_materials_discipline.
+    pub fn fits(self, category: MaterialCategory) -> bool {
+        if category == MaterialCategory::Paddle {
+            Self::PADDLE_CLASSES.contains(&self)
+        } else {
+            !Self::PADDLE_ONLY.contains(&self)
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, sqlx::Type)]
@@ -488,6 +518,9 @@ impl MaterialBody {
         if let Some(err) = self.extras_error() {
             return Some(err);
         }
+        if self.discipline.is_some_and(|d| !d.fits(self.category)) {
+            return Some(("discipline", "This class does not fit the category".into()));
+        }
         if let Some(url) = self.product_url.as_deref()
             && !(url.starts_with("http://") || url.starts_with("https://"))
         {
@@ -730,6 +763,27 @@ mod tests {
         b.blade_area_cm2 = Some(700.0);
         assert_eq!(b.validation_error().map(|(f, _)| f), Some("category"));
         b.category = MaterialCategory::Paddle;
+        assert!(b.validation_error().is_none());
+    }
+
+    #[test]
+    fn a_class_must_fit_the_category() {
+        let mut b = body();
+        b.category = MaterialCategory::Paddle;
+        for d in MaterialDiscipline::PADDLE_CLASSES {
+            b.discipline = Some(d);
+            assert!(b.validation_error().is_none(), "{d:?}");
+        }
+        for d in [MaterialDiscipline::Creek, MaterialDiscipline::Playboat] {
+            b.discipline = Some(d);
+            assert_eq!(b.validation_error().map(|(f, _)| f), Some("discipline"));
+        }
+        b.category = MaterialCategory::Kayak;
+        for d in MaterialDiscipline::PADDLE_ONLY {
+            b.discipline = Some(d);
+            assert_eq!(b.validation_error().map(|(f, _)| f), Some("discipline"));
+        }
+        b.discipline = Some(MaterialDiscipline::Creek);
         assert!(b.validation_error().is_none());
     }
 

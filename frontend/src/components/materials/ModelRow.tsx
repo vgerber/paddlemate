@@ -9,9 +9,8 @@ import RowOpenTarget from "@/components/RowOpenTarget";
 import type { MaterialModel } from "@/lib/api";
 import { MAX_COMPARE } from "@/lib/materials/compare";
 import { modelFigures, modelTitle, sinceLabel } from "@/lib/materials/facts";
-import { CATEGORY_LABELS } from "@/lib/materials/specs";
+import { CATEGORY_LABELS, disciplineLabel } from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
-import { humanize, sentenceCase } from "@/lib/text/format";
 import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -71,7 +70,7 @@ export default function ModelRow({
   const [menuAt, setMenuAt] = useState<HTMLElement | null>(null);
   const kind = [
     showCategory && CATEGORY_LABELS[model.category],
-    model.discipline && sentenceCase(humanize(model.discipline)),
+    model.discipline && disciplineLabel(model.discipline, model.category),
     sinceLabel(model),
   ]
     .filter(Boolean)
