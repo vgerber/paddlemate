@@ -1,12 +1,10 @@
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
-import ListItemText from "@mui/material/ListItemText";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { cardRowSx, listRowSx } from "@/components/canvas/flatRow";
 import { trailSlotSx } from "@/components/phone/phoneGrid";
+import { ActionMenu, type RowAction } from "@/components/RowMenu";
 import RowOpenTarget from "@/components/RowOpenTarget";
 import type { MaterialModel } from "@/lib/api";
 import { MAX_COMPARE } from "@/lib/materials/compare";
@@ -18,18 +16,29 @@ import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
-/** Side of the thumbnail box, px. */
-const THUMB = 56;
+/** Side of the thumbnail, px. */
+const THUMB = 44;
 
 const metaSx = {
   fontSize: "0.8125rem",
   lineHeight: "18px",
   color: "text.secondary",
+  overflowWrap: "anywhere",
 } as const;
 
-/** One model in the wiki list: its name, what it is, the figures across its
- * sizes, the sizes themselves, and a checkbox at the right that puts it in the
- * comparison (its first size, or the sizes already picked). */
+const valueSx = {
+  ...metaSx,
+  fontVariantNumeric: "tabular-nums",
+  // Wraps below the name rather than squeezing it, in a narrow card.
+  flex: "0 0 auto",
+  ml: "auto",
+} as const;
+
+/** One model in the wiki list, two lines: its name with the figures across
+ * its sizes at the right, then what it is with the sizes at the right. A
+ * photo shows only when there is one. The checkbox at the right puts the
+ * model in the comparison (its first size, or the sizes already picked); it
+ * shows on hover and focus, and stays while anything is being compared. */
 export default function ModelRow({
   model,
   card = false,
@@ -70,12 +79,21 @@ export default function ModelRow({
   // One size ticks at once; several ask which, so no size is picked unseen.
   const askSize = !selected && model.sizes.length > 1;
   const full = pickedIds.length >= MAX_COMPARE;
-  const figures = modelFigures(model, units);
+  const figures = modelFigures(model, units, false);
   const sizes = model.sizes
     .map((size) => size.size)
     .filter(Boolean)
     .join(" · ");
-  const thumb = model.thumb_url;
+  const sizeActions: RowAction[] = model.sizes.map((size) => {
+    const held = pickedIds.includes(size.id);
+    return {
+      label: size.size ?? "-",
+      checked: held,
+      disabled: full && !held,
+      onClick: () => onToggleSize(size.id),
+    };
+  });
+  const comparing = pickedIds.length > 0;
 
   return (
     // The open target and the checkbox are siblings: a checkbox inside a
@@ -88,31 +106,33 @@ export default function ModelRow({
           ? { ...cardRowSx, mb: 0, px: `${tokens.phone.inner}px` }
           : listRowSx),
         display: "flex",
-        alignItems: card ? "flex-start" : "center",
+        alignItems: "center",
         listStyle: "none",
+        // Out of the way until the row is reached, or while comparing; a
+        // touch screen has no hover, so it always shows there.
+        "@media (hover: hover)": {
+          "& .compare-box": { opacity: comparing ? 1 : 0 },
+          "&:hover .compare-box, &:focus-within .compare-box": { opacity: 1 },
+        },
       }}
     >
-      <RowOpenTarget
-        hang
-        onClick={onOpen}
-        sx={{ alignItems: card ? "flex-start" : "center" }}
-      >
-        <Box
-          data-testid="material-thumb"
-          sx={{
-            flexShrink: 0,
-            width: THUMB,
-            height: THUMB,
-            mr: 1.5,
-            borderRadius: `${tokens.radii.sm}px`,
-            bgcolor: tokens.surfaceHigh,
-            overflow: "hidden",
-          }}
-        >
-          {thumb && (
+      <RowOpenTarget hang onClick={onOpen} sx={{ alignItems: "center" }}>
+        {model.thumb_url && (
+          <Box
+            data-testid="material-thumb"
+            sx={{
+              flexShrink: 0,
+              width: THUMB,
+              height: THUMB,
+              mr: 1.5,
+              borderRadius: `${tokens.radii.sm}px`,
+              bgcolor: tokens.surfaceHigh,
+              overflow: "hidden",
+            }}
+          >
             <Box
               component="img"
-              src={thumb}
+              src={model.thumb_url}
               alt=""
               loading="lazy"
               decoding="async"
@@ -123,35 +143,30 @@ export default function ModelRow({
                 objectFit: "contain",
               }}
             />
-          )}
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography sx={{ ...cardTitleSx, overflowWrap: "anywhere" }}>
-            {modelTitle(model)}
-          </Typography>
-          {kind && (
-            <Typography sx={{ ...metaSx, overflowWrap: "anywhere" }}>
-              {kind}
+          </Box>
+        )}
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 1.5 }}>
+            <Typography
+              sx={{
+                ...cardTitleSx,
+                flex: "1 1 auto",
+                minWidth: 0,
+                overflowWrap: "anywhere",
+              }}
+            >
+              {modelTitle(model)}
             </Typography>
-          )}
-          <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 1 }}>
-            {figures && (
-              <Typography
-                sx={{
-                  ...metaSx,
-                  fontVariantNumeric: "tabular-nums",
-                  minWidth: 0,
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {figures}
+            {figures && <Typography sx={valueSx}>{figures}</Typography>}
+          </Box>
+          <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 1.5 }}>
+            {kind && (
+              <Typography sx={{ ...metaSx, flex: "1 1 auto", minWidth: 0 }}>
+                {kind}
               </Typography>
             )}
             {sizes && (
-              <Typography
-                data-testid="model-sizes"
-                sx={{ ...metaSx, overflowWrap: "anywhere" }}
-              >
+              <Typography data-testid="model-sizes" sx={valueSx}>
                 {sizes}
               </Typography>
             )}
@@ -160,6 +175,7 @@ export default function ModelRow({
       </RowOpenTarget>
       <Box sx={trailSlotSx}>
         <Checkbox
+          className="compare-box"
           checked={selected}
           disabled={compareDisabled}
           onChange={(event) =>
@@ -170,37 +186,12 @@ export default function ModelRow({
           }}
           sx={{ width: tokens.touch.min, height: tokens.touch.min, p: 0 }}
         />
-        <Menu
-          open={menuAt != null}
-          anchorEl={menuAt}
+        <ActionMenu
+          actions={sizeActions}
+          anchor={menuAt}
           onClose={() => setMenuAt(null)}
-          slotProps={{
-            list: { "aria-label": `Sizes of ${modelTitle(model)}` },
-          }}
-        >
-          {model.sizes.map((size) => {
-            const held = pickedIds.includes(size.id);
-            return (
-              <MenuItem
-                key={size.id}
-                role="menuitemcheckbox"
-                aria-checked={held}
-                disabled={full && !held}
-                onClick={() => onToggleSize(size.id)}
-                sx={{ minHeight: tokens.touch.min }}
-              >
-                <Checkbox
-                  edge="start"
-                  checked={held}
-                  tabIndex={-1}
-                  disableRipple
-                  aria-hidden
-                />
-                <ListItemText primary={size.size ?? "-"} />
-              </MenuItem>
-            );
-          })}
-        </Menu>
+          label={`Sizes of ${modelTitle(model)}`}
+        />
       </Box>
     </Box>
   );

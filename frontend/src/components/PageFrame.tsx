@@ -5,6 +5,32 @@ import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
+/** The card a panel header sits in on a desktop: rounded, with the body
+ * beneath. A phone shows it edge to edge. */
+export function HeaderCard({
+  children,
+  display,
+  testId,
+}: {
+  children: ReactNode;
+  display?: { xs: string; md: string };
+  testId?: string;
+}) {
+  return (
+    <Box
+      data-testid={testId}
+      sx={{
+        display,
+        borderRadius: { md: `${tokens.radii.md}px` },
+        overflow: { md: "hidden" },
+        mb: { md: 1 },
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
 /** The frame of a page that is not on the map canvas: a centred column on a
  * desktop (`width` wide), edge to edge on a phone. With a `title` the panel
  * header opens it, as on every other screen, and on a desktop it sits in a
@@ -43,15 +69,8 @@ export default function PageFrame({
       }}
     >
       {title != null && (
-        <Box
-          sx={{
-            display: headerOnPhoneOnly
-              ? { xs: "block", md: "none" }
-              : undefined,
-            borderRadius: { md: `${tokens.radii.md}px` },
-            overflow: { md: "hidden" },
-            mb: { md: 1 },
-          }}
+        <HeaderCard
+          display={headerOnPhoneOnly ? { xs: "block", md: "none" } : undefined}
         >
           <PanelHeader
             title={title}
@@ -60,7 +79,7 @@ export default function PageFrame({
             focusOnOpen="lost"
             actionButton={actions}
           />
-        </Box>
+        </HeaderCard>
       )}
       {children}
     </Box>

@@ -1,5 +1,6 @@
 import Chip from "@mui/material/Chip";
 import { CloseIcon } from "@/lib/icons";
+import { withAlpha } from "@/lib/theme/alpha";
 import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
@@ -13,6 +14,7 @@ export default function FilterChip({
   onDelete,
   deleteLabel,
   plain = false,
+  compact = false,
   testId,
 }: {
   testId?: string;
@@ -25,7 +27,44 @@ export default function FilterChip({
   deleteLabel?: string;
   /** A toggle inside the sheet rather than a summary chip. */
   plain?: boolean;
+  /** A quiet toggle for a dense pane: a 32px pill, teal when set, inside the
+   * same 44px hit area. */
+  compact?: boolean;
 }) {
+  if (compact) {
+    return (
+      <Chip
+        data-testid={testId}
+        clickable
+        onClick={onClick}
+        aria-pressed={set}
+        label={label}
+        sx={{
+          height: tokens.touch.min,
+          mr: 0.5,
+          bgcolor: "transparent",
+          "&:hover": { bgcolor: "transparent" },
+          ...focusRingSx(-2),
+          "& .MuiChip-label": {
+            px: 1.5,
+            lineHeight: "32px",
+            borderRadius: `${tokens.radii.pill}px`,
+            fontSize: "0.8125rem",
+            fontWeight: 600,
+            bgcolor: set
+              ? withAlpha(tokens.primary, "wash")
+              : tokens.surfaceLow,
+            color: set ? tokens.primary : tokens.onSurfaceVariant,
+          },
+          "&:hover .MuiChip-label": {
+            bgcolor: set
+              ? withAlpha(tokens.primary, "hover")
+              : tokens.surfaceHigh,
+          },
+        }}
+      />
+    );
+  }
   return (
     <Chip
       data-testid={testId}

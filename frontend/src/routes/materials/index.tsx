@@ -2,6 +2,7 @@ import Fab from "@mui/material/Fab";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import MaterialsView from "@/components/materials/MaterialsView";
+import { WIKI_WIDTH } from "@/components/materials/wikiLayout";
 import PageFrame from "@/components/PageFrame";
 import { fabSx } from "@/components/PaneFab";
 import { requireMaterials } from "@/lib/features";
@@ -45,7 +46,7 @@ function MaterialWikiPage() {
       title="Material wiki"
       subtitle="Boats, searchable and comparable"
       onBack={() => navigate({ to: "/tools" })}
-      width={1600}
+      width={WIKI_WIDTH}
       headerOnPhoneOnly
     >
       <MaterialsView
@@ -73,7 +74,7 @@ function MaterialWikiPage() {
           })
         }
       />
-      <Fab color="secondary" onClick={onAdd} aria-label="Add entry" sx={fabSx}>
+      <Fab color="primary" onClick={onAdd} aria-label="Add entry" sx={fabSx}>
         <AddIcon />
       </Fab>
     </PageFrame>

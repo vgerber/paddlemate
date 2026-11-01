@@ -1,9 +1,12 @@
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { type ReactNode, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
+import PanelHeader from "@/components/PanelHeader";
 import QueryStates from "@/components/states/QueryStates";
 import type { MaterialTree } from "@/lib/api";
 import { useMaterialTree } from "@/lib/hooks/useMaterials";
@@ -13,7 +16,7 @@ import {
   CloseIcon,
   MaterialIcon,
 } from "@/lib/icons";
-import { type MaterialWikiSearch } from "@/lib/materials/search";
+import type { MaterialWikiSearch } from "@/lib/materials/search";
 import {
   CATEGORY_PLURALS,
   pathOf,
@@ -22,7 +25,7 @@ import {
   treeFilters,
 } from "@/lib/materials/tree";
 import { humanize, sentenceCase } from "@/lib/text/format";
-import { focusRingSx } from "@/lib/theme/focusRing";
+import { withAlpha } from "@/lib/theme/alpha";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -116,77 +119,59 @@ function Content({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          minHeight: 56,
-          px: 0.5,
-          gap: 0.5,
-        }}
-      >
-        <IconButton
-          aria-label={
-            atRoot ? "Close" : `Back to ${levelAt(query.data, up(at)).title}`
-          }
-          onClick={() => (atRoot ? onClose() : setAt(up(at)))}
-          sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-        >
-          {atRoot ? <CloseIcon /> : <BackIcon />}
-        </IconButton>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            component="h2"
-            sx={{ fontSize: "1.125rem", fontWeight: 700, lineHeight: 1.33 }}
-          >
-            {level.title}
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            {level.trail}
-          </Typography>
-        </Box>
-        {!atRoot && (
-          <IconButton
-            aria-label="Close"
-            onClick={onClose}
-            sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-          >
-            <CloseIcon />
-          </IconButton>
-        )}
-      </Box>
+      <PanelHeader
+        title={level.title}
+        subtitle={level.trail}
+        backIcon={atRoot ? "close" : "arrow"}
+        onBack={() => (atRoot ? onClose() : setAt(up(at)))}
+        actionButton={
+          atRoot ? undefined : (
+            <IconButton aria-label="Close" onClick={onClose}>
+              <CloseIcon />
+            </IconButton>
+          )
+        }
+      />
       <QueryStates
         query={query}
         count={level.rows.length + 1}
         errorFallback="Could not load the categories."
         empty={{ icon: <MaterialIcon />, title: "Nothing to browse." }}
       >
-        <Box
-          role="list"
+        <List
+          disablePadding
           data-testid="browse-rows"
           sx={{ overflowY: "auto", minHeight: 0, pb: 2 }}
         >
-          <ButtonBase
-            data-testid="browse-all"
+          {!atRoot && (
+            <BrowseRow
+              testId="browse-up"
+              onClick={() => setAt(up(at))}
+              sx={{ color: "text.secondary" }}
+            >
+              <BackIcon fontSize="small" />
+              <Box component="span" sx={{ flex: 1 }}>
+                Back to {levelAt(query.data, up(at)).title}
+              </Box>
+            </BrowseRow>
+          )}
+          <BrowseRow
+            testId="browse-all"
             onClick={() => pick(at)}
-            sx={{ ...rowSx, color: tokens.primary, fontWeight: 600 }}
+            sx={{ color: tokens.primary, fontWeight: 600 }}
           >
-            <Box component="span" sx={{ flex: 1, textAlign: "left" }}>
+            <Box component="span" sx={{ flex: 1 }}>
               {level.all}
             </Box>
             {totals && <Box component="span">{totals.models}</Box>}
-          </ButtonBase>
+          </BrowseRow>
           {level.rows.map((row) => (
-            <ButtonBase
+            <BrowseRow
               key={row.label}
-              data-testid="browse-row"
+              testId="browse-row"
               onClick={() => (row.deeper ? setAt(row.path) : pick(row.path))}
-              sx={{ ...rowSx, borderTop: `1px solid ${tokens.outlineVariant}` }}
             >
-              <Box
-                component="span"
-                sx={{ flex: 1, textAlign: "left", overflowWrap: "anywhere" }}
-              >
+              <Box component="span" sx={{ flex: 1, overflowWrap: "anywhere" }}>
                 {row.label}
               </Box>
               <Box
@@ -203,24 +188,45 @@ function Content({
               ) : (
                 <Box component="span" sx={{ width: 24 }} />
               )}
-            </ButtonBase>
+            </BrowseRow>
           ))}
-        </Box>
+        </List>
       </QueryStates>
     </Box>
   );
 }
 
+function BrowseRow({
+  testId,
+  onClick,
+  sx,
+  children,
+}: {
+  testId: string;
+  onClick: () => void;
+  sx?: SxProps<Theme>;
+  children: ReactNode;
+}) {
+  return (
+    <ListItem disablePadding>
+      <ListItemButton
+        data-testid={testId}
+        onClick={onClick}
+        sx={[rowSx, ...(Array.isArray(sx) ? sx : [sx])]}
+      >
+        {children}
+      </ListItemButton>
+    </ListItem>
+  );
+}
+
 const rowSx = {
-  display: "flex",
-  width: "100%",
-  alignItems: "center",
   gap: 1,
   minHeight: 48,
   px: `${tokens.phone.inner}px`,
   fontSize: "0.9375rem",
   fontWeight: 500,
-  ...focusRingSx(-2),
+  borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
 } as const;
 
 /** The tree as a phone sheet, one level at a time: tap a category to see its

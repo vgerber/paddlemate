@@ -6,6 +6,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import ListPaneHeader from "@/components/ListPaneHeader";
 import { fabRoom } from "@/components/PaneFab";
 import FilterChip from "@/components/search/FilterChip";
+import SearchField from "@/components/search/SearchField";
 import { TreeIcon } from "@/lib/icons";
 import { formatFits } from "@/lib/materials/facts";
 import { activeFilterCount } from "@/lib/materials/search";
@@ -16,7 +17,6 @@ import { theme } from "@/lib/theme/theme";
 import BrowseSheet from "./BrowseSheet";
 import MaterialFiltersSheet from "./MaterialFiltersSheet";
 import { CompareBar, ModelResults } from "./MaterialResults";
-import MaterialSearchField from "./MaterialSearchField";
 import MaterialsDesktop from "./MaterialsDesktop";
 import { type MaterialsViewProps, useWikiList } from "./useWikiList";
 import { wikiSteps } from "./wikiTrail";
@@ -45,16 +45,33 @@ function PhoneWiki(props: MaterialsViewProps) {
       >
         <Box sx={{ display: "flex", gap: 1 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <MaterialSearchField value={text} onChange={setText} />
+            <SearchField
+              label="Brand or model"
+              maxLength={100}
+              value={text}
+              onChange={setText}
+            />
           </Box>
           <Button
             data-testid="browse-button"
             variant="outlined"
             startIcon={<TreeIcon />}
+            aria-label="Browse"
             onClick={() => setBrowseOpen(true)}
-            sx={{ minHeight: 56, flexShrink: 0 }}
+            sx={{
+              alignSelf: "stretch",
+              flexShrink: 0,
+              // On the narrowest phones the icon alone leaves the search room.
+              "@media (max-width: 359px)": {
+                minWidth: 0,
+                "& .MuiButton-startIcon": { m: 0 },
+                "& .browse-label": { display: "none" },
+              },
+            }}
           >
-            Browse
+            <Box component="span" className="browse-label">
+              Browse
+            </Box>
           </Button>
         </Box>
         <Breadcrumb

@@ -21,43 +21,67 @@ import {
 } from "@/lib/prefs/units";
 import { humanize, plural, sentenceCase } from "@/lib/text/format";
 /** The filters that are not the tree's levels: construction, the paddler's
- * weight and, on a phone, the sort. The desktop sidebar shows them under the
- * tree and puts the sort in the page header. */
+ * weight and, in the phone's sheet, the sort. The desktop sidebar shows them
+ * under the tree, lighter, and puts the sort in the page header. */
 export function FilterFields({
   search,
   onChange,
-  withSort,
+  sidebar = false,
 }: {
   search: MaterialWikiSearch;
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
-  withSort: boolean;
+  /** The quiet look for the desktop sidebar, without the sort. */
+  sidebar?: boolean;
 }) {
   const [units] = useUnits();
+  const label = `Fits paddler (${unitLabel("weight", units)})`;
+  const weight =
+    search.fits == null ? "" : toInputText("weight", search.fits, units);
+  const setWeight = (text: string) => {
+    const kg = parseInput("weight", text, units, 4);
+    onChange({
+      fits: kg != null && kg > 0 && kg <= MAX_FITS_KG ? kg : undefined,
+    });
+  };
   return (
-    <Box sx={{ display: "grid", gap: 2 }}>
-      <FilterGroup label="Construction">
+    <Box sx={{ display: "grid", gap: sidebar ? 1 : 2 }}>
+      <FilterGroup label="Construction" compact={sidebar}>
         <ChoiceChips
           options={CONSTRUCTIONS}
           value={search.construction}
           onChange={(construction) => onChange({ construction })}
           labelOf={(value) => sentenceCase(humanize(value))}
+          compact={sidebar}
         />
       </FilterGroup>
-      <TextField
-        label={`Fits paddler (${unitLabel("weight", units)})`}
-        value={
-          search.fits == null ? "" : toInputText("weight", search.fits, units)
-        }
-        onChange={(event) => {
-          const kg = parseInput("weight", event.target.value, units, 4);
-          onChange({
-            fits: kg != null && kg > 0 && kg <= MAX_FITS_KG ? kg : undefined,
-          });
-        }}
-        helperText="Boats built for your body weight"
-        slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 5 } }}
-      />
-      {withSort && (
+      {sidebar ? (
+        <FilterGroup label="Paddler weight" compact>
+          <TextField
+            hiddenLabel
+            size="small"
+            placeholder={unitLabel("weight", units)}
+            value={weight}
+            onChange={(event) => setWeight(event.target.value)}
+            slotProps={{
+              htmlInput: {
+                "aria-label": label,
+                inputMode: "decimal",
+                maxLength: 5,
+              },
+            }}
+            sx={{ width: 120, mt: 0.5 }}
+          />
+        </FilterGroup>
+      ) : (
+        <TextField
+          label={label}
+          value={weight}
+          onChange={(event) => setWeight(event.target.value)}
+          helperText="Boats built for your body weight"
+          slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 5 } }}
+        />
+      )}
+      {!sidebar && (
         <FilterGroup label="Sort by">
           <ChoiceChips<MaterialSort>
             options={SORTS}
@@ -108,7 +132,7 @@ export default function MaterialFiltersSheet({
         onClose={onClose}
         resultLabel={plural(total, "result")}
       >
-        <FilterFields search={search} onChange={onChange} withSort />
+        <FilterFields search={search} onChange={onChange} />
       </FilterSheetFrame>
     </BottomSheet>
   );

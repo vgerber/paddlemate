@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import ComparisonTable from "@/components/materials/ComparisonTable";
+import { WIKI_WIDTH } from "@/components/materials/wikiLayout";
 import PageFrame from "@/components/PageFrame";
 import EmptyState from "@/components/states/EmptyState";
 import QueryStates from "@/components/states/QueryStates";
@@ -66,7 +67,7 @@ function ComparePage() {
       title="Compare"
       subtitle={plural(compareIds.length, "entry", "entries")}
       onBack={goBack}
-      width={1400}
+      width={WIKI_WIDTH}
     >
       <Box sx={{ pt: 1, pb: 3 }}>
         {compareIds.length === 0 ? (

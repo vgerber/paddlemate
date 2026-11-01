@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -7,6 +6,7 @@ import MaterialDetailView, {
 } from "@/components/materials/MaterialDetailView";
 import MaterialForm from "@/components/materials/MaterialForm";
 import PendingProposalNote from "@/components/materials/PendingProposalNote";
+import { WIKI_WIDTH } from "@/components/materials/wikiLayout";
 import PageFrame from "@/components/PageFrame";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
@@ -32,7 +32,6 @@ import { CATEGORY_LABELS } from "@/lib/materials/specs";
 import { currentUnits } from "@/lib/prefs/units";
 import { isProposal } from "@/lib/proposals";
 import { humanize, sentenceCase } from "@/lib/text/format";
-import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/$materialId")({
   beforeLoad: () => requireMaterials(),
@@ -111,7 +110,7 @@ function MaterialPage() {
 
   return (
     <PageFrame
-      width={1200}
+      width={WIKI_WIDTH}
       title={modelTitle(material)}
       subtitle={subtitle}
       onBack={goBack}
@@ -198,26 +197,16 @@ function EditMaterial({
   );
   const update = useUpdateMaterial(material.id);
   return (
-    <Box
-      sx={{
-        maxWidth: 720,
-        mx: "auto",
-        height: PANEL_HEIGHT,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <MaterialForm
-        values={values}
-        onChange={setValues}
-        title={materialTitle(material)}
-        subtitle="Correct this entry"
-        saving={update.isPending}
-        error={update.error}
-        onCancel={onDone}
-        original={material}
-        onSubmit={(body) => update.mutate(body, { onSuccess: onDone })}
-      />
-    </Box>
+    <MaterialForm
+      values={values}
+      onChange={setValues}
+      title={materialTitle(material)}
+      subtitle="Correct this entry"
+      saving={update.isPending}
+      error={update.error}
+      onCancel={onDone}
+      original={material}
+      onSubmit={(body) => update.mutate(body, { onSuccess: onDone })}
+    />
   );
 }

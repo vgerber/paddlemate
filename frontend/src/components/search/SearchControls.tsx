@@ -1,10 +1,7 @@
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import TextField from "@mui/material/TextField";
 import { type ReactNode, useRef, useState } from "react";
 import ChipRow from "@/components/ChipRow";
 import { usePanelEnter } from "@/components/usePanelEnter";
-import { CloseIcon, SearchIcon } from "@/lib/icons";
 import { type AreaCircle, DEFAULT_RADIUS_KM } from "@/lib/map/geo";
 import { theme } from "@/lib/theme/theme";
 import AreaControls from "./AreaControls";
@@ -13,6 +10,7 @@ import FiltersSheet, { type FilterField } from "./FiltersSheet";
 import { gradeSummary } from "./gradeSummary";
 import RegionBrowse, { type RegionBrowseProps } from "./RegionBrowse";
 import { isListingRegions, RegionHint } from "./RegionSelect";
+import SearchField from "./SearchField";
 import type { WaterwaySearchFilters } from "./useWaterwaySearchFilters";
 
 const { tokens } = theme;
@@ -25,48 +23,6 @@ function RegionChipEnter({ children }: { children: ReactNode }) {
     <Box ref={ref} component="span" sx={{ display: "inline-flex" }}>
       {children}
     </Box>
-  );
-}
-
-/** One filled field with a magnifier and the label as placeholder: the name search or the region search. */
-function SearchField({
-  value,
-  onChange,
-  label,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  label: string;
-}) {
-  return (
-    <TextField
-      fullWidth
-      hiddenLabel
-      placeholder={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      slotProps={{
-        htmlInput: { "aria-label": label },
-        input: {
-          sx: { pr: 0.5, minHeight: 56, "& input": { py: 1.75 } },
-          startAdornment: (
-            <SearchIcon
-              sx={{ mr: 1, color: tokens.onSurfaceVariant }}
-              fontSize="small"
-            />
-          ),
-          endAdornment: value ? (
-            <IconButton
-              aria-label="Clear"
-              onClick={() => onChange("")}
-              sx={{ width: tokens.touch.min, height: tokens.touch.min }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          ) : undefined,
-        },
-      }}
-    />
   );
 }
 

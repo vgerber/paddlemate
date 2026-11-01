@@ -9,6 +9,7 @@ import { serializeCompareIds } from "@/lib/materials/compare";
 import { paddlerRangeLabel } from "@/lib/materials/facts";
 import { formatSpec, MATERIAL_SPECS, specValue } from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
+import { withAlpha } from "@/lib/theme/alpha";
 import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
@@ -21,7 +22,7 @@ const cellSx = {
   verticalAlign: "top",
   whiteSpace: "nowrap",
   fontSize: "0.875rem",
-  borderBottom: `1px solid ${tokens.outlineVariant}`,
+  borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
 } as const;
 
 const TABLE_KEYS: readonly string[] = ["length_cm", "volume_l", "weight_kg"];
