@@ -1,4 +1,5 @@
 import type { Components } from "@mui/material/styles";
+import { focusRing } from "../focusRing";
 import { easeOut, PRESS_SCALE, slowTo } from "../press";
 import { tokens } from "../tokenVars";
 
@@ -25,10 +26,7 @@ export const surfaceComponents: Components = {
           borderRadius: radii.pill,
         },
       },
-      "*:focus-visible": {
-        outline: `2px solid ${tokens.primary}`,
-        outlineOffset: 2,
-      },
+      "*:focus-visible": focusRing(),
       // Motion off when html[data-motion] says reduced: the app's setting,
       // which already folds in the device setting (motionMode.ts). An
       // element that sets `data-reduced-fade` keeps its own short fade.

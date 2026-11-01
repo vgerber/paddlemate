@@ -1,21 +1,17 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
-import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useEffect, useRef } from "react";
 import BottomSheet from "@/components/BottomSheet";
-import { CloseIcon } from "@/lib/icons";
+import FilterGroup from "@/components/filters/FilterGroup";
+import FilterSheetFrame from "@/components/filters/FilterSheetFrame";
 import { plural } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
 import type { WaterLevel } from "@/lib/water/waterLevel";
 import DifficultySelect from "./DifficultySelect";
 import FilterChip from "./FilterChip";
 import type { WaterwaySearchFilters } from "./useWaterwaySearchFilters";
-
-const { tokens } = theme;
 
 const WATER_LEVELS: { level: WaterLevel; label: string }[] = [
   { level: "low", label: "Low" },
@@ -54,50 +50,18 @@ function FiltersBody({
     maxDiff !== "" ||
     filters.water.length > 0;
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gap: 2,
-        px: { xs: `${tokens.phone.line}px`, md: 2 },
-        pb: 2,
+    <FilterSheetFrame
+      dialogPad
+      canReset={hasAny}
+      onReset={() => {
+        filters.setMinDiff("");
+        filters.setMaxDiff("");
+        filters.setCountry("");
+        filters.clearWater();
       }}
+      onClose={onClose}
+      resultLabel={plural(total, "result")}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography variant="h4" component="h2" sx={{ lineHeight: "24px" }}>
-          Filters
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Button
-            onClick={() => {
-              filters.setMinDiff("");
-              filters.setMaxDiff("");
-              filters.setCountry("");
-              filters.clearWater();
-            }}
-            disabled={!hasAny}
-          >
-            Reset
-          </Button>
-          <IconButton
-            aria-label="Close"
-            onClick={onClose}
-            sx={{
-              width: tokens.touch.min,
-              height: tokens.touch.min,
-              mr: -1,
-              color: tokens.onSurfaceVariant,
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </Box>
       <Box ref={slot("grade")}>
         <DifficultySelect
           minDiff={minDiff}
@@ -117,21 +81,7 @@ function FiltersBody({
         />
       )}
       <Box ref={slot("water")}>
-        <Typography
-          variant="body2"
-          component="span"
-          sx={{ display: "block", mb: 0.75, fontWeight: 600 }}
-          color="textSecondary"
-        >
-          Water now
-        </Typography>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 1,
-          }}
-        >
+        <FilterGroup label="Water now" columns={3}>
           {WATER_LEVELS.map(({ level, label }) => (
             <FilterChip
               key={level}
@@ -141,16 +91,9 @@ function FiltersBody({
               plain
             />
           ))}
-        </Box>
+        </FilterGroup>
       </Box>
-      <Button
-        variant="contained"
-        onClick={onClose}
-        sx={{ height: 52, borderRadius: `${tokens.radii.md}px` }}
-      >
-        {plural(total, "result")}
-      </Button>
-    </Box>
+    </FilterSheetFrame>
   );
 }
 

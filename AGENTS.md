@@ -322,6 +322,7 @@ Component files are not util modules; cross-cutting helpers live in `lib/`:
 | `lib/map/geo.ts` | geometry math plus `lineCoords`/`pointCoords` narrowing |
 | `lib/map/mapSearch.ts` | `EMPTY_MAP_SEARCH` (the map route's full search shape) |
 | `lib/prefs/units.ts` | the device-local unit choice (`useUnits`, `currentUnits`), metric/imperial conversion, `formatQuantity`, `unitLabel`, `parseInput` / `toInputText` for form fields; never print a bare km, kg or cm |
+| `lib/theme/focusRing.ts` | `focusRing(offset)` and `focusRingSx(offset)`, the one keyboard focus outline; never hand-write `outline: 2px solid` |
 | `lib/icons.ts` | every icon, one export per idea; never import `@mui/icons-material` elsewhere |
 
 `lib/` layout: `theme/` (theme, alpha, motion, badge ink), `prefs/` (device-local
@@ -362,6 +363,11 @@ feature look like the product rather than like MUI:
 | `DescentCard` | a descent in any list (`flush` where the list owns the rule and ground) |
 | `RowMenu` | everything a list row can do - one overflow control with named actions, never a row of bare icons |
 | `TimelineRail` | the dot-and-connector rail of a timeline entry (`hollow` for something not yet real) |
+| `filters/FilterSheetFrame` + `FilterGroup` + `ChoiceChips` | every Filters sheet: title, Reset, Close and the result button; a labelled group of controls; one choice as chips |
+| `Breadcrumb` | a trail of steps (chevron trail on a desktop, chips with `chips`); the step without `onClick` is the current one |
+| `tree/TreeView` | an ARIA tree over rows that satisfy `TreeNode` (`treeKeys.ts` has the keyboard logic); the caller owns opening and choosing |
+| `RowOpenTarget` | the clickable area of a row with the focus ring; `hang` stretches it over the row padding when a sibling control (checkbox) sits beside it |
+| `PageFrame` | the centred column of a page off the map canvas, with an optional panel header card |
 
 Before writing a new list row, header, form block or dialog, read
 [doc/design.md](doc/design.md) and copy the nearest existing screen. Rows are

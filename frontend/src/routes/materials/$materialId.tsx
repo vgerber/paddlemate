@@ -7,7 +7,7 @@ import MaterialDetailView, {
 } from "@/components/materials/MaterialDetailView";
 import MaterialForm from "@/components/materials/MaterialForm";
 import PendingProposalNote from "@/components/materials/PendingProposalNote";
-import WikiPage from "@/components/materials/WikiPage";
+import PageFrame from "@/components/PageFrame";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
@@ -110,7 +110,7 @@ function MaterialPage() {
     .join(" · ");
 
   return (
-    <WikiPage
+    <PageFrame
       width={1200}
       title={modelTitle(material)}
       subtitle={subtitle}
@@ -180,7 +180,7 @@ function MaterialPage() {
           })
         }
       />
-    </WikiPage>
+    </PageFrame>
   );
 }
 

@@ -23,6 +23,7 @@ import {
   type Sample,
 } from "@/lib/gestures/swipe";
 import { withAlpha } from "@/lib/theme/alpha";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { css, prefersReducedMotion, releaseMs } from "@/lib/theme/motion";
 import { theme } from "@/lib/theme/theme";
 
@@ -333,10 +334,7 @@ export default function BottomSheet({
               p: 0,
               bgcolor: "transparent",
               width: "100%",
-              "&:focus-visible": {
-                outline: `2px solid ${tokens.primary}`,
-                outlineOffset: -2,
-              },
+              ...focusRingSx(-2),
               flexShrink: 0,
               height: tokens.touch.min,
               display: "flex",

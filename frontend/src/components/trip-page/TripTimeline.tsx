@@ -15,6 +15,7 @@ import { useTripTimeline } from "@/lib/hooks/useTrips";
 import { EventNoteIcon, LogIcon } from "@/lib/icons";
 import { formatDate, todayIso } from "@/lib/text/format";
 import { withAlpha } from "@/lib/theme/alpha";
+import { focusRing } from "@/lib/theme/focusRing";
 import { prefersReducedMotion } from "@/lib/theme/motion";
 import { fonts, theme } from "@/lib/theme/theme";
 import {
@@ -269,9 +270,7 @@ function DayEntry({
             : "none",
         outlineOffset: 2,
         // The ring wraps the whole day while its header holds the focus.
-        "&:has(> [role='button']:focus-visible)": {
-          outline: `2px solid ${tokens.primary}`,
-        },
+        "&:has(> [role='button']:focus-visible)": focusRing(0),
         ...(isOpen ? { bgcolor: withAlpha(tokens.primary, "tint") } : {}),
       }}
     >

@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
 import { withAlpha } from "@/lib/theme/alpha";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { transition } from "@/lib/theme/motion";
 import { theme } from "@/lib/theme/theme";
 
@@ -152,10 +153,7 @@ export default function ResizeGrip({
           background: dots(tokens.primary),
           boxShadow: `${tokens.elevation.e2}, inset 0 0 0 2px ${tokens.primary}`,
         },
-        "&:focus-visible": {
-          outline: `2px solid ${tokens.primary}`,
-          outlineOffset: 0,
-        },
+        ...focusRingSx(0),
       }}
     >
       <span />

@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
 import { desktopFlatRow, openRowSx } from "@/components/canvas/flatRow";
 import { phoneRowPad } from "@/components/phone/phoneGrid";
+import RowOpenTarget from "@/components/RowOpenTarget";
 import type { Proposal } from "@/lib/api";
 import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
 import { proposalKind, proposalTitle } from "@/lib/proposals";
@@ -38,7 +38,7 @@ export default function ProposalRow({
 }) {
   const hasVotes = proposal.upvotes > 0 || proposal.downvotes > 0;
   return (
-    <ButtonBase
+    <RowOpenTarget
       data-testid="proposal-card"
       aria-current={selected ? "true" : undefined}
       onClick={onSelect}
@@ -46,7 +46,6 @@ export default function ProposalRow({
         display: "flex",
         alignItems: "center",
         gap: 1,
-        textAlign: "left",
         width: "100%",
         px: "14px",
         ...phoneRowPad,
@@ -57,10 +56,6 @@ export default function ProposalRow({
         boxShadow: tokens.elevation.e1,
         ...openRowSx(selected),
         ...desktopFlatRow,
-        "&.Mui-focusVisible": {
-          outline: `2px solid ${tokens.primary}`,
-          outlineOffset: 2,
-        },
       }}
     >
       <Typography
@@ -93,6 +88,6 @@ export default function ProposalRow({
           {timeAgo(proposal.created_at)}
         </Typography>
       </Box>
-    </ButtonBase>
+    </RowOpenTarget>
   );
 }

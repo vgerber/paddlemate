@@ -42,6 +42,7 @@ import {
 } from "@/lib/icons";
 import { useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { css, ms, prefersReducedMotion, releaseMs } from "@/lib/theme/motion";
 import { theme } from "@/lib/theme/theme";
 import {
@@ -368,10 +369,7 @@ export default function FeatureSheet({ state }: { state: MapPageState }) {
             sx={{
               width: "100%",
               height: tokens.touch.min,
-              "&.Mui-focusVisible": {
-                outline: `2px solid ${tokens.primary}`,
-                outlineOffset: -2,
-              },
+              ...focusRingSx(-2),
             }}
           >
             <Box

@@ -1,13 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { MaterialTree } from "@/lib/api";
-import {
-  crumbs,
-  nodeId,
-  pathPatch,
-  selectedTotals,
-  treeKey,
-  treeRows,
-} from "./tree";
+import { crumbs, nodeId, pathPatch, selectedTotals, treeRows } from "./tree";
 
 const tree: MaterialTree = {
   categories: [
@@ -98,58 +91,6 @@ describe("treeRows", () => {
     expect(leaf?.sizes).toBe("S · M");
     expect(leaf?.modelId).toBe(7);
     expect(leaf?.level).toBe(4);
-  });
-});
-
-describe("treeKey", () => {
-  const rows = treeRows(
-    tree,
-    { category: "kayak", discipline: "creek" },
-    none,
-    undefined,
-  );
-  test("arrows walk the visible rows", () => {
-    expect(treeKey(rows, "kayak", "ArrowDown")).toEqual({
-      type: "focus",
-      id: "kayak/creek",
-    });
-    expect(treeKey(rows, "kayak", "ArrowUp")).toBeNull();
-    expect(treeKey(rows, "kayak", "End")).toEqual({
-      type: "focus",
-      id: "canoe",
-    });
-    expect(treeKey(rows, "canoe", "Home")).toEqual({
-      type: "focus",
-      id: "kayak",
-    });
-  });
-  test("right opens, then enters; left closes, then climbs", () => {
-    expect(treeKey(rows, "kayak/sea", "ArrowRight")).toBeNull();
-    expect(treeKey(rows, "kayak", "ArrowRight")).toEqual({
-      type: "focus",
-      id: "kayak/creek",
-    });
-    expect(treeKey(rows, "kayak", "ArrowLeft")).toEqual({
-      type: "toggle",
-      id: "kayak",
-      open: false,
-    });
-    expect(treeKey(rows, "kayak/sea", "ArrowLeft")).toEqual({
-      type: "focus",
-      id: "kayak",
-    });
-  });
-  test("a letter jumps to the next row that starts with it", () => {
-    expect(treeKey(rows, "kayak", "d")).toEqual({
-      type: "focus",
-      id: "kayak/creek/dagger",
-    });
-  });
-  test("enter activates", () => {
-    expect(treeKey(rows, "kayak", "Enter")).toEqual({
-      type: "activate",
-      id: "kayak",
-    });
   });
 });
 

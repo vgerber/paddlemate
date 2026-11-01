@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import { factLabelSx } from "@/components/Fact";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -36,10 +37,7 @@ export default function SizePicker({
               sx={{
                 height: tokens.touch.min,
                 minWidth: 56,
-                "&.Mui-focusVisible": {
-                  outline: `2px solid ${tokens.primary}`,
-                  outlineOffset: 2,
-                },
+                ...focusRingSx(),
               }}
             />
           );

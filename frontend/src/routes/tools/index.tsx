@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
+import PageFrame from "@/components/PageFrame";
 import PanelHeader from "@/components/PanelHeader";
 import ToolsList from "@/components/ToolsList";
 import { theme } from "@/lib/theme/theme";
@@ -17,14 +18,7 @@ function ToolsPage() {
       <Box sx={{ display: { md: "none" } }}>
         <PanelHeader title="Tools" />
       </Box>
-      <Box
-        sx={{
-          maxWidth: 880,
-          mx: "auto",
-          px: { xs: 1.5, md: 2 },
-          py: { xs: 2, md: 3 },
-        }}
-      >
+      <PageFrame roomy>
         <Box sx={{ px: { xs: `${phone.inner}px`, md: 0 } }}>
           <Typography
             variant="h3"
@@ -40,7 +34,7 @@ function ToolsPage() {
           </Typography>
         </Box>
         <ToolsList />
-      </Box>
+      </PageFrame>
     </>
   );
 }

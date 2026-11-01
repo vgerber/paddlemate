@@ -9,6 +9,7 @@ import { serializeCompareIds } from "@/lib/materials/compare";
 import { paddlerRangeLabel } from "@/lib/materials/facts";
 import { formatSpec, MATERIAL_SPECS, specValue } from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -53,10 +54,7 @@ export default function AllSizesTable({
         sx={{
           ...phoneCardSx,
           overflowX: "auto",
-          "&:focus-visible": {
-            outline: `2px solid ${tokens.primary}`,
-            outlineOffset: 2,
-          },
+          ...focusRingSx(),
         }}
       >
         <Box

@@ -19,6 +19,7 @@ import {
 import { materialTitle, modelSizes } from "@/lib/materials/facts";
 import { useUnits } from "@/lib/prefs/units";
 import { withAlpha } from "@/lib/theme/alpha";
+import { focusRing, focusRingSx } from "@/lib/theme/focusRing";
 import { css } from "@/lib/theme/motion";
 import {
   cardTitleSx,
@@ -89,10 +90,7 @@ function EntrySize({
         fontSize: "0.875rem",
         fontWeight: 600,
         maxWidth: "100%",
-        "& .MuiNativeSelect-select:focus-visible": {
-          outline: `2px solid ${tokens.primary}`,
-          outlineOffset: -2,
-        },
+        "& .MuiNativeSelect-select:focus-visible": focusRing(-2),
       }}
     >
       {sizes.map(({ id, size }) => (
@@ -397,10 +395,7 @@ export default function ComparisonTable({
           ...phoneCardSx,
           overflow: wide ? "auto" : "hidden",
           maxHeight: wide ? "calc(100dvh - 160px)" : undefined,
-          "&:focus-visible": {
-            outline: `2px solid ${tokens.primary}`,
-            outlineOffset: 2,
-          },
+          ...focusRingSx(),
         }}
       >
         <Box

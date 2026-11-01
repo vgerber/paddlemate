@@ -2,7 +2,7 @@ import Fab from "@mui/material/Fab";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import MaterialsView from "@/components/materials/MaterialsView";
-import WikiPage from "@/components/materials/WikiPage";
+import PageFrame from "@/components/PageFrame";
 import { fabSx } from "@/components/PaneFab";
 import { requireMaterials } from "@/lib/features";
 import { AddIcon } from "@/lib/icons";
@@ -41,7 +41,7 @@ function MaterialWikiPage() {
   const onAdd = () => navigate({ to: "/materials/new" });
 
   return (
-    <WikiPage
+    <PageFrame
       title="Material wiki"
       subtitle="Boats, searchable and comparable"
       onBack={() => navigate({ to: "/tools" })}
@@ -76,6 +76,6 @@ function MaterialWikiPage() {
       <Fab color="secondary" onClick={onAdd} aria-label="Add entry" sx={fabSx}>
         <AddIcon />
       </Fab>
-    </WikiPage>
+    </PageFrame>
   );
 }
