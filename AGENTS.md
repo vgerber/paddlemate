@@ -238,7 +238,11 @@ asks for them or when an agreed plan calls for them.
 - **Migrations.** One agent per wave creates migrations, with
   `cargo sqlx migrate add` as in Migrations above, so prefixes cannot collide.
   Agents share one local database; only the agent that owns the schema change
-  runs migrations against it.
+  runs migrations against it. The user's running API reads that database too,
+  so a migration applied before the merge must not remove or rename anything
+  the merged code still uses (add the new column, drop the old one in a later
+  migration after the merge), and an applied migration file is never edited -
+  a fix is a new migration.
 - **Gates.** While iterating, run the single test. Run the full gate once at
   the end: `cargo check` and `cargo test --workspace` (plus `cargo sqlx prepare`
   after any SQL change) in `api/`; `npx tsc -b --force`, `npx biome check src`,
