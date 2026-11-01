@@ -1,5 +1,5 @@
 import type { Feature, FeatureType, Proposal } from "@/lib/api";
-import { materialTitle } from "@/lib/materials/materials";
+import { materialTitle } from "@/lib/materials/facts";
 import { humanize } from "@/lib/text/format";
 
 const ENTITY_LABEL: Record<string, string> = {

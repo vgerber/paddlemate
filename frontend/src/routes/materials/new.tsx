@@ -9,10 +9,8 @@ import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useCreateMaterial } from "@/lib/hooks/useMaterials";
 import { useSession } from "@/lib/hooks/useSession";
 import { MaterialIcon } from "@/lib/icons";
-import {
-  EMPTY_MATERIAL_SEARCH,
-  emptyMaterialForm,
-} from "@/lib/materials/materials";
+import { emptyMaterialForm } from "@/lib/materials/form";
+import { EMPTY_MATERIAL_SEARCH } from "@/lib/materials/search";
 import { isProposal } from "@/lib/proposals";
 import { PANEL_HEIGHT } from "@/lib/theme/theme";
 

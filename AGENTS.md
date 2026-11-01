@@ -315,6 +315,7 @@ Component files are not util modules; cross-cutting helpers live in `lib/`:
 | Module | Owns |
 |---|---|
 | `lib/text/format.ts` | `formatDate`, `formatTime`, `durationLabel`, `timeAgo`, `humanize` (snake_case to label), `formatReading` |
+| `lib/materials/{specs,facts,search,form,compare,tree}.ts` | the material wiki: spec tables and enum labels, text for an entry, URL search, entry form, comparison, category tree |
 | `lib/water/waterLevel.ts` | `LEVEL_ORDER`, `maxLevel`, `levelConfig`, `isCalibrated` |
 | `lib/proposals.ts` | proposal labels, diffing, `proposalTitle`, `shortValue` |
 | `lib/descents.ts` | `uniqueSnapshotsBySeries`, `toPseudoSection` |

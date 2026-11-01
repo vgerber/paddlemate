@@ -6,12 +6,8 @@ import DockedAction from "@/components/DockedAction";
 import FilterChip from "@/components/search/FilterChip";
 import type { MaterialSort } from "@/lib/api";
 import { useMaterialTree } from "@/lib/hooks/useMaterials";
-import {
-  enumLabel,
-  formatFits,
-  SORT_LABELS,
-  SORTS,
-} from "@/lib/materials/materials";
+import { formatFits } from "@/lib/materials/facts";
+import { SORT_LABELS, SORTS } from "@/lib/materials/search";
 import {
   crumbs,
   pathPatch,
@@ -20,7 +16,7 @@ import {
   treeFilters,
 } from "@/lib/materials/tree";
 import { useUnits } from "@/lib/prefs/units";
-import { plural } from "@/lib/text/format";
+import { humanize, plural, sentenceCase } from "@/lib/text/format";
 import { withAlpha } from "@/lib/theme/alpha";
 import { labelSx, theme } from "@/lib/theme/theme";
 import MaterialBreadcrumb from "./MaterialBreadcrumb";
@@ -190,7 +186,7 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pb: 1 }}>
             {search.construction && (
               <FilterChip
-                label={enumLabel(search.construction)}
+                label={sentenceCase(humanize(search.construction))}
                 set
                 onDelete={() => onChange({ construction: undefined })}
                 deleteLabel="Remove construction filter"

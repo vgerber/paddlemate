@@ -14,12 +14,9 @@ import {
   buildComparison,
   COMPARE_GROUP_LABELS,
   type CompareRow,
-} from "@/lib/materials/compare";
-import {
   MAX_COMPARE,
-  materialTitle,
-  modelSizes,
-} from "@/lib/materials/materials";
+} from "@/lib/materials/compare";
+import { materialTitle, modelSizes } from "@/lib/materials/facts";
 import { useUnits } from "@/lib/prefs/units";
 import { withAlpha } from "@/lib/theme/alpha";
 import { focusRing, focusRingSx } from "@/lib/theme/focusRing";

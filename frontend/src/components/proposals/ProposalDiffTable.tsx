@@ -1,10 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { fieldLabel } from "@/components/provenance/steps";
-import {
-  materialFieldLabel,
-  materialFieldValue,
-} from "@/lib/materials/materials";
+import { materialFieldLabel, materialFieldValue } from "@/lib/materials/facts";
 import { useUnits } from "@/lib/prefs/units";
 import { diffObjects, isEmptyValue, shortValue } from "@/lib/proposals";
 import { labelSx, theme } from "@/lib/theme/theme";

@@ -1,9 +1,6 @@
 import Box from "@mui/material/Box";
 import Fact from "@/components/Fact";
-import {
-  materialFieldLabel,
-  materialFieldValue,
-} from "@/lib/materials/materials";
+import { materialFieldLabel, materialFieldValue } from "@/lib/materials/facts";
 import { useUnits } from "@/lib/prefs/units";
 import { CREATE_HIDDEN_KEYS, isDisplayable, shortValue } from "@/lib/proposals";
 import { humanize, sentenceCase } from "@/lib/text/format";

@@ -9,15 +9,11 @@ import { useState } from "react";
 import { cardRowSx, listRowSx } from "@/components/canvas/flatRow";
 import { trailSlotSx } from "@/components/phone/phoneGrid";
 import type { MaterialModel } from "@/lib/api";
-import {
-  CATEGORY_LABELS,
-  enumLabel,
-  MAX_COMPARE,
-  modelFigures,
-  modelTitle,
-  sinceLabel,
-} from "@/lib/materials/materials";
+import { MAX_COMPARE } from "@/lib/materials/compare";
+import { modelFigures, modelTitle, sinceLabel } from "@/lib/materials/facts";
+import { CATEGORY_LABELS } from "@/lib/materials/specs";
 import { useUnits } from "@/lib/prefs/units";
+import { humanize, sentenceCase } from "@/lib/text/format";
 import { focusRingSx } from "@/lib/theme/focusRing";
 import { cardTitleSx, theme } from "@/lib/theme/theme";
 
@@ -67,7 +63,7 @@ export default function ModelRow({
   const [menuAt, setMenuAt] = useState<HTMLElement | null>(null);
   const kind = [
     showCategory && CATEGORY_LABELS[model.category],
-    model.discipline && enumLabel(model.discipline),
+    model.discipline && sentenceCase(humanize(model.discipline)),
     sinceLabel(model),
   ]
     .filter(Boolean)
