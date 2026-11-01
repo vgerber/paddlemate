@@ -51,7 +51,11 @@ export const EXTRA_SCREENS: SweepScreen[] = [
   {
     name: "gauge-catalog",
     path: "/tools/gauge-catalog",
-    ready: text(/Gauge/i),
+    ready: async (page) => {
+      await text(/Gauge/i)(page);
+      // The list loads under a spinner with no name; axe must not see it.
+      await expect(page.getByRole("progressbar")).toHaveCount(0);
+    },
   },
   {
     name: "materials",
@@ -600,7 +604,7 @@ export async function tabThrough(page: Page, max = 90): Promise<Finding[]> {
       await page.evaluate(() =>
         (document.activeElement as HTMLElement | null)?.blur(),
       );
-      await page.waitForTimeout(60);
+      await page.waitForTimeout(220);
       const differs = await page.evaluate(() => {
         const w = window as unknown as SweepWindow & {
           __swSig: (e: HTMLElement) => string[][];

@@ -708,6 +708,8 @@ test.describe("the region sheet", () => {
   test("a pick shows what it is part of and the ranges the map left out @small", async ({
     page,
   }) => {
+    // Several map jumps and region fetches: 14s alone, over 30s under load.
+    test.slow();
     await openRegionMap(page);
     // Keep the ground above the peek sheet, which covers a short screen's middle.
     await page.evaluate(() =>
