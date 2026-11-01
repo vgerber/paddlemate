@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { pickEntryAction } from "../support/entryMenu";
 import {
   computed,
   expectNoHorizontalOverflow,
@@ -130,7 +131,7 @@ test.describe("comparison", () => {
   }) => {
     await openWiki(page, "?q=Testflow");
     await row(page, "Testflow Cascade").getByRole("button").first().click();
-    await page.getByRole("button", { name: "Compare sizes" }).click();
+    await pickEntryAction(page, "Compare sizes");
 
     await expect(page).toHaveURL(/\/materials\/compare\?ids=/);
     const table = page.getByRole("region", { name: "Comparison table" });
@@ -331,7 +332,7 @@ test.describe("entry", () => {
     await page.goto("/materials/9852");
     await page.getByRole("button", { name: "Entry actions" }).click();
     await expect(
-      page.getByRole("menuitem", { name: "Edit entry" }),
+      page.getByRole("menuitem", { name: "Suggest a change" }),
     ).toBeVisible();
   });
 
@@ -386,7 +387,7 @@ test.describe("adding and correcting", () => {
     await openWiki(page, "?q=Specprobe");
     await row(page, "Specprobe Alpha").getByRole("button").first().click();
     await page.getByRole("button", { name: "Entry actions" }).click();
-    await page.getByRole("menuitem", { name: "Edit entry" }).click();
+    await page.getByRole("menuitem", { name: "Suggest a change" }).click();
     // An edit that leaves the size alone sends it back as it was.
     await expect(page.getByLabel("Size", { exact: true })).toHaveValue("XL");
     await page.getByLabel(/Length/).fill("305");
@@ -394,7 +395,7 @@ test.describe("adding and correcting", () => {
     await expect(page.getByText("305 cm").first()).toBeVisible();
     await expect(page.getByText(/Last edited by/)).toBeVisible();
     await page.getByRole("button", { name: "Entry actions" }).click();
-    await page.getByRole("menuitem", { name: "Edit entry" }).click();
+    await page.getByRole("menuitem", { name: "Suggest a change" }).click();
     await expect(page.getByLabel("Size", { exact: true })).toHaveValue("XL");
     await page.getByRole("button", { name: "Cancel" }).click();
 

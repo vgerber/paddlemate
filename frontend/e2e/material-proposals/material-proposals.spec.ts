@@ -98,6 +98,37 @@ test.describe("as a paddler who is not an admin", () => {
       await withdraw(page, id);
     }
   });
+
+  test("the waiting note withdraws the request after confirming @write @small", async ({
+    page,
+  }) => {
+    await signInAs(page, "jonas");
+    await page.goto(`/materials/${ENTRY}`);
+    await page.getByRole("button", { name: "Entry actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete entry" }).click();
+    const created = proposalId(page, "DELETE");
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Send for review" })
+      .click();
+    const id = await created;
+    try {
+      const note = page.getByTestId("pending-proposals");
+      await expect(note).toContainText("Your removal request");
+      await note.getByRole("button", { name: "Withdraw" }).click();
+      const dialog = page.getByRole("dialog", {
+        name: "Withdraw this proposal?",
+      });
+      await dialog.getByRole("button", { name: "Cancel" }).click();
+      await expect(note).toBeVisible();
+      await note.getByRole("button", { name: "Withdraw" }).click();
+      await dialog.getByRole("button", { name: "Withdraw" }).click();
+      await expect(page.getByTestId("pending-proposals")).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+    } finally {
+      await withdraw(page, id);
+    }
+  });
 });
 
 test.describe("as the admin", () => {

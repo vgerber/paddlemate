@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { pickEntryAction } from "../support/entryMenu";
 import { expectNoHorizontalOverflow } from "../support/fixture";
 import { API, bearer, signInAs } from "../support/signIn";
 
@@ -16,7 +17,7 @@ const PNG = Buffer.from(
 );
 
 async function pickPhoto(page: Page) {
-  await page.getByTestId("add-photo").first().click();
+  await pickEntryAction(page, "Add photo");
   const dialog = page.getByRole("dialog");
   await dialog.getByTestId("add-photo-input").setInputFiles({
     name: "paddle.png",
@@ -73,7 +74,7 @@ test.describe("signed out", () => {
     page,
   }) => {
     await page.goto(`/materials/${ENTRY}`);
-    await page.getByTestId("add-photo").first().click();
+    await pickEntryAction(page, "Add photo");
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText("Sign in to add a photo");
     await expect(dialog.getByRole("button", { name: "Sign in" })).toBeVisible();
@@ -104,9 +105,6 @@ test("an admin's photo is live on every size of the model @write", async ({
     await expect(photo).toContainText("Photo: Test Paddler");
     // No source page: the credit is text, not a link.
     await expect(photo.getByRole("link")).toHaveCount(0);
-    await expect(
-      page.getByTestId("suggest-change").getByTestId("add-photo"),
-    ).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
 
     await page.goto(`/materials/${SIZE_S}`);
@@ -123,7 +121,7 @@ test("an oversized or non-image file is refused before it is sent @small", async
   page,
 }) => {
   await page.goto(`/materials/${ENTRY}`);
-  await page.getByTestId("add-photo").first().click();
+  await pickEntryAction(page, "Add photo");
   const dialog = page.getByRole("dialog");
   await dialog.getByTestId("add-photo-input").setInputFiles({
     name: "notes.txt",

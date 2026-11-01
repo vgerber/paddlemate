@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
+import Breadcrumb, { type Crumb } from "@/components/Breadcrumb";
 import PanelHeader from "@/components/PanelHeader";
 import { PANEL_HEIGHT, theme } from "@/lib/theme/theme";
 
@@ -41,6 +42,7 @@ export default function PageFrame({
   subtitle,
   onBack,
   actions,
+  trail,
   width = 880,
   headerOnPhoneOnly = false,
   roomy = false,
@@ -51,6 +53,9 @@ export default function PageFrame({
   subtitle?: string;
   onBack?: () => void;
   actions?: ReactNode;
+  /** The trail above the header card on a desktop (a phone has the back
+   * arrow): where the page sits, each step but the last a way back. */
+  trail?: Crumb[];
   /** Widest the column grows on a desktop. */
   width?: number;
   /** The screen draws its own title on a desktop (the wiki list does, beside
@@ -77,6 +82,11 @@ export default function PageFrame({
         }),
       }}
     >
+      {trail && (
+        <Box sx={{ display: { xs: "none", md: "block" } }}>
+          <Breadcrumb crumbs={trail} />
+        </Box>
+      )}
       {title != null && (
         <HeaderCard
           display={headerOnPhoneOnly ? { xs: "block", md: "none" } : undefined}

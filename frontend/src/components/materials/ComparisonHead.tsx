@@ -26,7 +26,7 @@ function EntrySize({
     return material.size ? (
       <Typography
         variant="body2"
-        sx={{ fontWeight: 600, minHeight: 44, py: 1.25 }}
+        sx={{ fontWeight: 600, minHeight: tokens.touch.min, py: 1.25 }}
       >
         {material.size}
       </Typography>
@@ -110,7 +110,10 @@ export default function ComparisonHead({
           minHeight: tokens.touch.min,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          // Names start at the top and the size picker sits at the foot, so
+          // the pickers of all columns share a line.
+          justifyContent: "flex-start",
+          flex: "1 1 auto",
         }}
       >
         <Typography

@@ -3,7 +3,6 @@ import ButtonBase from "@mui/material/ButtonBase";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import AddPhotoButton from "@/components/materials/AddPhotoButton";
 import PhotoViewer from "@/components/media/PhotoViewer";
 import type { Material } from "@/lib/api";
 import { OpenExternalIcon } from "@/lib/icons";
@@ -35,11 +34,12 @@ export default function MaterialGallery({ material }: { material: Material }) {
           display: "grid",
           gridTemplateColumns:
             "repeat(auto-fill, minmax(min(100%, 240px), 1fr))",
-          gap: 2,
+          gap: 1,
           listStyle: "none",
           m: 0,
           p: 0,
-          mb: 2,
+          mx: { xs: `${tokens.phone.edge}px`, md: 0 },
+          mb: 1,
         }}
       >
         {material.images.map((image, i) => (
@@ -75,9 +75,6 @@ export default function MaterialGallery({ material }: { material: Material }) {
           </Box>
         ))}
       </Box>
-      <Box sx={{ mb: 1 }}>
-        <AddPhotoButton material={material} />
-      </Box>
       <PhotoViewer
         photos={photos}
         index={viewing}
@@ -105,6 +102,8 @@ function PhotoCredit({
     alignItems: "center",
     gap: 0.75,
     minHeight: tokens.touch.min,
+    // The credit sits on the text line of the cards below.
+    px: `${tokens.phone.inner}px`,
     overflowWrap: "anywhere",
   } as const;
   if (!pageUrl) {

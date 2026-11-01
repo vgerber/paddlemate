@@ -1,13 +1,9 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import ButtonBase from "@mui/material/ButtonBase";
 import Typography from "@mui/material/Typography";
-import { useNavigate } from "@tanstack/react-router";
-import { Fragment } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { phoneCardSx } from "@/components/phone/phoneGrid";
 import type { Material } from "@/lib/api";
-import { CompareIcon } from "@/lib/icons";
-import { serializeCompareIds } from "@/lib/materials/compare";
 import { sizeTableRows } from "@/lib/materials/specRows";
 import { useUnits } from "@/lib/prefs/units";
 import { withAlpha } from "@/lib/theme/alpha";
@@ -27,6 +23,46 @@ const cellSx = {
   borderBottom: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
 } as const;
 
+/** Which edges of a scroller hide more: kept current on scroll and resize. */
+function useScrollEdges() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ start: false, end: false });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const start = el.scrollLeft > 1;
+      const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+      setEdges((prev) =>
+        prev.start === start && prev.end === end ? prev : { start, end },
+      );
+    };
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    return () => {
+      el.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
+  }, []);
+  return { ref, edges };
+}
+
+const FADE = 28;
+
+/** A mask that fades the edges where the table scrolls on, so a cut-off
+ * column reads as more to see and not as the end. */
+const fadeMask = (edges: { start: boolean; end: boolean }) => {
+  if (!edges.start && !edges.end) return undefined;
+  const from = edges.start ? `transparent, black ${FADE}px` : "black, black";
+  const to = edges.end
+    ? `black calc(100% - ${FADE}px), transparent`
+    : "black, black";
+  return `linear-gradient(to right, ${from}, ${to})`; /* mask */
+};
+
 /** Every size of a model side by side, the only place its per-size specs
  * are listed. A size's column heading picks it (the URL holds the entry), and
  * the picked column is washed. Scrolls inside its own box. */
@@ -40,7 +76,7 @@ export default function AllSizesTable({
   onPick: (id: number) => void;
 }) {
   const [units] = useUnits();
-  const navigate = useNavigate();
+  const { ref, edges } = useScrollEdges();
   const rows = sizeTableRows(materials, units);
   const grouped = new Set(rows.map((row) => row.group)).size > 1;
   const picked = (id: number) => id === pickedId;
@@ -49,12 +85,14 @@ export default function AllSizesTable({
   return (
     <Box>
       <Box
+        ref={ref}
         role="region"
         aria-label="All sizes"
         tabIndex={0}
         sx={{
           ...phoneCardSx,
           overflowX: "auto",
+          maskImage: fadeMask(edges),
           ...focusRingSx(),
         }}
       >
@@ -63,9 +101,7 @@ export default function AllSizesTable({
           data-testid="all-sizes"
           sx={{
             borderCollapse: "collapse",
-            width: { xs: "100%", md: "max-content" },
-            minWidth: { md: 420 },
-            maxWidth: "100%",
+            width: "100%",
           }}
         >
           <thead>
@@ -147,18 +183,6 @@ export default function AllSizesTable({
           </tbody>
         </Box>
       </Box>
-      <Button
-        onClick={() =>
-          navigate({
-            to: "/materials/compare",
-            search: { ids: serializeCompareIds(materials.map((m) => m.id)) },
-          })
-        }
-        startIcon={<CompareIcon />}
-        sx={{ minHeight: tokens.touch.min, mt: 0.5 }}
-      >
-        Compare sizes
-      </Button>
     </Box>
   );
 }

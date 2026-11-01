@@ -17,11 +17,10 @@ export interface OverviewRow {
 }
 
 /** The overview as aligned label and value rows, a dimmed rule between
- * them. The block keeps a readable width instead of stretching its columns
- * across a wide card. */
+ * them. */
 export default function OverviewRows({ rows }: { rows: OverviewRow[] }) {
   return (
-    <Box data-testid="overview" sx={{ maxWidth: { md: 560 } }}>
+    <Box data-testid="overview">
       {rows.map((row) => (
         <Box
           key={row.label}

@@ -180,7 +180,7 @@ test.describe("availability", () => {
     );
 
     await page.getByRole("button", { name: "Entry actions" }).click();
-    await page.getByRole("menuitem", { name: "Edit entry" }).click();
+    await page.getByRole("menuitem", { name: "Suggest a change" }).click();
     await expect(page.getByLabel("Availability source")).toHaveValue(
       "https://example.com/archive",
     );

@@ -1,17 +1,21 @@
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import ComparisonTable from "@/components/materials/ComparisonTable";
-import { WIKI_WIDTH } from "@/components/materials/wikiLayout";
+import { WIKI_WIDTH, wikiPageTrail } from "@/components/materials/wikiLayout";
 import PageFrame from "@/components/PageFrame";
 import EmptyState from "@/components/states/EmptyState";
 import QueryStates from "@/components/states/QueryStates";
 import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
-import { CompareIcon } from "@/lib/icons";
-import { parseCompareIds, serializeCompareIds } from "@/lib/materials/compare";
+import { AddIcon, CompareIcon } from "@/lib/icons";
+import {
+  MAX_COMPARE,
+  parseCompareIds,
+  serializeCompareIds,
+} from "@/lib/materials/compare";
 import { EMPTY_MATERIAL_SEARCH, searchText } from "@/lib/materials/search";
-import { plural } from "@/lib/text/format";
 
 export const Route = createFileRoute("/materials/compare")({
   beforeLoad: () => requireMaterials(),
@@ -25,13 +29,13 @@ export const Route = createFileRoute("/materials/compare")({
  * so the page is a link somebody can send. */
 function ComparePage() {
   const navigate = useNavigate({ from: "/materials/compare" });
-  const goBack = useGoBack(() =>
+  const toWiki = () =>
     navigate({
       to: "/materials",
       search: EMPTY_MATERIAL_SEARCH,
       replace: true,
-    }),
-  );
+    });
+  const goBack = useGoBack(toWiki);
   const { ids } = Route.useSearch();
   const compareIds = parseCompareIds(ids);
   const query = useMaterialComparison(compareIds);
@@ -65,8 +69,22 @@ function ComparePage() {
   return (
     <PageFrame
       title="Compare"
-      subtitle={plural(compareIds.length, "entry", "entries")}
+      subtitle={`${compareIds.length} of ${MAX_COMPARE} entries`}
       onBack={goBack}
+      trail={wikiPageTrail(
+        { onTools: () => navigate({ to: "/tools" }), onWiki: toWiki },
+        { label: "Compare" },
+      )}
+      actions={
+        <IconButton
+          title="Add to comparison"
+          aria-label="Add to comparison"
+          disabled={compareIds.length >= MAX_COMPARE}
+          onClick={add}
+        >
+          <AddIcon />
+        </IconButton>
+      }
       width={WIKI_WIDTH}
     >
       <Box sx={{ pt: 1, pb: 3 }}>
@@ -90,7 +108,6 @@ function ComparePage() {
               materials={materials}
               onRemove={remove}
               onResize={resize}
-              onAdd={add}
             />
           </QueryStates>
         )}

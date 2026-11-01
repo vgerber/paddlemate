@@ -1,15 +1,16 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import AddPhotoButton from "@/components/materials/AddPhotoButton";
 import type { Material } from "@/lib/api";
 import { missingFields, missingSentence } from "@/lib/materials/missing";
+import { withAlpha } from "@/lib/theme/alpha";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
-/** The quiet invitation at the end of an entry's facts: what is missing, if
- * anything, and a link into the edit form (a proposal for non-admins). */
+/** The one prompt of an entry's page, closing its overview card: what is
+ * missing and the way to add it (a proposal for non-admins). Nothing when
+ * nothing is missing - the header menu has the action for the rest. */
 export default function SuggestChange({
   material,
   onSuggest,
@@ -18,6 +19,7 @@ export default function SuggestChange({
   onSuggest: () => void;
 }) {
   const sentence = missingSentence(missingFields(material));
+  if (!sentence) return null;
   return (
     <Box
       data-testid="suggest-change"
@@ -25,20 +27,16 @@ export default function SuggestChange({
         display: "flex",
         flexWrap: "wrap",
         alignItems: "center",
+        justifyContent: "space-between",
         columnGap: 1,
-        px: { xs: `${tokens.phone.edge}px`, md: 0 },
-        py: 1,
+        pt: 0.5,
+        borderTop: `1px solid ${withAlpha(tokens.outlineVariant, "hairline")}`,
       }}
     >
-      <Typography
-        variant="body2"
-        color="textSecondary"
-        sx={{ flex: "1 1 auto" }}
-      >
-        {sentence || "Something wrong?"}
+      <Typography variant="body2" color="textSecondary">
+        {sentence}
       </Typography>
-      {material.images.length === 0 && <AddPhotoButton material={material} />}
-      <Button onClick={onSuggest} sx={{ minHeight: tokens.touch.min }}>
+      <Button onClick={onSuggest} sx={{ minHeight: tokens.touch.min, mx: -1 }}>
         Suggest a change
       </Button>
     </Box>
