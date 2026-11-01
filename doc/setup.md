@@ -175,13 +175,24 @@ The API creates the database, tables and views itself (`api/analytics/*.sql`,
 sent in batches (1000 rows or 5 s); a failed insert drops the batch with a
 warning and counts `analytics_events_dropped_total`, requests never wait.
 
-**On the NAS**: run ClickHouse (about 1 GB server memory, data volume in the
-backups), set `ANALYTICS_URL` in `deploy/backend/.env` to its address on the
-NAS network (never the internet), use a user that may INSERT on
-`paddlemate.*` (and create the schema, or apply `api/analytics/0001_events.sql`
-once as an admin with `{database}` replaced), and give Grafana a read-only user
-on the datasource uid `clickhouse`. Import
-`deploy/analytics/api-usage.dashboard.json` (uid `paddlemate-api-usage`).
+**On the NAS**: ClickHouse runs in the monitoring stack (node-setup project,
+`nas1/monitoring`), about 1 GB server memory, nightly `BACKUP DATABASE
+paddlemate`. The API container joins its external docker network `analytics`
+(see `deploy/backend/docker-compose.yml`) and reaches it as
+`http://clickhouse:8123`. `deploy/backend/.env` gets:
+
+```
+ANALYTICS_URL=http://clickhouse:8123
+ANALYTICS_USER=paddlemate_ingest
+ANALYTICS_DATABASE=paddlemate
+ANALYTICS_PASSWORD=<from /volume1/services/monitoring/secrets/clickhouse_ingest_password on the NAS>
+```
+
+`paddlemate_ingest` may create and insert in `paddlemate.*` only (no DROP or
+ALTER), so a schema change after the first deploy needs the tables dropped by
+the NAS admin first. Grafana reads with a read-only user on the datasource uid
+`clickhouse`; `deploy/analytics/api-usage.dashboard.json` (uid
+`paddlemate-api-usage`) is provisioned there as "Paddlemate API usage".
 
 **Privacy: anonymous by design**
 

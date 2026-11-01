@@ -49,9 +49,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # "analytics" is the NAS monitoring stack's network; ClickHouse answers
+    # there as http://clickhouse:8123 (ANALYTICS_URL). It must exist before
+    # `up`, which is the case once that stack runs.
     networks:
       - backend
+      - analytics
 
 networks:
   backend:
     name: paddlemate-backend
+  analytics:
+    external: true
