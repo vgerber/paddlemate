@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import PanelHeader from "@/components/PanelHeader";
 import ProposalCreateSummary from "@/components/proposals/ProposalCreateSummary";
 import ProposalDetailPane from "@/components/proposals/ProposalDetailPane";
+import ProposalPhoto from "@/components/proposals/ProposalPhoto";
 import ProposalReviewControls from "@/components/proposals/ProposalReviewControls";
 import ProposalVoteBar from "@/components/proposals/ProposalVoteBar";
 import SectionHeading from "@/components/SectionHeading";
@@ -116,12 +117,17 @@ export default function ProposalDetailView({
           </Typography>
         )}
 
-        {proposal.operation === "create" && (
-          <ProposalCreateSummary
-            proposed={proposed}
-            entityType={proposal.entity_type}
-          />
+        {proposal.entity_type === "material_photo" && (
+          <ProposalPhoto proposal={proposal} />
         )}
+
+        {proposal.operation === "create" &&
+          proposal.entity_type !== "material_photo" && (
+            <ProposalCreateSummary
+              proposed={proposed}
+              entityType={proposal.entity_type}
+            />
+          )}
 
         {proposal.operation === "delete" &&
           proposal.entity_type === "material" &&
@@ -132,7 +138,9 @@ export default function ProposalDetailView({
             />
           )}
 
-        <ProposalDetailPane proposal={proposal} showMap={!docked} />
+        {proposal.entity_type !== "material_photo" && (
+          <ProposalDetailPane proposal={proposal} showMap={!docked} />
+        )}
 
         {proposal.review_note && (
           <Typography variant="caption" color="textSecondary">

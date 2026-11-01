@@ -55,7 +55,8 @@ async fn list_proposals_page(
            LEFT JOIN users su ON su.id = p.submitted_by
            LEFT JOIN users ru ON ru.id = p.reviewed_by
            WHERE ($2::text   IS NULL OR p.status       = $2)
-             AND ($3::text   IS NULL OR p.entity_type  = $3)
+             AND ($3::text   IS NULL OR p.entity_type  = $3
+                  OR ($3 = 'material' AND p.entity_type = 'material_photo'))
              AND ($4::text   IS NULL OR p.operation    = $4)
              AND ($5::text   IS NULL OR p.submitted_by = $5)
              AND ($11::text  IS NULL OR p.status = 'pending' OR p.submitted_by = $11)

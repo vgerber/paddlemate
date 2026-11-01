@@ -142,10 +142,13 @@ pub struct MaterialImage {
     /// The display copy, served from this API's media path.
     pub url: String,
     pub thumb_url: String,
-    /// The page the photo came from, for the credit link.
-    pub page_url: String,
-    /// Whose photo it is (the maker).
+    /// The page the photo came from, for the credit link; null for a photo
+    /// a paddler uploaded.
+    pub page_url: Option<String>,
+    /// Whose photo it is (the maker, or the uploader's chosen credit).
     pub credit: String,
+    /// Where it came from: `maker`, `retailer` or `user`.
+    pub source_kind: String,
 }
 
 /// One entry in the material wiki. The measurements are flat and each names

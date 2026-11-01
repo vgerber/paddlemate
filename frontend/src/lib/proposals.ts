@@ -7,6 +7,7 @@ const ENTITY_LABEL: Record<string, string> = {
   water_section: "Section",
   feature: "Feature",
   material: "Wiki entry",
+  material_photo: "Wiki photo",
 };
 
 const KIND_ENTITY: Record<string, string> = {
@@ -14,6 +15,7 @@ const KIND_ENTITY: Record<string, string> = {
   water_section: "section",
   feature: "feature",
   material: "wiki entry",
+  material_photo: "wiki photo",
 };
 
 /** What a proposal is in a paddler's words: "New feature", "Changed
@@ -156,7 +158,10 @@ export function isProposal(result: unknown): result is Proposal {
 export function proposalTitle(proposal: Proposal): string {
   const proposed = (proposal.proposed_data ?? {}) as Record<string, unknown>;
   const original = (proposal.original_data ?? {}) as Record<string, unknown>;
-  if (proposal.entity_type === "material") {
+  if (
+    proposal.entity_type === "material" ||
+    proposal.entity_type === "material_photo"
+  ) {
     const entry = typeof proposed.brand === "string" ? proposed : original;
     if (typeof entry.brand === "string" && typeof entry.model === "string") {
       return materialTitle({

@@ -30,6 +30,7 @@ pub enum ProposalEntityType {
     WaterSection,
     Feature,
     Material,
+    MaterialPhoto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

@@ -1,6 +1,6 @@
 import { createBatcher } from "@/lib/batcher";
 import type { ViewBounds } from "@/lib/map/geo";
-import { ApiError, client, postForm } from "./client";
+import { ApiError, client, fetchBlobUrl, postForm } from "./client";
 import type { components, operations } from "./schema.d.ts";
 
 export type Waterway = components["schemas"]["Waterway"];
@@ -99,6 +99,15 @@ export type PushSubscriptionEntry = components["schemas"]["PushSubscription"];
 export type CreatePushSubscriptionRequest =
   components["schemas"]["CreatePushSubscriptionRequest"];
 export type Material = components["schemas"]["Material"];
+
+/** What the photo form sends. */
+export interface MaterialPhotoUpload {
+  file: File;
+  rightsConfirmed: boolean;
+  /** Blank: the server uses the uploader's username. */
+  credit?: string;
+  note?: string;
+}
 export type MaterialProposalBody =
   components["schemas"]["Proposable_for_MaterialBody"];
 /** The entry fields alone; a write may also carry `proposal_note`. */
@@ -650,6 +659,26 @@ export const materialsApi = {
     });
     return data;
   },
+  /** 201 with the photo for an admin, 202 with a Proposal for others. */
+  addPhoto: (
+    materialId: number,
+    photo: MaterialPhotoUpload,
+    onProgress?: (fraction: number) => void,
+  ) => {
+    const data = new FormData();
+    data.append("file", photo.file);
+    data.append("rights_confirmed", String(photo.rightsConfirmed));
+    if (photo.credit) data.append("credit", photo.credit);
+    if (photo.note) data.append("proposal_note", photo.note);
+    return postForm<MaterialImage | Proposal>(
+      `/api/v1/materials/${materialId}/images`,
+      data,
+      onProgress,
+    );
+  },
+  /** An object URL for a photo still under review (revoke it when done). */
+  previewPhoto: (materialId: number, imageId: number) =>
+    fetchBlobUrl(`/api/v1/materials/${materialId}/images/${imageId}/preview`),
   /** Admin takedown of one photo. */
   removeImage: async (materialId: number, imageId: number) => {
     await client.DELETE("/api/v1/materials/{material_id}/images/{image_id}", {

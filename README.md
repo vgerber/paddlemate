@@ -76,7 +76,8 @@ water levels, and a shared logbook.
   they fit, and comparable side by side property for property. It
   comes pre-filled with whitewater kayaks and paddles, with credited photos,
   colourways and source links; admins can take photos down. Any signed-in
-  paddler can propose a new entry, a correction or a removal; an admin
+  paddler can add a photo (shown on every size of the model once an admin
+  approves it) and can propose a new entry, a correction or a removal; an admin
   reviews it with the other proposals.
 - **Community** - voting on proposals, comments on
   sections and features, favorites (listed as starred sections), follows, and per-user or

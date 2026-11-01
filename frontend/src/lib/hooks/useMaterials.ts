@@ -5,10 +5,12 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { announceIfProposal } from "@/components/proposals/ProposalSentSnackbar";
 import type {
   MaterialCategory,
   MaterialFilters,
+  MaterialPhotoUpload,
   MaterialProposalBody,
 } from "@/lib/api";
 import { materialsApi } from "@/lib/api";
@@ -163,6 +165,30 @@ export function useDeleteMaterial() {
   });
 }
 
+/** Add a photo to an entry. An admin's is live (the caches refresh); anyone
+ * else's is a proposal and the wiki stays as it was. `progress` is the
+ * fraction of the file sent so far. */
+export function useAddMaterialPhoto(materialId: number) {
+  const qc = useQueryClient();
+  const [progress, setProgress] = useState<number | null>(null);
+  const mutation = useMutation({
+    mutationFn: (photo: MaterialPhotoUpload) =>
+      materialsApi.addPhoto(materialId, photo, setProgress),
+    // The dialog renders the failure next to its button.
+    meta: { errorHandledLocally: true },
+    onSuccess: (result) => {
+      if (isProposal(result)) {
+        qc.invalidateQueries({ queryKey: proposalKeys.all });
+        announceIfProposal(result);
+        return;
+      }
+      qc.invalidateQueries({ queryKey: materialKeys.all });
+    },
+    onSettled: () => setProgress(null),
+  });
+  return { ...mutation, progress };
+}
+
 export function useRemoveMaterialImage(materialId: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -178,4 +204,34 @@ export function useRemoveBrandImages() {
     mutationFn: (brand: string) => materialsApi.removeBrandImages(brand),
     onSuccess: () => qc.invalidateQueries({ queryKey: materialKeys.all }),
   });
+}
+
+/** The picture of a photo waiting for review, loaded with the caller's token
+ * (the file is not public yet). `failed` is true when it cannot be shown. */
+export function useMaterialPhotoPreview(
+  materialId: number | null,
+  imageId: number | null,
+) {
+  const [state, setState] = useState<{ url: string | null; failed: boolean }>({
+    url: null,
+    failed: false,
+  });
+  useEffect(() => {
+    if (materialId == null || imageId == null) return;
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    materialsApi.previewPhoto(materialId, imageId).then(
+      (url) => {
+        objectUrl = url;
+        if (cancelled) URL.revokeObjectURL(url);
+        else setState({ url, failed: false });
+      },
+      () => !cancelled && setState({ url: null, failed: true }),
+    );
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [materialId, imageId]);
+  return state;
 }

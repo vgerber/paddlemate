@@ -183,6 +183,22 @@ never fetched again. The photos arrive gradually after an update (one request
 per site every two seconds), so a fresh install shows entries without photos
 for a while.
 
+### Adding your own photo
+
+Signed in, you can add a photo to an entry: "Add photo" sits beside the photos
+(and in "Suggest a change" when the entry has none). Pick a file or, on a
+phone, take one; you see a preview, tick that the photo is yours or that you
+may share it (required), and may change the credit line, which starts as your
+username. It is shown as "Photo: <credit>". The photo belongs to the whole
+model: it shows on every size of it, the way the model's thumbnail already
+does. An admin's photo is live at once. Anyone else's is "Sent for review":
+it is not shown to anyone, the admin sees it on the proposals screen (filter
+"Wiki") with the picture and approves or rejects it. A rejected or withdrawn
+photo is deleted, file included; you can withdraw your own waiting photo from
+the proposals screen. Admins remove any live photo with "Remove photo".
+Limits: 8 MB, JPEG, PNG, WebP or GIF (never SVG), 10 photos a day, 5 waiting
+at once, 6 uploaded photos per model.
+
 An entry a user has corrected is never overwritten by a later import of the
 catalogue.
 
@@ -409,8 +425,55 @@ caller. An admin's write applies (201, 200, 204); anyone else's is stored as a
 | DELETE | `/materials/{material_id}/images/{image_id}` | Take down one photo (admin); 404 if the photo belongs to another entry |
 | DELETE | `/materials/images?brand=` | Take down every photo of a brand (admin); 400 without `brand`; `{removed: n}` |
 
-Every entry carries `images[{id, url, thumb_url, page_url, credit}]`, fetched
-photos only.
+Every entry carries `images[{id, url, thumb_url, page_url, credit, source_kind}]`,
+live photos only. `source_kind` is `maker` or `retailer` (mirrored; `page_url`
+is the source page) or `user` (uploaded; `page_url` is null). A mirrored photo
+belongs to its entry; an uploaded one is stored on the entry it was added to
+and `images::attach` also shows it on every other size of the model (the model
+key in SQL), so `DELETE .../images/{image_id}` finds a user photo through any
+size of its model.
+
+#### Photo upload
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| POST | `/materials/{material_id}/images` | Multipart: `file`, `rights_confirmed=true` (required), optional `credit` (80 chars, one line, default the username), `proposal_note`. Admin 201 `MaterialImage`; others 202 `Proposal`; 400 (not an image, over 8 MB, no rights statement, bad credit); 404; 429 over a cap |
+| GET | `/materials/{material_id}/images/{image_id}/preview` | The JPEG of a photo under review; its uploader or an admin, `Cache-Control: private, no-store`; 404 otherwise |
+
+Migrations `0074` (status `review`) and `0075` (`source_kind`, `uploaded_by`,
+`created_at`, `rights_confirmed_at`; proposals accept `material_photo`). An
+uploaded row keeps the NOT NULL link columns filled with placeholders
+(`https://upload.invalid/<key>`, host `upload.invalid`, empty `page_url`), so
+older code reading mirrored rows keeps working; the mirror takes only
+`pending` rows and `allowed_hosts` skips `user` rows. A file is held while the
+status is `fetched` or `review`.
+
+A non-admin upload is one transaction (`proposals::material::submit_photo`):
+the caps under per-user and per-model advisory locks, the `review` row, and a
+proposal `entity_type = material_photo`, `entity_id` the entry, operation
+`create`, `proposed_data {image_id, credit, brand, model, variant, size}`. The
+file's address is not in it: pending proposals are listed publicly and the
+photo is not public until approved (the reviewer's page loads the picture from
+the preview route, which needs sign-in). Approval sets the row `fetched`;
+rejection and withdrawal delete the row in the same transaction and the files
+after commit. `media::sweep_orphans` counts every `material_images.file`, so a
+crash in between is cleaned up.
+
+| Guard | Where | Test (`api/tests/material_photos.rs`) |
+| --- | --- | --- |
+| Rights statement required | route | `the_rights_statement_is_required` |
+| 8 MB, real image, no SVG, at most 60 megapixels | route, `media::encode_copies` | `only_real_images_within_the_size_limit_are_accepted`, `media::tests::svg_and_huge_canvases_are_refused` |
+| 10 a day, 5 waiting, 6 per model, under locks | `materials::photos::check_in` | `a_user_may_upload_ten_photos_a_day`, `a_member_may_have_five_photos_waiting`, `a_model_holds_six_uploaded_photos_across_its_sizes` |
+| Cap checked before decoding; no file left behind | route | `a_capped_upload_is_refused_before_decoding_and_leaves_no_file` |
+| Entry exists, sign-in | route, `check_in` | `uploads_need_sign_in_and_an_existing_entry` |
+| Preview only for the uploader or an admin | `photos::preview_file` | `a_member_photo_waits_for_review_and_shows_after_approval` |
+| Reject / withdraw delete the file; only the submitter or an admin withdraws | `proposals::review` | `a_rejected_photo_is_deleted_with_its_file`, `a_withdrawn_photo_is_deleted_with_its_file` |
+| Takedown stays in the model, files deleted | `images::remove_one` | `an_admin_takes_down_any_photo_and_the_file_goes`, `a_photo_is_not_reachable_through_another_model` |
+| Sweeper keeps files under review | `media::sweep_orphans` | `the_sweeper_keeps_files_under_review` |
+
+Writes use the shared write rate limit. Known limits: an approved photo is
+not re-checked against the per-model cap, and an admin who takes down a photo
+under review leaves its proposal pending (approving it then does nothing).
 
 The list takes `q`, `category`, `discipline`, `construction`, `brand`,
 `min_length_cm`/`max_length_cm`, `min_volume_l`/`max_volume_l`,

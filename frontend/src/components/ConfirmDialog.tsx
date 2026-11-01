@@ -16,6 +16,8 @@ interface ConfirmDialogProps {
   pendingLabel?: string;
   color?: "primary" | "error" | "success";
   pending?: boolean;
+  /** Holds the confirm button back until the content is filled in. */
+  confirmDisabled?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   /** Extra content between body and actions (a note field, an error alert). */
@@ -32,6 +34,7 @@ export default function ConfirmDialog({
   pendingLabel,
   color = "primary",
   pending = false,
+  confirmDisabled = false,
   onCancel,
   onConfirm,
   children,
@@ -64,7 +67,7 @@ export default function ConfirmDialog({
           variant="contained"
           onClick={onConfirm}
           color={color}
-          disabled={pending}
+          disabled={pending || confirmDisabled}
         >
           {pending ? (pendingLabel ?? confirmLabel) : confirmLabel}
         </Button>

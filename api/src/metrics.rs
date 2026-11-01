@@ -82,7 +82,9 @@ pub fn rate_limited(budget: &'static str) {
 /// known entity types are used as a label.
 pub fn proposal_submitted(entity_type: &str) {
     let label = match entity_type {
-        "waterway" | "water_section" | "feature" | "material" => entity_type.to_string(),
+        "waterway" | "water_section" | "feature" | "material" | "material_photo" => {
+            entity_type.to_string()
+        }
         _ => "other".to_string(),
     };
     metrics::counter!("proposals_submitted_total", "entity_type" => label).increment(1);

@@ -2,6 +2,7 @@ use aide::axum::IntoApiResponse;
 
 mod images;
 mod models;
+mod photos;
 mod tree;
 use axum::{
     Extension, Json,
@@ -432,7 +433,7 @@ where
 }
 
 pub fn materials_routes(state: AppState) -> aide::axum::ApiRouter {
-    use aide::axum::routing::{delete_with, get_with};
+    use aide::axum::routing::{delete_with, get_with, post_with};
 
     aide::axum::ApiRouter::new()
         .api_route(
@@ -454,8 +455,17 @@ pub fn materials_routes(state: AppState) -> aide::axum::ApiRouter {
             ),
         )
         .api_route(
+            "/{material_id}/images",
+            post_with(photos::add_photo, photos::add_photo_docs)
+                .layer(crate::routes::waterways::media::upload_body_limit()),
+        )
+        .api_route(
             "/{material_id}/images/{image_id}",
             delete_with(images::remove_image, images::remove_image_docs),
+        )
+        .api_route(
+            "/{material_id}/images/{image_id}/preview",
+            get_with(photos::preview_photo, photos::preview_photo_docs),
         )
         .api_route(
             "/{material_id}",

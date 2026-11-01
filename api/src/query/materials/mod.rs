@@ -2,6 +2,7 @@ use sqlx::{PgPool, QueryBuilder, Row, postgres::PgRow};
 
 pub mod images;
 pub mod models;
+pub mod photos;
 pub mod tree;
 mod write;
 
