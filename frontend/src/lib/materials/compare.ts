@@ -26,16 +26,11 @@ export const COMPARE_GROUP_LABELS: Record<CompareGroup, string> = {
   shaft: "Shaft",
 };
 
-/** Numbers closer than this share of the larger one read as equal, so no bar
- * is drawn for a row the entries barely differ in. */
-export const BAR_THRESHOLD = 0.05;
-
 /** What one entry says in one row: `id` decides whether two entries agree,
- * `text` is what the cell shows, `num` (metric) is what a bar measures. */
+ * `text` is what the cell shows. */
 interface Reading {
   id: string;
   text: string;
-  num?: number;
 }
 
 interface Field {
@@ -44,8 +39,6 @@ interface Field {
   label: string;
   /** Unit of the row, shown in the label and the alike chip. */
   quantity?: (materials: Material[]) => Quantity;
-  /** Draw bars under the numbers when they differ enough. */
-  bar?: boolean;
   read: (
     material: Material,
     units: Units,
@@ -70,7 +63,6 @@ function measure(
   return {
     id: String(value),
     text: bareQuantity(quantity, value, units),
-    num: value,
   };
 }
 
@@ -141,7 +133,6 @@ const FIELDS: Field[] = [
     key: "length",
     group: "hull",
     label: "Length",
-    bar: true,
     ...measured("length_cm", "length"),
     chip: withUnit("Length"),
   },
@@ -149,7 +140,6 @@ const FIELDS: Field[] = [
     key: "width",
     group: "hull",
     label: "Width",
-    bar: true,
     ...measured("width_cm", "length"),
     chip: withUnit("Width"),
   },
@@ -157,7 +147,6 @@ const FIELDS: Field[] = [
     key: "height",
     group: "hull",
     label: "Height",
-    bar: true,
     ...measured("height_cm", "length"),
     chip: withUnit("Height"),
   },
@@ -165,7 +154,6 @@ const FIELDS: Field[] = [
     key: "volume",
     group: "hull",
     label: "Volume",
-    bar: true,
     ...measured("volume_l", "volume"),
     chip: withUnit("Volume"),
   },
@@ -173,7 +161,6 @@ const FIELDS: Field[] = [
     key: "weight",
     group: "hull",
     label: "Weight",
-    bar: true,
     quantity: weightQuantity,
     read: (m, units, q) => measure(m, "weight_kg", units, q),
     chip: withUnit("Weight"),
@@ -213,7 +200,6 @@ const FIELDS: Field[] = [
     key: "blade_area",
     group: "blade",
     label: "Blade area",
-    bar: true,
     ...measured("blade_area_cm2", "area"),
     chip: withUnit("Blade area"),
   },
@@ -221,7 +207,6 @@ const FIELDS: Field[] = [
     key: "blade_length",
     group: "blade",
     label: "Blade length",
-    bar: true,
     ...measured("blade_length_cm", "length"),
     chip: withUnit("Blade length"),
   },
@@ -229,7 +214,6 @@ const FIELDS: Field[] = [
     key: "blade_width",
     group: "blade",
     label: "Blade width",
-    bar: true,
     ...measured("blade_width_cm", "length"),
     chip: withUnit("Blade width"),
   },
@@ -296,9 +280,6 @@ export interface CompareRow {
   label: string;
   /** One text per entry, undefined where the entry states nothing. */
   cells: (string | undefined)[];
-  /** Per entry, how long its bar runs (0-1, zero based); absent when the
-   * entries do not differ enough for bars. */
-  bars?: (number | undefined)[];
 }
 
 export interface Comparison {
@@ -307,19 +288,6 @@ export interface Comparison {
   rows: CompareRow[];
   /** More than one category is compared. */
   mixed: boolean;
-}
-
-/** The zero-based bar lengths of a row's numbers, or none when the largest
- * and smallest differ by less than `BAR_THRESHOLD` of the largest. */
-export function barRatios(
-  values: (number | undefined)[],
-): (number | undefined)[] | undefined {
-  const stated = values.filter((v): v is number => v != null);
-  if (stated.length < 2) return undefined;
-  const max = Math.max(...stated);
-  const min = Math.min(...stated);
-  if (max <= 0 || (max - min) / max < BAR_THRESHOLD) return undefined;
-  return values.map((v) => (v == null ? undefined : Math.max(v, 0) / max));
 }
 
 /** The rows two or more entries state and the strip of values they all share.
@@ -347,13 +315,11 @@ export function buildComparison(
       alike.push(field.chip ? field.chip(first.text, unit) : first.text);
       continue;
     }
-    const nums = readings.map((r) => r?.num);
     rows.push({
       key: field.key,
       group: field.group,
       label: unit ? `${field.label} (${unit})` : field.label,
       cells: readings.map((r) => r?.text),
-      bars: field.bar ? barRatios(nums) : undefined,
     });
   }
   const categories = new Set(materials.map((m) => m.category));

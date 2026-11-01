@@ -305,8 +305,7 @@ differing rows, each labelled with its unit and holding bare tabular numbers.
 Up to four entries share the width equally (on a phone the label above its
 values, never a sideways scroll, also at 320); more scroll under a sticky head
 with a visible hint. A row shows when two entries state it. Difference is shown
-by a thin zero-based bar (`tokens`, transform not width, so reduced motion
-drops it) only at 5% or more, never by colouring the value. Selection is a bar
+by the numbers alone, never by colouring the value or a bar. Selection is a bar
 pinned above the bottom nav and FAB (inside the free area on a desktop) naming
 each pick; a tick never picks a size the user has not seen.
 
