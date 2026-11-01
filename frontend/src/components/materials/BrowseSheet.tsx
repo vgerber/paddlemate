@@ -21,6 +21,7 @@ import {
   type TreePath,
   treeFilters,
 } from "@/lib/materials/tree";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -218,10 +219,7 @@ const rowSx = {
   px: `${tokens.phone.inner}px`,
   fontSize: "0.9375rem",
   fontWeight: 500,
-  "&.Mui-focusVisible": {
-    outline: `2px solid ${tokens.primary}`,
-    outlineOffset: -2,
-  },
+  ...focusRingSx(-2),
 } as const;
 
 /** The tree as a phone sheet, one level at a time: tap a category to see its

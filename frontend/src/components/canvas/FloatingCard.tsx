@@ -10,6 +10,7 @@ import {
   resizeBounds,
   writeCardFrac,
 } from "@/lib/map/cardWidth";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { durations, LEAD_MS } from "@/lib/theme/motion";
 import { theme } from "@/lib/theme/theme";
 import { layout, useLayout } from "./canvasStore";
@@ -161,7 +162,7 @@ export default function FloatingCard({
               display: "flex",
               justifyContent: "flex-start",
               textAlign: "left",
-              "&:focus-visible": { outline: `2px solid ${tokens.primary}` },
+              ...focusRingSx(0),
             }}
           >
             <PanelHeader title={title} subtitle={subtitle} />

@@ -1,5 +1,6 @@
 import Chip from "@mui/material/Chip";
 import { CloseIcon } from "@/lib/icons";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -41,10 +42,7 @@ export default function FilterChip({
       sx={{
         height: tokens.touch.min,
         // The theme's chip style drops the button focus ring.
-        "&.Mui-focusVisible": {
-          outline: `2px solid ${tokens.primary}`,
-          outlineOffset: 2,
-        },
+        ...focusRingSx(),
         // The X is a touch target of its own.
         "& .MuiChip-deleteIcon": {
           position: "relative",

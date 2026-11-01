@@ -13,6 +13,7 @@ import {
   specValue,
 } from "@/lib/materials/materials";
 import { useUnits } from "@/lib/prefs/units";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -57,10 +58,7 @@ export default function AllSizesTable({
         sx={{
           ...phoneCardSx,
           overflowX: "auto",
-          "&:focus-visible": {
-            outline: `2px solid ${tokens.primary}`,
-            outlineOffset: 2,
-          },
+          ...focusRingSx(),
         }}
       >
         <Box

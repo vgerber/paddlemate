@@ -18,6 +18,7 @@ import {
   sinceLabel,
 } from "@/lib/materials/materials";
 import { useUnits } from "@/lib/prefs/units";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { cardTitleSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -111,10 +112,7 @@ export default function ModelRow({
           ml: `-${tokens.phone.inner}px`,
           pl: `${tokens.phone.inner}px`,
           borderRadius: `${tokens.radii.md}px`,
-          "&.Mui-focusVisible": {
-            outline: `2px solid ${tokens.primary}`,
-            outlineOffset: -2,
-          },
+          ...focusRingSx(-2),
         }}
       >
         <Box

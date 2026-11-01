@@ -3,6 +3,7 @@ import FeatureTypeIcon from "@/components/FeatureTypeIcon";
 import type { FeatureType } from "@/lib/api";
 import { FEATURE_TYPES } from "@/lib/map/featureTypes";
 import { humanize } from "@/lib/text/format";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { labelSx, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -67,10 +68,7 @@ export default function SuggestFeatureTypeGrid({
               bgcolor: chosen ? tokens.primaryContainer : tokens.surface,
               color: chosen ? tokens.primary : tokens.onSurfaceVariant,
               transition: `background-color ${tokens.motion.fast}ms ${tokens.motion.easeOut}`,
-              "&:focus-visible": {
-                outline: `2px solid ${tokens.primary}`,
-                outlineOffset: 2,
-              },
+              ...focusRingSx(),
               "&:disabled": { opacity: 0.5, cursor: "default" },
             }}
           >

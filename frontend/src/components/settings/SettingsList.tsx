@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { openRowSx } from "@/components/canvas/flatRow";
 import { phoneRowPad } from "@/components/phone/phoneGrid";
 import { ChevronRightIcon } from "@/lib/icons";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
 import type { GroupId } from "./groups";
 
@@ -43,10 +44,7 @@ export default function SettingsList({
             px: 1.75,
             ...phoneRowPad,
             "&.Mui-selected, &.Mui-selected:hover": openRowSx(true),
-            "&.Mui-focusVisible": {
-              outline: `2px solid ${tokens.primary}`,
-              outlineOffset: 2,
-            },
+            ...focusRingSx(),
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>

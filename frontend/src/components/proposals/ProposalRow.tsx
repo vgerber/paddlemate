@@ -7,6 +7,7 @@ import type { Proposal } from "@/lib/api";
 import { ThumbDownIcon, ThumbUpIcon } from "@/lib/icons";
 import { proposalKind, proposalTitle } from "@/lib/proposals";
 import { timeAgo } from "@/lib/text/format";
+import { focusRingSx } from "@/lib/theme/focusRing";
 import { fonts, theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -57,10 +58,7 @@ export default function ProposalRow({
         boxShadow: tokens.elevation.e1,
         ...openRowSx(selected),
         ...desktopFlatRow,
-        "&.Mui-focusVisible": {
-          outline: `2px solid ${tokens.primary}`,
-          outlineOffset: 2,
-        },
+        ...focusRingSx(),
       }}
     >
       <Typography
