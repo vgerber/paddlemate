@@ -13,6 +13,7 @@ import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
 import type { Material } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
+import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import {
   useDeleteMaterial,
@@ -38,6 +39,7 @@ import { isProposal } from "@/lib/proposals";
 import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/$materialId")({
+  beforeLoad: () => requireMaterials(),
   validateSearch: (search: Record<string, unknown>) => ({
     edit: search.edit === true || search.edit === "true",
   }),

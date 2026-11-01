@@ -63,6 +63,8 @@ pub struct Config {
     pub analytics: Option<AnalyticsSettings>,
     pub disable_gauge_readers: bool,
     pub disable_material_mirror: bool,
+    /// MATERIALS_ENABLED: false hides the whole material wiki.
+    pub materials_enabled: bool,
 }
 
 /// One reader for every setting: the process environment, then `.env`.
@@ -230,6 +232,7 @@ impl Config {
             )?,
             disable_gauge_readers: get("DISABLE_GAUGE_READERS").as_deref() == Some("true"),
             disable_material_mirror: get("DISABLE_MATERIAL_MIRROR").as_deref() == Some("true"),
+            materials_enabled: get("MATERIALS_ENABLED").as_deref() != Some("false"),
         })
     }
 }
@@ -258,6 +261,18 @@ mod tests {
     }
 
     #[test]
+    fn materials_off_stops_the_mirror_whatever_the_mirror_flag_says() {
+        use crate::jobs::mirror_runs;
+        let on = Config::from_lookup(lookup(&[])).unwrap();
+        assert!(mirror_runs(&on));
+        let flag = Config::from_lookup(lookup(&[("DISABLE_MATERIAL_MIRROR", "true")])).unwrap();
+        assert!(!mirror_runs(&flag));
+        let off = Config::from_lookup(lookup(&[("MATERIALS_ENABLED", "false")])).unwrap();
+        assert!(!off.materials_enabled);
+        assert!(!mirror_runs(&off));
+    }
+
+    #[test]
     fn defaults_match_the_documented_table() {
         let config = Config::from_lookup(lookup(&[])).unwrap();
         assert_eq!(config.port, "3000");
@@ -279,6 +294,7 @@ mod tests {
         assert!(config.analytics.is_none());
         assert!(!config.disable_gauge_readers);
         assert!(!config.disable_material_mirror);
+        assert!(config.materials_enabled);
     }
 
     #[test]

@@ -4,6 +4,7 @@ import { useState } from "react";
 import MaterialForm from "@/components/materials/MaterialForm";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
+import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useCreateMaterial } from "@/lib/hooks/useMaterials";
 import { useSession } from "@/lib/hooks/useSession";
@@ -16,6 +17,7 @@ import { isProposal } from "@/lib/proposals";
 import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/new")({
+  beforeLoad: () => requireMaterials(),
   component: NewMaterialPage,
 });
 
