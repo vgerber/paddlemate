@@ -1000,7 +1000,7 @@ INSERT INTO materials (id, category, brand, model, variant, discipline,
                        blade_length_cm, blade_width_cm, length_min_cm, length_max_cm,
                        lengths_cm, pieces, shaft, shaft_material, blade_material,
                        feather_deg, shaft_diameter, weight_kg, sources, created_by)
-SELECT 9862, 'paddle', 'Photocraft', 'Blade', 'Bent', 'river_runner',
+SELECT 9862, 'paddle', 'Photocraft', 'Blade', 'Bent', 'whitewater',
        'Fixture paddle with every spec stated.',
        'Lengths are ranges.', ARRAY['Black'], 2023, 645.0,
        47.5, 19.5, 191.0, 205.0,

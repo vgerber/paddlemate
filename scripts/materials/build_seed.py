@@ -20,10 +20,15 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA = os.path.join(ROOT, "data", "materials")
-DEFAULT_OUT = os.path.join(ROOT, "api", "migrations", "0059_materials_catalogue_reseed.sql")
+DEFAULT_OUT = os.path.join(ROOT, "api", "migrations", "0064_materials_paddle_use_reseed.sql")
 
-DISCIPLINES = {"creek", "river_runner", "half_slice", "playboat", "slalom", "downriver",
-               "crossover", "freestyle", "other"}
+# A paddle is filed by use, a boat by the kind of boat (chk_materials_discipline).
+DISCIPLINES = {
+    "kayak": {"creek", "river_runner", "half_slice", "playboat", "slalom", "downriver",
+              "crossover", "freestyle", "other"},
+    "paddle": {"whitewater", "freestyle", "slalom", "wildwater", "touring", "canoe", "polo",
+               "other"},
+}
 CONSTRUCTIONS = {"plastic", "composite", "inflatable", "folding", "wood"}
 SHAFTS = {"straight", "bent", "cranked"}
 SHAFT_MATERIALS = {"carbon", "fiberglass", "aluminium", "wood", "plastic", "hybrid"}
@@ -153,7 +158,7 @@ def clean_common(e, out, category):
     out["size"] = size[:40] if size else None
     out["notes"] = (e.get("notes") or "").strip()
 
-    for field, allowed in (("discipline", DISCIPLINES), ("construction", CONSTRUCTIONS),
+    for field, allowed in (("discipline", DISCIPLINES[category]), ("construction", CONSTRUCTIONS),
                            ("shaft", SHAFTS), ("shaft_material", SHAFT_MATERIALS)):
         v = e.get(field)
         if v is None or field not in e:
