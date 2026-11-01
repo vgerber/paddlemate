@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import AddPhotoButton from "@/components/materials/AddPhotoButton";
 import type { Material } from "@/lib/api";
 import { missingFields, missingSentence } from "@/lib/materials/missing";
 import { theme } from "@/lib/theme/theme";
@@ -36,6 +37,7 @@ export default function SuggestChange({
       >
         {sentence || "Something wrong?"}
       </Typography>
+      {material.images.length === 0 && <AddPhotoButton material={material} />}
       <Button onClick={onSuggest} sx={{ minHeight: tokens.touch.min }}>
         Suggest a change
       </Button>

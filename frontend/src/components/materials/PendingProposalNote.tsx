@@ -33,7 +33,10 @@ export default function PendingProposalNote({
           sx={{ display: "flex", alignItems: "center", gap: 1 }}
         >
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            {WHAT[proposal.operation]} is waiting for review.
+            {proposal.entity_type === "material_photo"
+              ? "Your photo"
+              : WHAT[proposal.operation]}{" "}
+            is waiting for review.
           </Typography>
           <Button
             size="small"

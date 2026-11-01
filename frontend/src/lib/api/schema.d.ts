@@ -406,6 +406,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/materials/{material_id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Add a photo to an entry. Multipart: a 'file' part (jpeg, png, webp or gif, 8 MB max; re-encoded, which strips EXIF and caps it at 1600px), 'rights_confirmed=true' (the photo is yours or you may share it; required), optional 'credit' (80 characters, default the uploader's username) and, for non-admins, 'proposal_note'. The photo shows on every size of the model. An admin's photo is live (201); anyone else's waits for review as a proposal (202). Caps: 10 photos per day, 5 waiting, 6 uploaded per model (429). */
+        post: operations["add_photo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/materials/{material_id}/images/{image_id}": {
         parameters: {
             query?: never;
@@ -418,6 +435,23 @@ export interface paths {
         post?: never;
         /** @description Take down one photo of an entry (admin only). The file is deleted and the photo is never fetched again. */
         delete: operations["remove_image"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/materials/{material_id}/images/{image_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The image of a photo that is still waiting for review (its uploader or an admin only). Not cached. */
+        get: operations["preview_photo"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2856,12 +2890,17 @@ export interface components {
         };
         /** @description A mirrored product photo. Only fetched images are ever returned. */
         MaterialImage: {
-            /** @description Whose photo it is (the maker). */
+            /** @description Whose photo it is (the maker, or the uploader's chosen credit). */
             credit: string;
             /** Format: int64 */
             id: number;
-            /** @description The page the photo came from, for the credit link. */
-            page_url: string;
+            /**
+             * @description The page the photo came from, for the credit link; null for a photo
+             *      a paddler uploaded.
+             */
+            page_url?: string | null;
+            /** @description Where it came from: `maker`, `retailer` or `user`. */
+            source_kind: string;
             thumb_url: string;
             /** @description The display copy, served from this API's media path. */
             url: string;
@@ -3594,7 +3633,7 @@ export interface components {
             user_vote?: number | null;
         };
         /** @enum {string} */
-        ProposalEntityType: "waterway" | "water_section" | "feature" | "material";
+        ProposalEntityType: "waterway" | "water_section" | "feature" | "material" | "material_photo";
         /** @enum {string} */
         ProposalOperation: "create" | "update" | "delete";
         ProposalPath: {
@@ -4972,11 +5011,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-11-01T17:06:53.618621239Z",
-                     *         "expires_at": "2027-01-30T17:06:53.618623679Z",
+                     *         "created_at": "2026-11-01T18:13:09.796525139Z",
+                     *         "expires_at": "2027-01-30T18:13:09.796527359Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-11-01T17:06:53.618634249Z",
+                     *         "last_used_at": "2026-11-01T18:13:09.796540829Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -5007,8 +5046,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-11-01T17:06:53.618764539Z",
-                     *       "expires_at": "2027-01-30T17:06:53.618764919Z",
+                     *       "created_at": "2026-11-01T18:13:09.796682059Z",
+                     *       "expires_at": "2027-01-30T18:13:09.796682559Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5971,6 +6010,73 @@ export interface operations {
             };
         };
     };
+    add_photo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Photo added */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialImage"];
+                };
+            };
+            /** @description Sent for review */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Proposal"];
+                };
+            };
+            /** @description Not a readable image, too large, or the rights statement missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Entry not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Over a photo cap */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     remove_image: {
         parameters: {
             query?: never;
@@ -6009,6 +6115,47 @@ export interface operations {
                 };
             };
             /** @description Photo not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    preview_photo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                image_id: number;
+                material_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The JPEG */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No such photo under review, or not yours */
             404: {
                 headers: {
                     [name: string]: unknown;

@@ -65,6 +65,7 @@ export { default as OpenExternalIcon } from "@mui/icons-material/OpenInNew";
 export { default as PendingIcon } from "@mui/icons-material/PendingActionsOutlined";
 export { default as AddPersonIcon } from "@mui/icons-material/PersonAddOutlined";
 export { default as RemovePersonIcon } from "@mui/icons-material/PersonRemoveOutlined";
+export { default as CameraIcon } from "@mui/icons-material/PhotoCameraOutlined";
 export { default as PhotoIcon } from "@mui/icons-material/PhotoOutlined";
 export { default as PlaceIcon } from "@mui/icons-material/PlaceOutlined";
 export { default as StartIcon } from "@mui/icons-material/PlayArrowOutlined";

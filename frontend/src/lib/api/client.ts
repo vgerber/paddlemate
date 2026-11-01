@@ -41,10 +41,18 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
  * that did not come from the API itself (a proxy or gateway, say). */
 async function toApiError(response: Response): Promise<ApiError> {
   const body = await response.text().catch(() => "");
+  return toApiErrorFrom(response.status, body, response.statusText);
+}
+
+function toApiErrorFrom(
+  status: number,
+  body: string,
+  statusText: string,
+): ApiError {
   try {
     const parsed = JSON.parse(body);
     if (parsed?.error?.message) {
-      return new ApiError(response.status, parsed.error.message, {
+      return new ApiError(status, parsed.error.message, {
         code: parsed.error.code,
         target: parsed.error.target,
       });
@@ -52,7 +60,7 @@ async function toApiError(response: Response): Promise<ApiError> {
   } catch {
     // not JSON - fall through to the raw body
   }
-  return new ApiError(response.status, body || response.statusText);
+  return new ApiError(status, body || statusText);
 }
 
 export const client = createClient<paths>({ baseUrl: API_BASE });
@@ -100,14 +108,56 @@ export async function authorizedTarget(path: string): Promise<{
 }
 
 /** Multipart POST. The typed client cannot express a file upload; this
- * still reports failures as the same ApiError everything else does. */
-export async function postForm<T>(path: string, form: FormData): Promise<T> {
+ * still reports failures as the same ApiError everything else does. With
+ * `onProgress` the body goes through XMLHttpRequest, the only way a browser
+ * reports how much of an upload has left. The reply is JSON; `status` tells a
+ * 201 from a 202. */
+export async function postForm<T>(
+  path: string,
+  form: FormData,
+  onProgress?: (fraction: number) => void,
+): Promise<T> {
   const { url, headers } = await authorizedTarget(path);
-  const response = await fetch(url, {
-    method: "POST",
-    body: form,
-    headers,
+  if (!onProgress) {
+    const response = await fetch(url, {
+      method: "POST",
+      body: form,
+      headers,
+    });
+    if (!response.ok) throw await toApiError(response);
+    return (await response.json()) as T;
+  }
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    headers.forEach((value, key) => {
+      xhr.setRequestHeader(key, value);
+    });
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded / event.total);
+    };
+    xhr.onerror = () => reject(new ApiError(0, "The upload could not be sent"));
+    xhr.onload = () => {
+      const failed = xhr.status < 200 || xhr.status >= 300;
+      if (failed) {
+        reject(toApiErrorFrom(xhr.status, xhr.responseText, xhr.statusText));
+        return;
+      }
+      try {
+        resolve(JSON.parse(xhr.responseText) as T);
+      } catch {
+        reject(new ApiError(xhr.status, "Unreadable reply"));
+      }
+    };
+    xhr.send(form);
   });
+}
+
+/** The image behind an authenticated GET (a photo still under review), as an
+ * object URL the caller revokes. */
+export async function fetchBlobUrl(path: string): Promise<string> {
+  const { url, headers } = await authorizedTarget(path);
+  const response = await fetch(url, { headers });
   if (!response.ok) throw await toApiError(response);
-  return (await response.json()) as T;
+  return URL.createObjectURL(await response.blob());
 }

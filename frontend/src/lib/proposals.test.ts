@@ -252,3 +252,18 @@ describe("material proposals", () => {
     expect(isProposal(undefined)).toBe(false);
   });
 });
+
+describe("photo proposals", () => {
+  const photo = {
+    id: 2,
+    entity_type: "material_photo",
+    operation: "create",
+    status: "pending",
+    proposed_data: { brand: "Testflow", model: "Cascade", size: "M" },
+  } as Proposal;
+
+  test("they are named after the entry and called a wiki photo", () => {
+    expect(proposalTitle(photo)).toBe("Testflow Cascade M");
+    expect(proposalKind(photo)).toBe("New wiki photo");
+  });
+});
