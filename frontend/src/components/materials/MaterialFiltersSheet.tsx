@@ -1,23 +1,16 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import type { ReactNode } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import FilterChip from "@/components/search/FilterChip";
-import type { MaterialDiscipline, MaterialSort } from "@/lib/api";
-import { useMaterialBrands } from "@/lib/hooks/useMaterials";
+import type { MaterialSort } from "@/lib/api";
 import { CloseIcon } from "@/lib/icons";
 import {
   activeFilterCount,
-  CATEGORIES,
-  CATEGORY_LABELS,
   CONSTRUCTIONS,
-  disciplinesFor,
   enumLabel,
   MAX_FITS_KG,
   type MaterialWikiSearch,
@@ -74,97 +67,21 @@ function Choice<T extends string>({
   ));
 }
 
-function SheetBody({
+/** The filters that are not the tree's levels: construction, the paddler's
+ * weight and, on a phone, the sort. The desktop sidebar shows them under the
+ * tree and puts the sort in the page header. */
+export function FilterFields({
   search,
-  total,
   onChange,
-  onClose,
+  withSort,
 }: {
   search: MaterialWikiSearch;
-  total: number;
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
-  onClose: () => void;
+  withSort: boolean;
 }) {
   const [units] = useUnits();
-  const { data: brands } = useMaterialBrands(search.category);
-  const count = activeFilterCount(search);
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gap: 2,
-        px: { xs: `${tokens.phone.line}px`, md: 2 },
-        pb: 2,
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography variant="h4" component="h2" sx={{ lineHeight: "24px" }}>
-          Filters
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Button
-            disabled={count === 0 && search.sort == null}
-            onClick={() =>
-              onChange({
-                category: undefined,
-                discipline: undefined,
-                construction: undefined,
-                brand: undefined,
-                fits: undefined,
-                sort: undefined,
-              })
-            }
-          >
-            Reset
-          </Button>
-          <IconButton
-            aria-label="Close"
-            onClick={onClose}
-            sx={{
-              width: tokens.touch.min,
-              height: tokens.touch.min,
-              mr: -1,
-              color: tokens.onSurfaceVariant,
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </Box>
-
-      <Group label="Category">
-        <Choice
-          options={CATEGORIES}
-          value={search.category}
-          // A brand of the old category may not exist in the new one.
-          onChange={(category) =>
-            onChange({
-              category,
-              brand: undefined,
-              discipline: disciplinesFor(category).includes(
-                search.discipline as MaterialDiscipline,
-              )
-                ? search.discipline
-                : undefined,
-            })
-          }
-          labelOf={(value) => CATEGORY_LABELS[value]}
-        />
-      </Group>
-      <Group label="Discipline">
-        <Choice
-          options={disciplinesFor(search.category)}
-          value={search.discipline}
-          onChange={(discipline) => onChange({ discipline })}
-          labelOf={enumLabel}
-        />
-      </Group>
+    <Box sx={{ display: "grid", gap: 2 }}>
       <Group label="Construction">
         <Choice
           options={CONSTRUCTIONS}
@@ -173,22 +90,6 @@ function SheetBody({
           labelOf={enumLabel}
         />
       </Group>
-
-      <TextField
-        select
-        label="Brand"
-        value={search.brand ?? ""}
-        onChange={(event) =>
-          onChange({ brand: event.target.value || undefined })
-        }
-      >
-        <MenuItem value="">Any brand</MenuItem>
-        {(brands ?? []).map((entry) => (
-          <MenuItem key={entry.brand} value={entry.brand}>
-            {entry.brand} ({entry.count})
-          </MenuItem>
-        ))}
-      </TextField>
       <TextField
         label={`Fits paddler (${unitLabel("weight", units)})`}
         value={
@@ -203,35 +104,31 @@ function SheetBody({
         helperText="Boats built for your body weight"
         slotProps={{ htmlInput: { inputMode: "decimal", maxLength: 5 } }}
       />
-      <Group label="Sort by">
-        <Choice<MaterialSort>
-          options={SORTS}
-          value={search.sort ?? "name"}
-          // Name is the default, so it stays out of the URL.
-          onChange={(sort) =>
-            onChange({ sort: sort === "name" ? undefined : sort })
-          }
-          labelOf={(value) => SORT_LABELS[value]}
-        />
-      </Group>
-
-      <Button
-        variant="contained"
-        onClick={onClose}
-        sx={{ height: 52, borderRadius: `${tokens.radii.md}px` }}
-      >
-        {plural(total, "result")}
-      </Button>
+      {withSort && (
+        <Group label="Sort by">
+          <Choice<MaterialSort>
+            options={SORTS}
+            value={search.sort ?? "name"}
+            // Name is the default, so it stays out of the URL.
+            onChange={(sort) =>
+              onChange({ sort: sort === "name" ? undefined : sort })
+            }
+            labelOf={(value) => SORT_LABELS[value]}
+          />
+        </Group>
+      )}
     </Box>
   );
 }
 
-/** Every way the wiki list can be narrowed or ordered: a bottom sheet on a
- * phone, a dialog on a desktop. */
+/** Every way the phone's wiki list can be narrowed beyond the tree or
+ * ordered: a bottom sheet. */
 export default function MaterialFiltersSheet({
   open,
   onClose,
-  ...body
+  search,
+  total,
+  onChange,
 }: {
   open: boolean;
   onClose: () => void;
@@ -239,29 +136,67 @@ export default function MaterialFiltersSheet({
   total: number;
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
 }) {
-  const desktop = useMediaQuery(theme.breakpoints.up("md"));
-  if (desktop) {
-    return (
-      <Dialog
-        open={open}
-        onClose={onClose}
-        fullWidth
-        maxWidth="xs"
-        slotProps={{ paper: { "aria-label": "Filters" } }}
-      >
-        <Box sx={{ pt: 2 }}>
-          <SheetBody {...body} onClose={onClose} />
-        </Box>
-      </Dialog>
-    );
-  }
+  const count = activeFilterCount(search);
   return (
     <BottomSheet
       state={open ? "open" : "closed"}
       onStateChange={(s) => s === "open" || onClose()}
       label="Filters"
     >
-      <SheetBody {...body} onClose={onClose} />
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          px: `${tokens.phone.line}px`,
+          pb: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="h4" component="h2" sx={{ lineHeight: "24px" }}>
+            Filters
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Button
+              disabled={count === 0 && search.sort == null}
+              onClick={() =>
+                onChange({
+                  construction: undefined,
+                  fits: undefined,
+                  sort: undefined,
+                })
+              }
+            >
+              Reset
+            </Button>
+            <IconButton
+              aria-label="Close"
+              onClick={onClose}
+              sx={{
+                width: tokens.touch.min,
+                height: tokens.touch.min,
+                mr: -1,
+                color: tokens.onSurfaceVariant,
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </Box>
+        <FilterFields search={search} onChange={onChange} withSort />
+        <Button
+          variant="contained"
+          onClick={onClose}
+          sx={{ height: 52, borderRadius: `${tokens.radii.md}px` }}
+        >
+          {plural(total, "result")}
+        </Button>
+      </Box>
     </BottomSheet>
   );
 }

@@ -5,8 +5,8 @@ import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
 
-/** The frame of every wiki screen: a centred column on a desktop, edge to
- * edge on a phone. The panel header opens it, as on every other screen, and
+/** The frame of every wiki screen: a centred column on a desktop (`width`
+ * wide, the list takes the page), edge to edge on a phone. The panel header opens it, as on every other screen, and
  * on a desktop it sits in a card with the body beneath. */
 export default function WikiPage({
   title,
@@ -14,6 +14,7 @@ export default function WikiPage({
   onBack,
   actions,
   width = 880,
+  headerOnPhoneOnly = false,
   children,
 }: {
   title: string;
@@ -22,6 +23,9 @@ export default function WikiPage({
   actions?: ReactNode;
   /** Widest the column grows on a desktop. */
   width?: number;
+  /** The screen draws its own title on a desktop (the wiki list does, beside
+   * the tree), so the header shows on a phone only. */
+  headerOnPhoneOnly?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -30,11 +34,12 @@ export default function WikiPage({
         maxWidth: width,
         mx: "auto",
         px: { xs: 0, md: 2 },
-        py: { xs: 0, md: 3 },
+        py: { xs: 0, md: 2 },
       }}
     >
       <Box
         sx={{
+          display: headerOnPhoneOnly ? { xs: "block", md: "none" } : undefined,
           borderRadius: { md: `${tokens.radii.md}px` },
           overflow: { md: "hidden" },
           mb: { md: 1 },

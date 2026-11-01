@@ -1,0 +1,194 @@
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import ChipRow from "@/components/ChipRow";
+import { phoneCardSx } from "@/components/phone/phoneGrid";
+import FilterChip from "@/components/search/FilterChip";
+import QueryStates from "@/components/states/QueryStates";
+import type { MaterialModel } from "@/lib/api";
+import { useMaterialComparison } from "@/lib/hooks/useMaterials";
+import { MaterialIcon } from "@/lib/icons";
+import {
+  MAX_COMPARE,
+  materialTitle,
+  modelPicked,
+} from "@/lib/materials/materials";
+import { BOTTOM_NAV_SPACE, theme } from "@/lib/theme/theme";
+import ModelRow from "./ModelRow";
+
+const { tokens } = theme;
+
+/** The picked entries, pinned to the foot of the list: how many, each one by
+ * name and size with a way to drop it, and the way into the comparison (two
+ * are the least that compare). It sits above the bottom nav and the add
+ * button on a phone. */
+export function CompareBar({
+  ids,
+  onRemove,
+  onClear,
+  onCompare,
+}: {
+  ids: number[];
+  onRemove: (id: number) => void;
+  onClear: () => void;
+  onCompare: () => void;
+}) {
+  const picked = useMaterialComparison(ids, true);
+  const names = new Map(
+    (picked.data ?? []).map((m) => [m.id, materialTitle(m)]),
+  );
+  return (
+    <Box
+      data-testid="compare-bar"
+      sx={{
+        ...phoneCardSx,
+        position: "sticky",
+        bottom: { xs: `calc(${BOTTOM_NAV_SPACE} + 80px)`, md: 12 },
+        zIndex: 2,
+        mt: 1,
+        py: 1,
+        boxShadow: tokens.elevation.e2,
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          px: `${tokens.phone.inner}px`,
+        }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 600 }} aria-live="polite">
+          {ids.length} picked
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {MAX_COMPARE} at most
+        </Typography>
+      </Box>
+      <Box sx={{ px: `${tokens.phone.inner}px`, py: 0.5 }}>
+        <ChipRow>
+          {ids.map((id) => {
+            const name = names.get(id) ?? "Entry";
+            return (
+              <FilterChip
+                key={id}
+                label={name}
+                set
+                onDelete={() => onRemove(id)}
+                deleteLabel={`Remove ${name}`}
+              />
+            );
+          })}
+        </ChipRow>
+      </Box>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", px: 0.5 }}>
+        <Button onClick={onClear} sx={{ minHeight: tokens.touch.min }}>
+          Clear
+        </Button>
+        <Button
+          disabled={ids.length < 2}
+          onClick={onCompare}
+          sx={{ minHeight: tokens.touch.min }}
+        >
+          Compare
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+/** The model list, a column of rows on a phone and a grid of cards on a
+ * desktop, with a Show more button while the server has more. */
+export function ModelResults({
+  query,
+  items,
+  compareIds,
+  showCategory,
+  grid,
+  onOpen,
+  onToggleCompare,
+  onToggleSize,
+}: {
+  query: {
+    isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+    refetch: () => unknown;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+    fetchNextPage: () => unknown;
+  };
+  items: MaterialModel[];
+  compareIds: number[];
+  showCategory: boolean;
+  /** Cards in as many columns as the width allows. */
+  grid: boolean;
+  onOpen: (id: number) => void;
+  onToggleCompare: (model: MaterialModel) => void;
+  onToggleSize: (id: number) => void;
+}) {
+  return (
+    <QueryStates
+      query={query}
+      count={items.length}
+      errorFallback="Could not load the wiki."
+      empty={{
+        icon: <MaterialIcon />,
+        title: "Nothing in the wiki matches that.",
+        caption: "Add the boat you are looking for.",
+      }}
+    >
+      <Box
+        component="ul"
+        data-testid="material-list"
+        sx={{
+          m: 0,
+          p: 0,
+          ...(grid
+            ? {
+                display: "grid",
+                gridTemplateColumns: `repeat(auto-fill, minmax(${CARD_MIN}px, 1fr))`,
+                gap: 1,
+              }
+            : {
+                bgcolor: { md: tokens.surface },
+                borderRadius: { md: `${tokens.radii.md}px` },
+                boxShadow: { md: tokens.elevation.e1 },
+                overflow: { md: "hidden" },
+              }),
+        }}
+      >
+        {items.map((model) => (
+          <ModelRow
+            key={`${model.category}-${model.brand}-${model.model}-${model.variant ?? ""}`}
+            model={model}
+            card={grid}
+            selected={modelPicked(compareIds, model)}
+            pickedIds={compareIds}
+            compareDisabled={
+              compareIds.length >= MAX_COMPARE &&
+              !modelPicked(compareIds, model)
+            }
+            showCategory={showCategory}
+            onOpen={() => onOpen(model.sizes[0].id)}
+            onToggleCompare={() => onToggleCompare(model)}
+            onToggleSize={onToggleSize}
+          />
+        ))}
+      </Box>
+      {query.hasNextPage && (
+        <Button
+          fullWidth
+          disabled={query.isFetchingNextPage}
+          onClick={() => query.fetchNextPage()}
+          sx={{ minHeight: tokens.touch.min, mt: 1 }}
+        >
+          Show more
+        </Button>
+      )}
+    </QueryStates>
+  );
+}
+
+/** Narrowest a card of the desktop grid gets, in px. */
+const CARD_MIN = 340;

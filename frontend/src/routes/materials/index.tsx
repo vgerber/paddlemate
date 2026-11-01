@@ -41,6 +41,8 @@ function MaterialWikiPage() {
       title="Material wiki"
       subtitle="Boats, searchable and comparable"
       onBack={() => navigate({ to: "/tools" })}
+      width={1600}
+      headerOnPhoneOnly
     >
       <MaterialsView
         search={search}
@@ -54,6 +56,7 @@ function MaterialWikiPage() {
           })
         }
         onAdd={onAdd}
+        onTools={() => navigate({ to: "/tools" })}
         onToggleCompare={(model) =>
           setCompare(toggleModelCompare(compareIds, model))
         }

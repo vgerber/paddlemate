@@ -784,3 +784,40 @@ mod tests {
         );
     }
 }
+
+/// A brand inside one discipline of the browse tree.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialTreeBrand {
+    pub brand: String,
+    /// Models of the brand that match the filters.
+    pub models: i64,
+    /// Entries (sizes) of those models.
+    pub entries: i64,
+}
+
+/// A discipline inside one category of the browse tree.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialTreeDiscipline {
+    pub discipline: MaterialDiscipline,
+    pub models: i64,
+    pub entries: i64,
+    /// Most models first.
+    pub brands: Vec<MaterialTreeBrand>,
+}
+
+/// A category of the browse tree. Entries without a discipline count toward
+/// the category but sit under no discipline.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialTreeCategory {
+    pub category: MaterialCategory,
+    pub models: i64,
+    pub entries: i64,
+    /// Most models first.
+    pub disciplines: Vec<MaterialTreeDiscipline>,
+}
+
+/// The wiki as a browse tree: category, discipline, brand.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialTree {
+    pub categories: Vec<MaterialTreeCategory>,
+}

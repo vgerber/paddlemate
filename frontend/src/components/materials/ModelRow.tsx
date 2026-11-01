@@ -6,7 +6,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { listRowSx } from "@/components/canvas/flatRow";
+import { cardRowSx, listRowSx } from "@/components/canvas/flatRow";
 import { trailSlotSx } from "@/components/phone/phoneGrid";
 import type { MaterialModel } from "@/lib/api";
 import {
@@ -36,6 +36,7 @@ const metaSx = {
  * comparison (its first size, or the sizes already picked). */
 export default function ModelRow({
   model,
+  card = false,
   selected,
   pickedIds,
   compareDisabled,
@@ -45,6 +46,8 @@ export default function ModelRow({
   onToggleSize,
 }: {
   model: MaterialModel;
+  /** A card of its own, for the desktop grid, rather than a row of a list. */
+  card?: boolean;
   /** True while a size of the model is held in the comparison. */
   selected: boolean;
   /** The ids held in the comparison, for the size choice. */
@@ -85,9 +88,11 @@ export default function ModelRow({
       component="li"
       data-testid="material-row"
       sx={{
-        ...listRowSx,
+        ...(card
+          ? { ...cardRowSx, mb: 0, px: `${tokens.phone.inner}px` }
+          : listRowSx),
         display: "flex",
-        alignItems: "center",
+        alignItems: card ? "flex-start" : "center",
         listStyle: "none",
       }}
     >
@@ -98,6 +103,7 @@ export default function ModelRow({
           minWidth: 0,
           alignSelf: "stretch",
           justifyContent: "flex-start",
+          alignItems: card ? "flex-start" : "center",
           textAlign: "left",
           // Hangs out over the row's padding so the whole row opens it.
           my: -1,
