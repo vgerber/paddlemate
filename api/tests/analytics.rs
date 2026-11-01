@@ -15,26 +15,11 @@ use axum::{
 use paddlemate_api::{
     analytics::{self, Event, Sink},
     config::{AnalyticsSettings, Config},
-    layers::{
-        auth::{AuthMethod, AuthMethodKind},
-        limit::{RateLimits, Rates, TrustedProxies},
-    },
+    layers::auth::{AuthMethod, AuthMethodKind},
     metrics,
 };
 use tokio::sync::mpsc;
 use tower::ServiceExt;
-
-fn limits() -> RateLimits {
-    RateLimits::new(
-        Rates {
-            reads: 0,
-            writes: 0,
-            expensive: 0,
-        },
-        TrustedProxies::private_ranges(),
-        "/api/v1",
-    )
-}
 
 fn app(sink: Option<Sink>) -> Router {
     let api = Router::new()
@@ -90,18 +75,21 @@ fn off_without_a_url_no_task_no_sink() {
     })
     .unwrap();
     assert!(config.analytics.is_none());
-    assert!(analytics::start(&config, &limits()).is_none());
+    assert!(analytics::start(&config).is_none());
 }
 
 #[tokio::test]
 async fn events_hold_template_route_client_and_no_identity() {
     let (tx, mut rx) = mpsc::channel(16);
-    let app = app(Some(Sink::new(tx, limits())));
+    let app = app(Some(Sink::new(tx)));
+    let ua =
+        "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0 uniqueagent-77";
     for id in 1..=3 {
-        let uri = format!("/api/v1/things/{id}?q=weser&page=2&secret=abc&user_id=9");
+        let uri =
+            format!("/api/v1/things/{id}?q=SomeName&page=2&secret=abc&user_id=9&category=kayak");
         let res = app
             .clone()
-            .oneshot(request(&uri, "203.0.113.7", "curl/8.5.0"))
+            .oneshot(request(&uri, "203.0.113.7", ua))
             .await
             .unwrap();
         assert_eq!(res.status(), StatusCode::OK);
@@ -110,41 +98,52 @@ async fn events_hold_template_route_client_and_no_identity() {
     for event in &events {
         assert_eq!(event.route, "/api/v1/things/{id}");
         assert_eq!(event.client, "api_token");
-        assert_eq!(event.ua_family, "curl");
+        assert_eq!((event.browser, event.os), ("firefox", "linux"));
         assert_eq!(event.status, 200);
         let json = serde_json::to_string(event).unwrap();
         for secret in [
             "203.0.113.7",
             "secret-token-value",
+            "SomeName",
             "abc",
             "user_id",
-            "curl/8",
+            "uniqueagent",
+            "Gecko",
+            "121",
         ] {
             assert!(!json.contains(secret), "{secret} leaked into {json}");
         }
-        assert_eq!(event.query.len(), 2);
+        assert_eq!(event.query.len(), 1);
+        assert_eq!(event.query["category"], "kayak");
     }
-    assert_eq!(events[0].caller, events[2].caller);
 }
 
 #[tokio::test]
-async fn callers_differ_by_address() {
-    let (tx, mut rx) = mpsc::channel(16);
-    let app = app(Some(Sink::new(tx, limits())));
-    for ip in ["203.0.113.7", "203.0.113.8"] {
-        app.clone()
-            .oneshot(request("/api/v1/things/1", ip, "ua"))
-            .await
-            .unwrap();
-    }
-    let events = collect(&mut rx, 2).await;
-    assert_ne!(events[0].caller, events[1].caller);
+async fn unknown_enum_values_are_stored_as_other() {
+    let (tx, mut rx) = mpsc::channel(4);
+    let app = app(Some(Sink::new(tx)));
+    app.oneshot(request(
+        "/api/v1/things/1?category=SomeName&discipline=creek",
+        "203.0.113.7",
+        "SomeScanner/1.0 secret-id-123",
+    ))
+    .await
+    .unwrap();
+    let event = collect(&mut rx, 1).await.remove(0);
+    assert_eq!(event.query["category"], "other");
+    assert_eq!(event.query["discipline"], "creek");
+    assert_eq!((event.browser, event.os), ("other", "other"));
+    let json = serde_json::to_string(&event).unwrap();
+    assert!(
+        !json.contains("SomeName") && !json.contains("secret-id"),
+        "{json}"
+    );
 }
 
 #[tokio::test]
 async fn unmatched_paths_use_the_placeholder_route() {
     let (tx, mut rx) = mpsc::channel(16);
-    let app = app(Some(Sink::new(tx, limits())));
+    let app = app(Some(Sink::new(tx)));
     app.oneshot(request("/api/v1/wp-login.php", "203.0.113.7", "x"))
         .await
         .unwrap();
@@ -156,7 +155,7 @@ async fn unmatched_paths_use_the_placeholder_route() {
 #[tokio::test]
 async fn a_full_queue_drops_events_and_requests_still_answer() {
     let (tx, _rx) = mpsc::channel(1);
-    let app = app(Some(Sink::new(tx, limits())));
+    let app = app(Some(Sink::new(tx)));
     for _ in 0..5 {
         let res = tokio::time::timeout(
             Duration::from_millis(500),
@@ -189,7 +188,7 @@ async fn clickhouse_down_requests_answer_and_batches_are_counted_dropped() {
         },
         rx,
     );
-    let app = app(Some(Sink::new(tx, limits())));
+    let app = app(Some(Sink::new(tx)));
     let before = dropped_total();
     for _ in 0..3 {
         let res = tokio::time::timeout(
@@ -236,12 +235,12 @@ async fn n_requests_become_n_rows_in_clickhouse() {
         },
         rx,
     );
-    let app = app(Some(Sink::new(tx, limits())));
-    let marker = format!("it{}", std::process::id());
+    let app = app(Some(Sink::new(tx)));
+    let start = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
     for _ in 0..7 {
         app.clone()
             .oneshot(request(
-                &format!("/api/v1/things/1?q={marker}"),
+                "/api/v1/things/1?category=zzz",
                 "203.0.113.7",
                 "curl/8",
             ))
@@ -250,7 +249,7 @@ async fn n_requests_become_n_rows_in_clickhouse() {
     }
     tokio::time::sleep(paddlemate_api::jobs::analytics::BATCH_WAIT + Duration::from_secs(2)).await;
     let sql = format!(
-        "SELECT count(), uniqExact(caller), any(route), any(client) FROM {database}.api_events WHERE query['q'] = '{marker}' FORMAT TSV"
+        "SELECT count(), any(route), any(client), any(browser), any(os), any(query['category']) FROM {database}.api_events WHERE ts >= '{start}' FORMAT TSV"
     );
     let mut req = reqwest::Client::new().post(&url).body(sql);
     if let Some(user) = user {
@@ -259,7 +258,7 @@ async fn n_requests_become_n_rows_in_clickhouse() {
     let text = req.send().await.unwrap().text().await.unwrap();
     assert_eq!(
         text.trim(),
-        "7\t1\t/api/v1/things/{id}\tapi_token",
+        "7\t/api/v1/things/{id}\tapi_token\tcurl\tother\tother",
         "{text}"
     );
 }
@@ -271,7 +270,7 @@ async fn nested_routers_report_their_full_template() {
         .route("/{id}/gauges", get(|| async { "ok" }))
         .layer(middleware::from_fn(metrics::tag_route));
     let api = Router::new().nest_service("/api/v1/waterways", inner);
-    let app = metrics::wrap(api, metrics::install(), None, Some(Sink::new(tx, limits())));
+    let app = metrics::wrap(api, metrics::install(), None, Some(Sink::new(tx)));
     app.oneshot(request("/api/v1/waterways/5/gauges", "203.0.113.7", "ua"))
         .await
         .unwrap();

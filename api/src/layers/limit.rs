@@ -204,7 +204,7 @@ impl RateLimits {
     }
 
     /// The caller's address, with forwarded headers believed only from a
-    /// trusted proxy. Also keys the analytics caller hash.
+    /// trusted proxy.
     pub fn client_ip(&self, req: &Request<Body>) -> IpAddr {
         let peer = req
             .extensions()

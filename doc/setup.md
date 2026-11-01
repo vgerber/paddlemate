@@ -154,7 +154,7 @@ settings and secrets. Both files stay out of git.
 ## Analytics and privacy
 
 The API can record one event per request in ClickHouse for a Grafana
-dashboard (which routes are used, errors, slow routes, popular searches). It is
+dashboard (which features are used, errors, slow routes, browsers and systems). It is
 off unless `ANALYTICS_URL` is set; Prometheus `/metrics` is separate and stays.
 
 **Locally**
@@ -177,21 +177,25 @@ once as an admin with `{database}` replaced), and give Grafana a read-only user
 on the datasource uid `clickhouse`. Import
 `deploy/analytics/api-usage.dashboard.json` (uid `paddlemate-api-usage`).
 
-**Privacy: what is stored**
+**Privacy: anonymous by design**
+
+The analytics answer "which features are used", nothing about who uses them.
+There is no personal data, no identifier and nothing per person: no caller
+hash, no salt, no address, no user id, no token, no raw user agent, no free
+text. The code never reads the client address for analytics.
 
 | Stored | How long |
 |---|---|
-| time, route template (`/api/v1/waterways/{id}`, never the real path), method, status, latency, response size, client kind (anonymous, api_token, app), browser family (browser, app, curl, python, other) | 90 days; hourly counts per route, status class and client for 3 years |
-| `caller`: SHA-256 of a random salt, the client address and the user agent, cut to 16 hex characters | 90 days |
-| search and filter values (`q` cut to 64 characters, `category`, `discipline`, `page`) | 30 days |
+| time, route template (`/api/v1/waterways/{id}`, never the real path), method, status, latency, response size, client kind (anonymous, api_token, app), `browser` and `os` | 90 days; hourly counts per route, status class and client for 3 years |
+| feature filters: `category`, `discipline`, `construction`, `sort` (a value outside the known list is stored as `other`) | 90 days |
 
-The salt exists only in the API's memory and is replaced at UTC midnight, so
-callers cannot be linked across days or recovered from the hash. Never stored:
-the IP address, user id, token, raw user agent, other query parameters, request
-or response bodies, headers. Search terms are the one free-text field; they
-can in principle contain a name, which is why they expire after 30 days. The
-legal basis is legitimate interest (operating and improving the service); the
-data is not shared and not used for profiling. Country is not recorded.
+`browser` (chrome, safari, firefox, edge, samsung, other_browser, app, curl,
+python, other) and `os` (android, ios, windows, macos, linux, other) are coarse
+families derived in memory from the User-Agent by a short fixed match
+(`api/src/analytics/event.rs`); only these families are kept, never the header
+and never a version. Everything else in the query string (search text, page,
+ids, other parameters), request and response bodies and headers are dropped.
+Country is not recorded. The data is not shared and not used for profiling.
 
 ## Backups
 
