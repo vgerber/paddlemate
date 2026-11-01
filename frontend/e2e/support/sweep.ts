@@ -80,7 +80,9 @@ export const EXTRA_SCREENS: SweepScreen[] = [
   {
     name: "materials-compare",
     path: "/materials/compare?ids=9851,9852,9853",
-    ready: text("Cascade L"),
+    ready: async (page) => {
+      await expect(page.getByTestId("compare-row").first()).toBeVisible();
+    },
   },
   { name: "materials-new", path: "/materials/new", ready: text("Boat") },
   settings("account", /Account/i),
