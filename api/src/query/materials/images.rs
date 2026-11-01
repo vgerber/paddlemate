@@ -67,11 +67,15 @@ pub struct PendingImage {
     pub host: String,
 }
 
-/// The hosts the job may contact: those of the seeded links.
+/// The hosts the job may contact: those of the seeded links. A host whose
+/// links were all taken down drops out.
 pub async fn allowed_hosts(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
-    sqlx::query_scalar("SELECT DISTINCT host FROM material_images WHERE source_kind <> 'user'")
-        .fetch_all(pool)
-        .await
+    sqlx::query_scalar(
+        "SELECT DISTINCT host FROM material_images \
+         WHERE source_kind <> 'user' AND status <> 'removed'",
+    )
+    .fetch_all(pool)
+    .await
 }
 
 /// The next pending image of each host that is not on cooldown, at most

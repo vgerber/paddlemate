@@ -155,8 +155,9 @@ are the same boat.
 
 ## Catalogue
 
-An entry opens with its photos, each captioned "Photo: <maker>" and linking
-to the page it came from; a click on a photo opens it full size in the photo
+An entry opens with its photos, each captioned "Photo: <credit>" (the maker,
+or the shop when the picture comes from a shop's page) and linking to the page
+it came from; a click on a photo opens it full size in the photo
 viewer (arrow keys, buttons or a swipe step through the photos, Esc closes),
 then an **Overview** card: type (category and groups), construction, built
 ("since 2021", "about 2010"), availability with its check date and source link
@@ -176,8 +177,11 @@ source (an archive's first capture, a listing year, a search snippet) the
 entry says so, and the app shows "about <year>" instead of a hard date.
 
 Product photos are mirrored: the server downloads them from the maker's page
-into its own storage, never into the source repository, and every photo keeps
-the maker's name and a link back to the page it came from. An admin can take
+(or, where the maker's page is gone, the maker's page in the web archive, or a
+shop that shows the maker's own product shot) into its own storage, never into
+the source repository, and every photo keeps the real source's name and a link
+back to the page it came from. Community sites such as Playak are not a photo
+source. An admin can take
 down one photo, or every photo of a brand; a taken-down photo is deleted and
 never fetched again. The photos arrive gradually after an update (one request
 per site every two seconds), so a fresh install shows entries without photos
@@ -358,10 +362,34 @@ writing).
 Links added after the first seed carry a `"batch"` tag in the data files and
 ship in their own migration, made with `python3 -I scripts/materials/build_seed.py
 --photo-migration <batch> <out.sql>` (0066, 0067; the default seed leaves tagged
-links out). It queues every size row of a model that has no image yet, so a
+links out). It queues every size row of a model that has no live mirrored image yet, so a
 re-run inserts nothing, and the new hosts join the allowlist with those rows
 (the running job rereads it each round, no restart). Tests:
 `api/tests/material_photo_links.rs`.
+
+### Photo sources and credits
+
+`MAKER_HOSTS` and `SHOP_HOSTS` in `scripts/materials/build_seed.py` map the
+host of a photo's page (looking through `web.archive.org` wrappers, ignoring
+`www.` and ports) to its source: a maker host credits the entry's brand with
+`source_kind = maker` (group owners count as the maker: Confluence Outdoor for
+Dagger, Perception and Wave Sport); a shop host credits the shop
+("kayak-shop.eu", "NOC", "Wilderness Supply", ...) with `source_kind =
+retailer`; a shop that is itself the maker (NRS for NRS boats) is `maker`. A
+host in neither table stops the build, so every photo link has a named
+source. User uploads keep the credit their uploader chose.
+
+Migration 0076 (`--photo-migration photos-1102 --swap`) swapped the Playak
+photos for maker photos: every row whose host, source URL or page URL is on
+playak.com became `removed` with its file cleared (the rows stay, so a
+re-import conflicts with them and adds nothing; the data files hold no Playak
+photo link any more), the credits and kinds of all other mirrored rows were
+set from the tables, and the maker photos were queued as pending for every
+size of each model. The files of the removed rows are no longer referenced by
+any row, so the media sweeper (`media::sweep_orphans`, at start and daily)
+deletes them. `allowed_hosts` ignores removed rows, so a taken-down host drops
+out of the mirror allowlist. Tests: `api/tests/material_photo_swap.rs` and
+`python3 -I scripts/materials/test_build_seed.py`.
 
 ### Photo mirror
 

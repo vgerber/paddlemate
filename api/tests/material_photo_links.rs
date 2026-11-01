@@ -9,8 +9,7 @@ const PHOTOS: [&str; 2] = [
     include_str!("../migrations/0067_materials_photo_links_https.sql"),
 ];
 
-const NEW_HOSTS: [&str; 8] = [
-    "playak.com",
+const NEW_HOSTS: [&str; 7] = [
     "cdn.myshoptet.com",
     "www.kajakshop.sk",
     "www.kayaksession.com",
@@ -49,10 +48,14 @@ async fn every_size_of_a_model_gets_the_photos(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn the_credit_is_the_brand_and_the_page_is_kept(pool: PgPool) {
+async fn the_credit_names_the_source_and_the_page_is_kept(pool: PgPool) {
+    // A maker photo credits the brand, a shop photo the shop (see
+    // material_photo_swap.rs); the page is always a real link.
     let bad: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM material_images i JOIN materials m ON m.id = i.material_id \
-         WHERE i.credit <> m.brand OR i.page_url !~ '^https?://'",
+         WHERE i.page_url !~ '^https?://' \
+            OR (i.source_kind = 'maker' AND i.credit <> m.brand) \
+            OR (i.source_kind = 'retailer' AND i.credit = m.brand)",
     )
     .fetch_one(&pool)
     .await
