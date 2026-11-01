@@ -775,17 +775,21 @@ function oneOf<T extends string>(
 export const SORTS: MaterialSort[] = [
   "name",
   "newest",
+  "added",
   "length",
   "volume",
   "weight",
 ];
 
+/** What each sort puts first: the newest model year, the latest filing, and
+ * the smallest value of a model's sizes for the measures. */
 export const SORT_LABELS: Record<MaterialSort, string> = {
   name: "Name",
-  newest: "Newest",
-  length: "Length",
-  volume: "Volume",
-  weight: "Weight",
+  newest: "Newest model",
+  added: "Recently added",
+  length: "Shortest first",
+  volume: "Smallest volume",
+  weight: "Lightest first",
 };
 
 /** Heaviest body weight the filter takes; the server bounds a paddler's

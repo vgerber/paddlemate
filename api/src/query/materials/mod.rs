@@ -107,7 +107,7 @@ fn sort_column(sort: MaterialSort) -> Option<&'static str> {
         MaterialSort::Length => Some("m.length_cm"),
         MaterialSort::Volume => Some("m.volume_l"),
         MaterialSort::Weight => Some("m.weight_kg"),
-        MaterialSort::Name | MaterialSort::Newest => None,
+        MaterialSort::Name | MaterialSort::Newest | MaterialSort::Added => None,
     }
 }
 
@@ -192,10 +192,20 @@ pub(super) fn push_score(qb: &mut QueryBuilder<'_, sqlx::Postgres>, q: &str) {
 /// one for texts long enough to tolerate a typo.
 pub(super) fn push_name_match(qb: &mut QueryBuilder<'_, sqlx::Postgres>, q: &str) {
     let pattern = escape_like(q);
+    let pattern_full = pattern.clone();
     qb.push(" AND (");
     qb.push(NAME_KEY);
     qb.push(" LIKE '%' || public.search_key(");
     qb.push_bind(pattern);
+    qb.push(") || '%'");
+    // The variant is part of what a reader types ("drip pr-x"); the indexed
+    // expression above covers brand and model only, so this is a scan, which
+    // the size of the catalogue allows.
+    qb.push(
+        " OR public.search_key(m.brand || ' ' || m.model || ' ' || COALESCE(m.variant, '')) \
+             LIKE '%' || public.search_key(",
+    );
+    qb.push_bind(pattern_full);
     qb.push(") || '%'");
     if q.chars().count() >= FUZZY_MIN_CHARS {
         // The indexed expression stays on the left of %> so the gate and
@@ -255,18 +265,26 @@ pub async fn search(
         // cannot be placed among the ones that do.
         Some(column) => {
             qb.push(column);
-            qb.push(" ASC NULLS LAST, m.brand, m.model");
+            qb.push(" ASC NULLS LAST, m.brand, m.model, m.variant NULLS FIRST");
         }
         None if filters.sort == MaterialSort::Newest => {
+            qb.push("m.year_from DESC NULLS LAST, m.brand, m.model, m.variant NULLS FIRST");
+        }
+        None if filters.sort == MaterialSort::Added => {
             qb.push("m.created_at DESC, m.id DESC");
         }
         None if q.is_some() => {
-            qb.push("tier, score DESC, m.brand, m.model");
+            qb.push("tier, score DESC, m.brand, m.model, m.variant NULLS FIRST");
         }
         None => {
             qb.push("m.brand, m.model, m.variant NULLS FIRST");
         }
     }
+    // Entries tie on everything above when they are sizes of one model; the
+    // size order, then the id, keeps the pages stable.
+    qb.push(", ");
+    qb.push(SIZE_ORDER);
+    qb.push(", m.id");
 
     qb.push(" LIMIT ");
     qb.push_bind(per_page);
@@ -274,16 +292,32 @@ pub async fn search(
     qb.push_bind(offset);
 
     let rows = qb.build().fetch_all(pool).await?;
-    let total = rows
-        .first()
-        .and_then(|row| row.try_get::<i64, _>("total_count").ok())
-        .unwrap_or(0);
+    let total = match rows.first() {
+        Some(row) => row.try_get::<i64, _>("total_count")?,
+        None if page > 1 => count_entries(pool, filters, q).await?,
+        None => 0,
+    };
     let mut items = rows
         .iter()
         .map(row_to_material)
         .collect::<Result<Vec<_>, _>>()?;
     images::attach(pool, &mut items).await?;
     Ok((items, total))
+}
+
+/// The match count, for a page past the last one that has no row to carry it.
+async fn count_entries(
+    pool: &PgPool,
+    filters: &MaterialFilters,
+    q: Option<&str>,
+) -> Result<i64, sqlx::Error> {
+    let mut qb: QueryBuilder<sqlx::Postgres> =
+        QueryBuilder::new("SELECT COUNT(*) FROM materials m WHERE 1=1");
+    if let Some(q) = q {
+        push_name_match(&mut qb, q);
+    }
+    push_filters(&mut qb, filters);
+    qb.build_query_scalar().fetch_one(pool).await
 }
 
 pub async fn fetch(pool: &PgPool, id: MaterialId) -> Result<Option<Material>, sqlx::Error> {

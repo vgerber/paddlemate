@@ -49,7 +49,7 @@ beside the heading); each one set shows as a chip that takes itself away:
 | --- | --- |
 | Construction | Plastic, composite, inflatable, folding or wood |
 | Fits paddler | Your body weight in your weight unit (Settings > Units), keeping the boats whose paddler range covers it |
-| Sort | Name, newest, or by length, volume or weight |
+| Sort | Name; newest model (by model year, newest first, no year last, ties by name); recently added (when the entry was filed); shortest, smallest volume or lightest first |
 
 A boat that states no paddler range is kept by the **fits paddler** filter:
 saying nothing is not the same as saying it does not fit.
@@ -297,6 +297,13 @@ paging; a malformed list or more than `MAX_COMPARE_IDS` (8) ids is a 400.
 10000 and `per_page` to 100. The daily cap on new entries is
 `MAX_NEW_PER_DAY` in `api/src/query/materials/write.rs`; the count and the insert
 run under a per-user advisory lock, and the 31st is a 429.
+
+`sort` takes `name`, `newest` (model year, newest first), `added` (latest
+filing first), `length`, `volume` and `weight` (ascending). On the model list a
+model's value is the smallest across its sizes (the year: the latest of its
+sizes, so a re-released model counts as new); a model or entry that does not state it comes last, and every order ends
+on the id so pages never repeat or skip a row. A page past the last still
+reports the true `total`. `q` matches brand, model and variant ("drip pr-x").
 
 With a query text and the default name sort, results are ranked the way the
 river search ranks them - exact, prefix, substring, fuzzy, then trigram
