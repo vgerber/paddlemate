@@ -35,6 +35,9 @@ export const overlayComponents: Components = {
 
   MuiPopover: {
     styleOverrides: {
+      // Above the full-screen forms (1350): a menu at the modal default
+      // opens beneath the form that owns it and can not be clicked.
+      root: { zIndex: 1400 },
       paper: {
         boxShadow: elevation.e2,
         backgroundColor: tokens.surfaceBright,

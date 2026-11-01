@@ -158,11 +158,7 @@ test.describe("availability", () => {
     await pickGroups(page, "Creek");
     await page.getByLabel("Last year").fill("2008");
     await page.getByLabel("Availability", { exact: true }).click();
-    // The menu opens on the current choice (unknown); one step up is
-    // Discontinued. The keyboard avoids clicking an option that is still
-    // moving into place.
-    await page.keyboard.press("ArrowUp");
-    await page.keyboard.press("Enter");
+    await page.getByRole("option", { name: "Discontinued" }).click();
     await expect(
       page.getByRole("combobox", { name: "Availability" }),
     ).toHaveText("Discontinued");
