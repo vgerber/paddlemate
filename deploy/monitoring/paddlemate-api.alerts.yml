@@ -2,15 +2,8 @@
 groups:
   - name: paddlemate-api
     rules:
-      - alert: PaddlemateApiDown
-        expr: up{job="paddlemate-api"} == 0
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Paddlemate API is down"
-          description: "Prometheus could not scrape {{ $labels.instance }} for 5 minutes."
-
+      # Down is left to the NAS-wide ScrapeTargetDown, ContainerMissing and
+      # EndpointDown rules, which would otherwise mail twice.
       - alert: PaddlemateApiHighErrorRatio
         expr: |
           sum(rate(http_requests_total{job="paddlemate-api",status=~"5.."}[5m]))
