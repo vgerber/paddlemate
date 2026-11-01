@@ -120,7 +120,8 @@ test.describe("catalogue detail", () => {
     const thumb = lens.getByTestId("material-thumb");
     await expect(thumb.locator("img")).toHaveAttribute("loading", "lazy");
     const size = await thumb.boundingBox();
-    expect(size?.width).toBe(44);
+    // 80 square in a phone row, 144 high in a desktop card.
+    expect([80, 144]).toContain(size?.height);
     await expect(
       page
         .getByTestId("material-row")

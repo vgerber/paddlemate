@@ -38,7 +38,7 @@ test.describe("wiki list", () => {
     await expect(cascade).toContainText("Creek");
     await expect(cascade).toContainText("since 2022");
     await expect(cascade).toContainText("254-274 cm");
-    await expect(cascade.getByTestId("model-sizes")).toHaveText("S · M · L");
+    await expect(cascade.getByTestId("model-sizes")).toHaveText("S M L");
     await expect(page.getByText("2 models")).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });

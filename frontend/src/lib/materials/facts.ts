@@ -2,7 +2,6 @@ import {
   type Material,
   type MaterialAvailability,
   type MaterialCategory,
-  type MaterialModel,
 } from "@/lib/api";
 import {
   bareQuantity,
@@ -150,7 +149,7 @@ export function modelSizes(
 
 /** A handful of fixed lengths as a list, "191, 194, 197 cm"; more than that
  * reads as the range they span. */
-function lengthsLabel(lengths: number[], units: Units): string {
+export function lengthsLabel(lengths: number[], units: Units): string {
   const unique = [...new Set(lengths)].sort((a, b) => a - b);
   if (unique.length > 5) return rangeLabel("length", unique, units);
   const num = (cm: number) =>
@@ -172,57 +171,6 @@ export function rangeLabel(
   const max = num(Math.max(...stated));
   const unit = unitLabel(quantity, units);
   return min === max ? `${min} ${unit}` : `${min}-${max} ${unit}`;
-}
-
-/** The figures line of a model row: length and weight across its sizes
- * (volume as well for boats), the ones the sizes state only. Unlabelled, the
- * bare length and weight for a row that has little room: "238-253 cm ·
- * 17-20 kg". */
-export function modelFigures(
-  model: MaterialModel,
-  units: Units,
-  labelled = true,
-): string {
-  const sizes = model.sizes;
-  const isPaddle = model.category === "paddle";
-  const lengths = sizes.flatMap((size) => size.lengths_cm ?? []);
-  const parts: [string, string][] = [
-    [
-      "Length",
-      isPaddle && lengths.length > 0
-        ? lengthsLabel(lengths, units)
-        : rangeLabel(
-            "length",
-            sizes.map((size) => size.length_cm),
-            units,
-          ),
-    ],
-    [
-      "Volume",
-      rangeLabel(
-        "volume",
-        sizes.map((s) => s.volume_l),
-        units,
-      ),
-    ],
-    [
-      "Weight",
-      rangeLabel(
-        isPaddle ? "light" : "weight",
-        sizes.map((s) => s.weight_kg),
-        units,
-      ),
-    ],
-  ];
-  return parts
-    .filter(
-      ([label, value]) =>
-        value &&
-        !(isPaddle && label === "Volume") &&
-        !(!labelled && label === "Volume"),
-    )
-    .map(([label, value]) => (labelled ? `${label} ${value}` : value))
-    .join(labelled ? "  ·  " : " · ");
 }
 
 /** The production run, open at either end: "2022-", "2019-2024", "2020".

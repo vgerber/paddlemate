@@ -1,47 +1,33 @@
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
-import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { cardRowSx, listRowSx } from "@/components/canvas/flatRow";
 import { trailSlotSx } from "@/components/phone/phoneGrid";
 import { ActionMenu, type RowAction } from "@/components/RowMenu";
 import RowOpenTarget from "@/components/RowOpenTarget";
 import type { MaterialModel } from "@/lib/api";
-import { rowAvailabilityLabel } from "@/lib/materials/availability";
+import { modelCardFacts } from "@/lib/materials/card";
 import { MAX_COMPARE } from "@/lib/materials/compare";
-import { modelFigures, modelTitle, sinceLabel } from "@/lib/materials/facts";
-import { CATEGORY_LABELS, disciplineLabel } from "@/lib/materials/specs";
+import { modelTitle } from "@/lib/materials/facts";
 import { useUnits } from "@/lib/prefs/units";
-import { cardTitleSx, theme } from "@/lib/theme/theme";
+import { withAlpha } from "@/lib/theme/alpha";
+import { theme } from "@/lib/theme/theme";
+import ModelCardBody from "./ModelCardBody";
+import ModelRowBody from "./ModelRowBody";
 
 const { tokens } = theme;
 
-/** Side of the thumbnail, px. */
-const THUMB = 44;
-
-const metaSx = {
-  fontSize: "0.8125rem",
-  lineHeight: "18px",
-  color: "text.secondary",
-  overflowWrap: "anywhere",
-} as const;
-
-const valueSx = {
-  ...metaSx,
-  fontVariantNumeric: "tabular-nums",
-  // Wraps below the name rather than squeezing it, in a narrow card.
-  flex: "0 0 auto",
-  ml: "auto",
-} as const;
-
-/** One model in the wiki list, two lines: its name with the figures across
- * its sizes at the right, then what it is with the sizes at the right. A
- * photo shows only when there is one. The checkbox at the right puts the
- * model in the comparison (its first size, or the sizes already picked); it
- * shows on hover and focus, and stays while anything is being compared. */
+/** One model in the wiki list: a card of the desktop grid (`card`) or a row
+ * of the phone list, both with the same content in the same order (photo,
+ * brand, name, what it is, key figures, tags). The checkbox puts the model in
+ * the comparison (its first size, or the sizes already picked); it sits in
+ * one corner of the card, or at the end of the row, shows on hover and focus
+ * and stays while anything is being compared. A touch screen always shows
+ * it. */
 export default function ModelRow({
   model,
   card = false,
+  tagRow = false,
   selected,
   pickedIds,
   compareDisabled,
@@ -53,6 +39,8 @@ export default function ModelRow({
   model: MaterialModel;
   /** A card of its own, for the desktop grid, rather than a row of a list. */
   card?: boolean;
+  /** A card keeps room for tags, as other cards of its grid have some. */
+  tagRow?: boolean;
   /** True while a size of the model is held in the comparison. */
   selected: boolean;
   /** The ids held in the comparison, for the size choice. */
@@ -69,21 +57,10 @@ export default function ModelRow({
 }) {
   const [units] = useUnits();
   const [menuAt, setMenuAt] = useState<HTMLElement | null>(null);
-  const kind = [
-    showCategory && CATEGORY_LABELS[model.category],
-    model.discipline && disciplineLabel(model.discipline, model.category),
-    sinceLabel(model),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const facts = modelCardFacts(model, units, showCategory);
   // One size ticks at once; several ask which, so no size is picked unseen.
   const askSize = !selected && model.sizes.length > 1;
   const full = pickedIds.length >= MAX_COMPARE;
-  const figures = modelFigures(model, units, false);
-  const sizes = model.sizes
-    .map((size) => size.size)
-    .filter(Boolean)
-    .join(" · ");
   const sizeActions: RowAction[] = model.sizes.map((size) => {
     const held = pickedIds.includes(size.id);
     return {
@@ -93,8 +70,41 @@ export default function ModelRow({
       onClick: () => onToggleSize(size.id),
     };
   });
-  const discontinued = rowAvailabilityLabel(model);
   const comparing = pickedIds.length > 0;
+
+  const checkbox = (
+    <>
+      <Checkbox
+        className="compare-box"
+        checked={selected}
+        disabled={compareDisabled}
+        onChange={(event) =>
+          askSize ? setMenuAt(event.currentTarget) : onToggleCompare()
+        }
+        slotProps={{
+          input: { "aria-label": `Compare ${modelTitle(model)}` },
+        }}
+        sx={{
+          width: tokens.touch.min,
+          height: tokens.touch.min,
+          p: 0,
+          ...(card && {
+            position: "absolute",
+            top: 8,
+            right: 8,
+            bgcolor: withAlpha(tokens.surface, "scrim"),
+            "&:hover": { bgcolor: tokens.surface },
+          }),
+        }}
+      />
+      <ActionMenu
+        actions={sizeActions}
+        anchor={menuAt}
+        onClose={() => setMenuAt(null)}
+        label={`Sizes of ${modelTitle(model)}`}
+      />
+    </>
+  );
 
   return (
     // The open target and the checkbox are siblings: a checkbox inside a
@@ -104,10 +114,14 @@ export default function ModelRow({
       data-testid="material-row"
       sx={{
         ...(card
-          ? { ...cardRowSx, mb: 0, px: `${tokens.phone.inner}px` }
-          : listRowSx),
-        display: "flex",
-        alignItems: "center",
+          ? {
+              ...cardRowSx,
+              mb: 0,
+              p: 1,
+              position: "relative",
+              display: "flex",
+            }
+          : { ...listRowSx, display: "flex", alignItems: "center" }),
         listStyle: "none",
         // Out of the way until the row is reached, or while comparing; a
         // touch screen has no hover, so it always shows there.
@@ -117,87 +131,31 @@ export default function ModelRow({
         },
       }}
     >
-      <RowOpenTarget hang onClick={onOpen} sx={{ alignItems: "center" }}>
-        {model.thumb_url && (
-          <Box
-            data-testid="material-thumb"
+      {card ? (
+        <>
+          <RowOpenTarget
+            onClick={onOpen}
             sx={{
-              flexShrink: 0,
-              width: THUMB,
-              height: THUMB,
-              mr: 1.5,
-              borderRadius: `${tokens.radii.sm}px`,
-              bgcolor: tokens.surfaceHigh,
-              overflow: "hidden",
+              flex: 1,
+              minWidth: 0,
+              flexDirection: "column",
+              alignItems: "stretch",
+              justifyContent: "flex-start",
+              borderRadius: `${tokens.radii.md}px`,
             }}
           >
-            <Box
-              component="img"
-              src={model.thumb_url}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              sx={{
-                display: "block",
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-              }}
-            />
-          </Box>
-        )}
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 1.5 }}>
-            <Typography
-              sx={{
-                ...cardTitleSx,
-                flex: "1 1 auto",
-                minWidth: 0,
-                overflowWrap: "anywhere",
-              }}
-            >
-              {modelTitle(model)}
-            </Typography>
-            {figures && <Typography sx={valueSx}>{figures}</Typography>}
-          </Box>
-          <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 1.5 }}>
-            {(kind || discontinued) && (
-              <Typography sx={{ ...metaSx, flex: "1 1 auto", minWidth: 0 }}>
-                {kind}
-                {kind && discontinued && " · "}
-                {discontinued && (
-                  <span data-testid="availability-label">{discontinued}</span>
-                )}
-              </Typography>
-            )}
-            {sizes && (
-              <Typography data-testid="model-sizes" sx={valueSx}>
-                {sizes}
-              </Typography>
-            )}
-          </Box>
-        </Box>
-      </RowOpenTarget>
-      <Box sx={trailSlotSx}>
-        <Checkbox
-          className="compare-box"
-          checked={selected}
-          disabled={compareDisabled}
-          onChange={(event) =>
-            askSize ? setMenuAt(event.currentTarget) : onToggleCompare()
-          }
-          slotProps={{
-            input: { "aria-label": `Compare ${modelTitle(model)}` },
-          }}
-          sx={{ width: tokens.touch.min, height: tokens.touch.min, p: 0 }}
-        />
-        <ActionMenu
-          actions={sizeActions}
-          anchor={menuAt}
-          onClose={() => setMenuAt(null)}
-          label={`Sizes of ${modelTitle(model)}`}
-        />
-      </Box>
+            <ModelCardBody model={model} facts={facts} tagRow={tagRow} />
+          </RowOpenTarget>
+          {checkbox}
+        </>
+      ) : (
+        <>
+          <RowOpenTarget hang onClick={onOpen} sx={{ alignItems: "center" }}>
+            <ModelRowBody model={model} facts={facts} />
+          </RowOpenTarget>
+          <Box sx={trailSlotSx}>{checkbox}</Box>
+        </>
+      )}
     </Box>
   );
 }
