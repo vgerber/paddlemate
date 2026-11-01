@@ -123,6 +123,13 @@ export function ModelResults({
   onToggleCompare: (model: MaterialModel) => void;
   onToggleSize: (id: number) => void;
 }) {
+  // Cards of one grid keep the same blocks; the tag row's room is kept only
+  // when some card has tags.
+  const tagRow = items.some(
+    (model) =>
+      model.availability === "discontinued" ||
+      model.sizes.some((size) => size.size),
+  );
   return (
     <QueryStates
       query={query}
@@ -159,6 +166,7 @@ export function ModelResults({
             key={`${model.category}-${model.brand}-${model.model}-${model.variant ?? ""}`}
             model={model}
             card={grid}
+            tagRow={tagRow}
             selected={modelPicked(compareIds, model)}
             pickedIds={compareIds}
             compareDisabled={
@@ -187,4 +195,4 @@ export function ModelResults({
 }
 
 /** Narrowest a card of the desktop grid gets, in px. */
-const CARD_MIN = 340;
+const CARD_MIN = 248;

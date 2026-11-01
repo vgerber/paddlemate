@@ -5,7 +5,6 @@ import {
   materialFieldLabel,
   materialFieldValue,
   materialTitle,
-  modelFigures,
   modelSizes,
   modelTitle,
   paddleFacts,
@@ -191,24 +190,6 @@ describe("model rows", () => {
     expect(modelTitle(SCORCH)).toBe("Pyranha Scorch");
     expect(materialTitle(material({ model: "Scorch", size: "M" }))).toBe(
       "Testflow Scorch M",
-    );
-  });
-
-  test("figures span the sizes in the chosen unit", () => {
-    expect(modelFigures(SCORCH, METRIC)).toBe(
-      "Length 259-279 cm  ·  Volume 265-340 l  ·  Weight 21-24.5 kg",
-    );
-    expect(modelFigures(SCORCH, IMPERIAL)).toContain("Weight 46.3-54 lb");
-  });
-
-  test("one size reads as a single value, a paddle drops volume", () => {
-    const one: MaterialModel = {
-      ...SCORCH,
-      category: "paddle",
-      sizes: [{ id: 1, lengths_cm: [191, 194], weight_kg: 0.87 }],
-    };
-    expect(modelFigures(one, METRIC)).toBe(
-      "Length 191, 194 cm  ·  Weight 870 g",
     );
   });
 

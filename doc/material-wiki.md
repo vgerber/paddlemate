@@ -12,11 +12,16 @@ Measurements show, and are typed, in the units chosen under Settings > Units
 
 ## Finding a boat
 
-The list shows models, not single entries: the Pyranha Scorch is one row of
-two lines: its name with the length and weight it spans at the right, then
-"Creek - since 2021" (or "about 2021" when the year is weak) with its sizes
-(S, M, L) at the right. A photo shows only when the model has one, and the
-compare checkbox appears when you point at a row (always on a touch screen). The count above
+The list shows models, not single entries: the Pyranha Scorch is one card (on
+a phone, one row) however many sizes it has. Every card has the same parts in
+the same order: the photo (or a quiet icon in the same box when there is
+none), the brand, the model name, one line of what it is ("Creek - Plastic -
+since 2021", "about 2021" when the year is weak), the key specs, then small
+tags for the sizes (S, M, L) and "Discontinued". A boat shows length, volume
+and weight; a paddle shows length and weight. A model sold in several sizes
+shows the range they span, in your units, and a figure the model does not state
+leaves its place empty. The compare checkbox sits in the photo's corner and
+appears when you point at a card (always on a touch screen). The count above
 the list counts models. Tapping a row opens the model; the **Size** chips
 there switch between its sizes, and the address holds the size you picked.
 
@@ -37,7 +42,7 @@ follows the keyboard like a file browser: Up and Down move, Right opens, Left
 closes or goes up, Home and End jump, a letter jumps to the next name starting
 with it, Enter picks. The search text and the filters below narrow the tree's
 counts too. The page uses the window's width: the models are a grid of cards,
-two or three across, under a header card with the heading, the counts and the
+two to four across, under a header card with the heading, the counts and the
 sort.
 
 On a phone the **Browse** button beside the search opens the tree one level at

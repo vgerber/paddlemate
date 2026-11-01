@@ -149,7 +149,7 @@ slang, bounce or confetti. Color is used sparingly and always carries meaning.
 | Logs | Two panes on desktop; the date is a picker field |
 | Trips | Plan, Bases, Members and Logs tabs; the Plan pins a week strip with a dot on days that have runs and opens to a month; its days read in three states - past quiet (sunk ground, no shadow, grey heading), today ringed in teal, upcoming white with a hairline outline; bases and candidate bases (a closed base ends in a `LevelDots` row, one dot per run on its watch list); admins get Add member and the trip actions |
 | Proposals | The diff shows the before struck through next to the after; reviewing opens a dialog |
-| Material wiki | A normal page, not a map screen; the list, the entry, the comparison and the form share one column (max 1440), one 16 edge and one 8 gap between cards. From `md` the list opens with the breadcrumb as a slim line, then the same white `PanelHeader` card as the entry (title "Material wiki" or the picked path, "n models, m sizes" beneath, the sort as a field at its right), then a 300 sidebar card (search, the category tree, the filters in a quiet form: 13/600 labels, 32px teal-when-set pills in a 44px hit area, a compact weight field; a docked Add entry; it sticks and scrolls on its own) beside the models as a grid of cards, 340 wide at least. A model is two lines: name with its length and weight range at the right, then what it is with its sizes at the right; a photo shows only when there is one, and the compare checkbox shows on hover and focus (always on a touch screen, and while anything is picked). On a phone it is edge to edge under a `PanelHeader`: search with a Browse button (icon only below 360), one chip row (Filters, filters set, the path), a count line, the same rows, a compare bar above the FAB (`aboveFab`, teal like Trips); Browse is a drill-down `BottomSheet` with a `PanelHeader` and a "Back to ..." row, Filters a sheet. The form is a 720 card on the page ground with its bottom bar as the card foot. The tree follows the Tree rule below. The comparison follows the Compare rule below |
+| Material wiki | A normal page, not a map screen; the list, the entry, the comparison and the form share one column (max 1440), one 16 edge and one 8 gap between cards. From `md` the list opens with the breadcrumb as a slim line, then the same white `PanelHeader` card as the entry (title "Material wiki" or the picked path, "n models, m sizes" beneath, the sort as a field at its right), then a 300 sidebar card (search, the category tree, the filters in a quiet form: 13/600 labels, 32px teal-when-set pills in a 44px hit area, a compact weight field; a docked Add entry; it sticks and scrolls on its own) beside the models as a grid of cards, 248 wide at least (two to four across). A model is a card (a row on a phone) built by the Material card rule below; the compare checkbox shows on hover and focus (always on a touch screen, and while anything is picked). On a phone it is edge to edge under a `PanelHeader`: search with a Browse button (icon only below 360), one chip row (Filters, filters set, the path), a count line, the same rows, a compare bar above the FAB (`aboveFab`, teal like Trips); Browse is a drill-down `BottomSheet` with a `PanelHeader` and a "Back to ..." row, Filters a sheet. The form is a 720 card on the page ground with its bottom bar as the card foot. The tree follows the Tree rule below. The comparison follows the Compare rule below |
 | Settings | Two panes on desktop; Profile, Inbox and Tools on a phone; an access token is shown once, when made |
 
 Components for each live in the matching folder under `frontend/src/components/`.
@@ -166,6 +166,26 @@ is a link and the back button works; picking the picked row folds it. On a
 phone the same data is a drill-down sheet one level at a time: back arrow,
 "All <level>" first in teal, rows of 48 with count and chevron; the path then
 shows as chips.
+
+## Material card
+
+A model in the wiki is one card on a desktop and one row on a phone, and every
+one has the same parts in the same order (`ModelCardBody`, `ModelRowBody`; the
+content comes from `modelCardFacts` in `lib/materials/card.ts`):
+
+| Part | Rule |
+|---|---|
+| Photo | 144 high on a card, 80 square on a row, `thumb_url`, `object-fit: contain` on `surfaceHigh`, lazy. No photo keeps the box with the outline photo icon, never a collapsed card |
+| Brand | `labelSx`, one line, above the name |
+| Name | model and variant, `cardTitleSx`, two lines at most; a card keeps two lines of room so the blocks below align |
+| Meta | one line: kind, construction, years ("since 2021", "about 2010"); a card wraps it at two |
+| Specs | aligned label/value pairs in a fixed order per category (boat: length, volume, weight; paddle: length, weight), a range across sizes, in the reader's units. A figure the model lacks keeps its slot empty, never "-". A row shows the values on one line |
+| Tags | sizes and "Discontinued" as 24px tags in one row at the foot; the row's room is kept for every card only when some card in the grid has tags |
+| Compare | one checkbox in the corner of the photo (end of the row on a phone), 44px, with a surface backing over the picture |
+
+Cards in a grid row are the same height; the specs block sits at the foot so
+it lines up. The photo has no alt text because the name beside it already
+names the model.
 
 ## Color
 
