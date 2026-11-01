@@ -3,7 +3,6 @@ import {
   computed,
   expectNoHorizontalOverflow,
   expectTouchTargets,
-  phoneOnly,
 } from "../support/fixture";
 
 // The material wiki. Fixture entries 9851-9860: the Testflow Cascade in S, M
@@ -57,7 +56,10 @@ test.describe("wiki list", () => {
   test("the filters sheet narrows the list and shows as chips", async ({
     page,
   }) => {
-    phoneOnly("the desktop filters sit in the sidebar, see tree.spec");
+    test.skip(
+      !test.info().project.name.startsWith("phone"),
+      "the desktop filters sit in the sidebar, see tree.spec",
+    );
     await openWiki(page, FIXTURE);
     await page.getByTestId("filters-chip").click();
     const sheet = page.getByRole("dialog", { name: "Filters" });

@@ -41,6 +41,11 @@ test.describe("compare layout", () => {
   test("more than four entries scroll under a sticky head, with a hint", async ({
     page,
   }) => {
+    // The page is up to 1400px wide, which holds six columns: narrow the
+    // window on a desktop so the table has to scroll.
+    if (test.info().project.name.startsWith("desktop")) {
+      await page.setViewportSize({ width: 800, height: 900 });
+    }
     await openCompare(page, [9851, 9852, 9853, 9854, 9855, 9856]);
     await expect(page.getByTestId("compare-scroll-hint")).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -53,6 +58,22 @@ test.describe("compare layout", () => {
     await region(page).evaluate((el) => el.scrollTo(0, 80));
     const after = await head.boundingBox();
     expect(after?.y).toBeCloseTo(before?.y ?? 0, 0);
+  });
+
+  test("six entries on a wide window fit, so no scroll hint shows", async ({
+    page,
+  }) => {
+    test.skip(
+      !test.info().project.name.startsWith("desktop"),
+      "a desktop layout",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openCompare(page, [9851, 9852, 9853, 9854, 9855, 9856]);
+    const fits = await region(page).evaluate(
+      (el) => el.scrollWidth <= el.clientWidth + 1,
+    );
+    expect(fits).toBe(true);
+    await expect(page.getByTestId("compare-scroll-hint")).toHaveCount(0);
   });
 
   test("the values of equal entries sit in the strip, not in the table @small", async ({
