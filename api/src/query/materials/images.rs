@@ -11,31 +11,49 @@ use crate::{
 /// Tries a transient failure (timeout, 5xx) gets before the row is failed.
 pub const MAX_ATTEMPTS: i32 = 3;
 
-/// Fill in the fetched images of every material in one query.
+/// SQL that holds when entries `a` and `b` are sizes of one model, folded the
+/// way the unique index folds the key.
+pub(super) fn same_model(a: &str, b: &str) -> String {
+    let key = |t: &str| {
+        format!(
+            "(lower(btrim({t}.brand)), lower(btrim({t}.model)), \
+             lower(btrim(COALESCE({t}.variant, ''))))"
+        )
+    };
+    format!("{a}.category = {b}.category AND {} = {}", key(a), key(b))
+}
+
+/// Fill in the fetched images of every material in one query. A mirrored
+/// photo belongs to its own entry; an uploaded one shows on every size of its
+/// model, because the paddler photographed the boat, not one size of it.
 pub async fn attach(pool: &PgPool, materials: &mut [Material]) -> Result<(), sqlx::Error> {
     if materials.is_empty() {
         return Ok(());
     }
     let ids: Vec<MaterialId> = materials.iter().map(|m| m.id).collect();
-    let rows = sqlx::query(
-        "SELECT id, material_id, file, page_url, credit FROM material_images \
-         WHERE material_id = ANY($1) AND status = 'fetched' ORDER BY id",
-    )
-    .bind(&ids)
-    .fetch_all(pool)
-    .await?;
+    let sql = format!(
+        "SELECT m.id AS target, i.id, i.file, i.page_url, i.credit, i.source_kind \
+         FROM materials m JOIN material_images i ON i.status = 'fetched' AND ( \
+             i.material_id = m.id OR (i.source_kind = 'user' AND EXISTS ( \
+                 SELECT 1 FROM materials s WHERE s.id = i.material_id AND {}))) \
+         WHERE m.id = ANY($1) ORDER BY i.id",
+        same_model("s", "m")
+    );
+    let rows = sqlx::query(&sql).bind(&ids).fetch_all(pool).await?;
     for row in rows {
-        let material_id: MaterialId = row.try_get("material_id")?;
+        let target: MaterialId = row.try_get("target")?;
         let file: String = row.try_get("file")?;
-        let Some(material) = materials.iter_mut().find(|m| m.id == material_id) else {
+        let Some(material) = materials.iter_mut().find(|m| m.id == target) else {
             continue;
         };
+        let page_url: String = row.try_get("page_url")?;
         material.images.push(MaterialImage {
             id: row.try_get("id")?,
             url: media::url_for(&file),
             thumb_url: media::url_for(&media::thumb_key(&file)),
-            page_url: row.try_get("page_url")?,
+            page_url: (!page_url.is_empty()).then_some(page_url),
             credit: row.try_get("credit")?,
+            source_kind: row.try_get("source_kind")?,
         });
     }
     Ok(())
@@ -51,7 +69,7 @@ pub struct PendingImage {
 
 /// The hosts the job may contact: those of the seeded links.
 pub async fn allowed_hosts(pool: &PgPool) -> Result<Vec<String>, sqlx::Error> {
-    sqlx::query_scalar("SELECT DISTINCT host FROM material_images")
+    sqlx::query_scalar("SELECT DISTINCT host FROM material_images WHERE source_kind <> 'user'")
         .fetch_all(pool)
         .await
 }
@@ -136,24 +154,32 @@ pub async fn block_host(pool: &PgPool, host: &str, reason: &str) -> Result<(), s
     Ok(())
 }
 
-/// Take one image down. The image is looked up inside its entry. Returns
-/// None when there is no such live image, else the stored file to delete.
+/// Take one image down. The image is looked up inside its entry (or, for an
+/// uploaded photo, inside the entry's model, since it shows on every size).
+/// Returns None when there is no such live image, else the stored file to
+/// delete.
 pub async fn remove_one(
     pool: &PgPool,
     material_id: MaterialId,
     image_id: i64,
 ) -> Result<Option<Option<String>>, sqlx::Error> {
-    let row = sqlx::query(
+    let sql = format!(
         "WITH old AS ( \
              SELECT id, file FROM material_images \
-             WHERE id = $1 AND material_id = $2 AND status <> 'removed' FOR UPDATE) \
+             WHERE id = $1 AND status <> 'removed' AND (material_id = $2 OR ( \
+                 source_kind = 'user' AND material_id IN ( \
+                     SELECT s.id FROM materials s JOIN materials t ON t.id = $2 \
+                     AND {}))) \
+             FOR UPDATE) \
          UPDATE material_images i SET status = 'removed', file = NULL FROM old \
          WHERE i.id = old.id RETURNING old.file",
-    )
-    .bind(image_id)
-    .bind(material_id)
-    .fetch_optional(pool)
-    .await?;
+        same_model("s", "t")
+    );
+    let row = sqlx::query(&sql)
+        .bind(image_id)
+        .bind(material_id)
+        .fetch_optional(pool)
+        .await?;
     row.map(|row| row.try_get("file")).transpose()
 }
 

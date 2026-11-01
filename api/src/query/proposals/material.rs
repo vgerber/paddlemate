@@ -5,11 +5,12 @@ use sqlx::{PgConnection, PgPool};
 
 use super::create::insert_row;
 use super::rows::{row_to_proposal, with_names};
+use crate::media::StoredImage;
 use crate::models::{
     material::{Material, MaterialBody},
     proposal::{Proposal, ProposalOperation},
 };
-use crate::query::materials;
+use crate::query::materials::{self, photos};
 
 /// Material proposals one user may send per day.
 pub const MAX_PER_DAY: i64 = materials::MAX_NEW_PER_DAY;
@@ -131,4 +132,72 @@ pub(super) async fn apply(
         _ => {}
     }
     Ok(())
+}
+
+/// Store a paddler's photo under review and the proposal that asks for it,
+/// in one transaction. The caps are the photo caps, checked under their locks.
+/// The proposal holds ids and names only, never the file's address: a pending
+/// proposal is listed publicly, and the photo is not public until approved.
+pub async fn submit_photo(
+    db: &PgPool,
+    material_id: i64,
+    stored: &StoredImage,
+    credit: &str,
+    user_id: &str,
+    note: Option<&str>,
+) -> Result<Proposal, photos::UploadError> {
+    let mut tx = db.begin().await?;
+    photos::check_in(&mut tx, material_id, user_id, false, true).await?;
+    let image_id = photos::insert_in(&mut tx, material_id, stored, credit, user_id, false).await?;
+    let (brand, model, variant, size): (String, String, Option<String>, Option<String>) =
+        sqlx::query_as("SELECT brand, model, variant, size FROM materials WHERE id = $1")
+            .bind(material_id)
+            .fetch_one(&mut *tx)
+            .await?;
+    let data = json!({
+        "image_id": image_id,
+        "credit": credit,
+        "brand": brand,
+        "model": model,
+        "variant": variant,
+        "size": size,
+    });
+    let row = insert_row(
+        &mut tx,
+        "material_photo",
+        Some(material_id),
+        "create",
+        data,
+        None,
+        user_id,
+        note,
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(with_names(db, row_to_proposal(&row)).await?)
+}
+
+/// Make the photo of an approved photo proposal live.
+pub(super) async fn apply_photo(
+    conn: &mut PgConnection,
+    entity_id: Option<i64>,
+    data: &Value,
+) -> Result<(), sqlx::Error> {
+    if let (Some(material_id), Some(image_id)) = (entity_id, data["image_id"].as_i64()) {
+        photos::approve_in(conn, material_id, image_id).await?;
+    }
+    Ok(())
+}
+
+/// Delete the photo of a rejected or withdrawn photo proposal; the file to
+/// delete once the transaction has committed.
+pub(super) async fn discard_photo(
+    conn: &mut PgConnection,
+    entity_id: Option<i64>,
+    data: &Value,
+) -> Result<Option<String>, sqlx::Error> {
+    match data["image_id"].as_i64() {
+        Some(image_id) => photos::discard_in(conn, entity_id, image_id).await,
+        None => Ok(None),
+    }
 }

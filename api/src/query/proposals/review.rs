@@ -58,12 +58,27 @@ pub async fn unvote_proposal(
 /// by the route handler. Associated votes are removed via ON DELETE CASCADE.
 /// Returns true if a row was removed.
 pub async fn delete_proposal(db: &PgPool, proposal_id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM proposals WHERE id = $1")
-        .bind(proposal_id)
-        .execute(db)
-        .await?;
-
-    Ok(result.rows_affected() > 0)
+    let mut tx = db.begin().await?;
+    let gone: Option<(String, Option<i64>, serde_json::Value)> = sqlx::query_as(
+        "DELETE FROM proposals WHERE id = $1 RETURNING entity_type, entity_id, proposed_data",
+    )
+    .bind(proposal_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some((entity_type, entity_id, data)) = gone else {
+        return Ok(false);
+    };
+    // A withdrawn photo proposal takes its photo with it.
+    let file = if entity_type == "material_photo" {
+        super::material::discard_photo(&mut tx, entity_id, &data).await?
+    } else {
+        None
+    };
+    tx.commit().await?;
+    if let Some(file) = file {
+        crate::media::delete_image(&file).await;
+    }
+    Ok(true)
 }
 
 /// Review a proposal: approve or reject it.
@@ -98,8 +113,13 @@ pub async fn review_proposal(
 
     let proposal = row_to_proposal(&row);
 
+    let mut dropped_file = None;
     if matches!(new_status, ProposalStatus::Approved) {
         apply_proposal(&mut tx, &proposal, reviewer_id).await?;
+    } else if proposal.entity_type == ProposalEntityType::MaterialPhoto {
+        dropped_file =
+            super::material::discard_photo(&mut tx, proposal.entity_id, &proposal.proposed_data)
+                .await?;
     }
 
     let updated_row = sqlx::query(&format!(
@@ -116,6 +136,9 @@ pub async fn review_proposal(
     .await?;
 
     tx.commit().await?;
+    if let Some(file) = dropped_file {
+        crate::media::delete_image(&file).await;
+    }
 
     with_names(db, row_to_proposal(&updated_row))
         .await
@@ -348,6 +371,10 @@ async fn apply_proposal(
             if let Some(id) = proposal.entity_id {
                 delete_tracked(tx, EntityKind::Feature, id, &via).await?;
             }
+        }
+
+        (ProposalEntityType::MaterialPhoto, _) => {
+            super::material::apply_photo(tx, proposal.entity_id, data).await?;
         }
 
         (ProposalEntityType::Material, operation) => {

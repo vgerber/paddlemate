@@ -15,6 +15,9 @@ pub const MAX_UPLOAD_BYTES: usize = 8 * 1024 * 1024;
 const MAX_EDGE: u32 = 1600;
 /// Longest edge of the thumbnail used in lists and galleries.
 const THUMB_EDGE: u32 = 400;
+/// Most pixels a decoded upload may have. An 8 MB PNG can describe a canvas
+/// of gigapixels; decoding it would hold gigabytes.
+const MAX_PIXELS: u64 = 60_000_000;
 /// Re-encode quality for the stored JPEG.
 const JPEG_QUALITY: u8 = 82;
 
@@ -76,8 +79,16 @@ fn flatten_alpha(img: image::DynamicImage) -> image::DynamicImage {
 /// Decode `bytes` and encode the display copy and the thumbnail as JPEG,
 /// returning both and the display size.
 fn encode_copies(bytes: &[u8]) -> anyhow::Result<(Vec<u8>, Vec<u8>, u32, u32)> {
-    let decoded = image::load_from_memory(bytes)
-        .map_err(|_| anyhow::anyhow!("not a readable image (jpeg, png, webp or gif)"))?;
+    let unreadable = || anyhow::anyhow!("not a readable image (jpeg, png, webp or gif)");
+    let (width, height) = image::ImageReader::new(Cursor::new(bytes))
+        .with_guessed_format()
+        .map_err(|_| unreadable())?
+        .into_dimensions()
+        .map_err(|_| unreadable())?;
+    if u64::from(width) * u64::from(height) > MAX_PIXELS {
+        anyhow::bail!("image is too large in pixels");
+    }
+    let decoded = image::load_from_memory(bytes).map_err(|_| unreadable())?;
 
     let decoded = flatten_alpha(decoded);
     let display = if decoded.width().max(decoded.height()) > MAX_EDGE {
@@ -264,6 +275,35 @@ mod tests {
         let out = flatten_alpha(img.clone());
         assert_eq!(out.to_rgb8(), img.to_rgb8());
         assert!(!out.color().has_alpha());
+    }
+
+    #[test]
+    fn svg_and_huge_canvases_are_refused() {
+        let svg = br#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>"#;
+        assert!(encode_copies(svg).is_err());
+        // A PNG header claiming 20000 x 20000 pixels, with no pixel data.
+        let mut png = Cursor::new(Vec::new());
+        image::DynamicImage::new_luma8(2, 2)
+            .write_to(&mut png, ImageFormat::Png)
+            .unwrap();
+        let mut bytes = png.into_inner();
+        bytes[16..20].copy_from_slice(&20000u32.to_be_bytes());
+        bytes[20..24].copy_from_slice(&20000u32.to_be_bytes());
+        // The IHDR chunk's checksum covers its type and 13 data bytes.
+        let mut crc = 0xffff_ffffu32;
+        for byte in &bytes[12..29] {
+            crc ^= u32::from(*byte);
+            for _ in 0..8 {
+                crc = if crc & 1 == 1 {
+                    (crc >> 1) ^ 0xedb8_8320
+                } else {
+                    crc >> 1
+                };
+            }
+        }
+        bytes[29..33].copy_from_slice(&(!crc).to_be_bytes());
+        let err = encode_copies(&bytes).unwrap_err().to_string();
+        assert!(err.contains("too large"), "{err}");
     }
 
     #[tokio::test]
