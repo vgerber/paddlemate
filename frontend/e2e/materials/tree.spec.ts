@@ -18,7 +18,7 @@ const item = (page: Page, name: string | RegExp) =>
   tree(page).getByRole("treeitem", { name });
 
 test.describe("category tree on a desktop", () => {
-  test.beforeEach(({}, info) => {
+  test.beforeEach(({ page: _page }, info) => {
     test.skip(
       info.project.name.startsWith("phone"),
       "the tree is a desktop control",
@@ -106,6 +106,18 @@ test.describe("category tree on a desktop", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("the sidebar filters narrow the list and the tree, and show as chips", async ({
+    page,
+  }) => {
+    await page.goto(`/materials${PATH}`);
+    await expect(rows(page)).toHaveCount(9);
+    await page.getByRole("button", { name: "Composite" }).click();
+    await expect(page).toHaveURL(/construction=composite/);
+    await expect(page.getByTestId("empty-state")).toBeVisible();
+    await page.locator(".MuiChip-deleteIcon").click();
+    await expect(rows(page)).toHaveCount(9);
+  });
+
   test("the page uses the width of a wide window", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`/materials${PATH}`);
@@ -126,7 +138,7 @@ test.describe("category tree on a desktop", () => {
 });
 
 test.describe("browse sheet on a phone", () => {
-  test.beforeEach(({}, info) => {
+  test.beforeEach(({ page: _page }, info) => {
     test.skip(
       !info.project.name.startsWith("phone") &&
         !info.project.name.startsWith("small"),

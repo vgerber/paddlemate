@@ -71,7 +71,7 @@ function Row({
         display: "flex",
         alignItems: "center",
         gap: 1,
-        minHeight: leaf ? 40 : tokens.touch.min,
+        minHeight: tokens.touch.min,
         boxSizing: "border-box",
         pl: `${BASE_PAD + (row.level - 1) * LEVEL_STEP}px`,
         pr: 1,
@@ -278,7 +278,8 @@ export default function MaterialTree({
       </Box>
       <QueryStates
         query={query}
-        count={rows.length}
+        // An empty tree is the list's to explain; the tree just stays bare.
+        count={Math.max(rows.length, 1)}
         errorFallback="Could not load the categories."
         empty={{ icon: <MaterialIcon />, title: "No categories match that." }}
         py={2}

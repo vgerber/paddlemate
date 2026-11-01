@@ -259,32 +259,45 @@ export default function MaterialDetailView({
         </Card>
       )}
 
-      {(["hull", "cockpit", "paddler"] as const).map((group) => {
-        // With a size picker, its facts already say length, volume, weight
-        // and the paddler window; the cards keep the rest.
-        const specs = MATERIAL_SPECS.filter(
-          (spec) =>
-            spec.group === group &&
-            specValue(material, spec.key) != null &&
-            !(
-              sizes.length > 0 &&
-              (SIZE_FACT_KEYS.includes(spec.key) || group === "paddler")
-            ),
-        );
-        // A paddle's weight is among its facts; the boat groups do not apply.
-        if (specs.length === 0 || material.category === "paddle") return null;
-        return (
-          <Card key={group} heading={SPEC_GROUP_LABELS[group]}>
-            {specs.map((spec) => (
-              <SpecRow
-                key={spec.key}
-                label={spec.label}
-                value={formatSpec(specValue(material, spec.key), spec, units)}
-              />
-            ))}
-          </Card>
-        );
-      })}
+      <Box
+        sx={{
+          display: "grid",
+          // The hull, cockpit and paddler cards sit side by side where the
+          // width allows.
+          gridTemplateColumns: {
+            md: "repeat(auto-fit, minmax(340px, 1fr))",
+          },
+          columnGap: 1,
+          alignItems: "start",
+        }}
+      >
+        {(["hull", "cockpit", "paddler"] as const).map((group) => {
+          // With a size picker, its facts already say length, volume, weight
+          // and the paddler window; the cards keep the rest.
+          const specs = MATERIAL_SPECS.filter(
+            (spec) =>
+              spec.group === group &&
+              specValue(material, spec.key) != null &&
+              !(
+                sizes.length > 0 &&
+                (SIZE_FACT_KEYS.includes(spec.key) || group === "paddler")
+              ),
+          );
+          // A paddle's weight is among its facts; the boat groups do not apply.
+          if (specs.length === 0 || material.category === "paddle") return null;
+          return (
+            <Card key={group} heading={SPEC_GROUP_LABELS[group]}>
+              {specs.map((spec) => (
+                <SpecRow
+                  key={spec.key}
+                  label={spec.label}
+                  value={formatSpec(specValue(material, spec.key), spec, units)}
+                />
+              ))}
+            </Card>
+          );
+        })}
+      </Box>
 
       {siblings.data && siblings.data.length > 1 && (
         <Box>

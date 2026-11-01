@@ -70,7 +70,7 @@ function ComparePage() {
       title="Compare"
       subtitle={plural(compareIds.length, "entry", "entries")}
       onBack={goBack}
-      width={1100}
+      width={1400}
     >
       <Box sx={{ pt: 1, pb: 3 }}>
         {compareIds.length === 0 ? (

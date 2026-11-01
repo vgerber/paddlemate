@@ -70,8 +70,9 @@ water levels, and a shared logbook.
   wiki follow the choice, forms included; everything is stored metric. Gauge
   readings stay as the gauge reports them.
 - **Material wiki** - a shared gear catalog under Tools: models with their
-  sizes (S, M, L) as one row each, searchable by
-  brand and model, filterable by discipline, construction and the paddler
+  sizes (S, M, L) as one row each, browsable through a category tree
+  (category, type, brand), searchable by brand and model, filterable by
+  construction and the paddler
   weight they fit, and comparable side by side property for property. It
   comes pre-filled with whitewater kayaks and paddles, with credited photos,
   colourways and source links; admins can take photos down. Any signed-in

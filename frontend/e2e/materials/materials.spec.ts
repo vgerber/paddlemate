@@ -3,6 +3,7 @@ import {
   computed,
   expectNoHorizontalOverflow,
   expectTouchTargets,
+  phoneOnly,
 } from "../support/fixture";
 
 // The material wiki. Fixture entries 9851-9860: the Testflow Cascade in S, M
@@ -56,17 +57,20 @@ test.describe("wiki list", () => {
   test("the filters sheet narrows the list and shows as chips", async ({
     page,
   }) => {
+    phoneOnly("the desktop filters sit in the sidebar, see tree.spec");
     await openWiki(page, FIXTURE);
     await page.getByTestId("filters-chip").click();
     const sheet = page.getByRole("dialog", { name: "Filters" });
     await expect(sheet).toBeVisible();
-    await sheet.getByRole("button", { name: "Creek" }).click();
-    await expect(sheet.getByRole("button", { name: /1 result/ })).toBeVisible();
-    await sheet.getByRole("button", { name: /1 result/ }).click();
-    await expect(rows(page)).toHaveCount(1);
-    await expect(page).toHaveURL(/discipline=creek/);
+    await sheet.getByRole("button", { name: "Composite" }).click();
+    await expect(
+      sheet.getByRole("button", { name: /0 results/ }),
+    ).toBeVisible();
+    await sheet.getByRole("button", { name: /0 results/ }).click();
+    await expect(page.getByTestId("empty-state")).toBeVisible();
+    await expect(page).toHaveURL(/construction=composite/);
     // The set filter is a chip that takes itself away.
-    const chip = page.getByRole("button", { name: "Creek", exact: true });
+    const chip = page.getByRole("button", { name: "Composite", exact: true });
     await expect(chip).toBeVisible();
     await chip.locator(".MuiChip-deleteIcon").click();
     await expect(rows(page)).toHaveCount(2);
@@ -99,16 +103,12 @@ test.describe("wiki list", () => {
     expect((await first.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   });
 
-  test("the row is a card on a phone and flat on a desktop", async ({
+  test("a model is a card on a phone and in the desktop grid", async ({
     page,
-  }, info) => {
+  }) => {
     await openWiki(page);
     const shadow = await computed(rows(page).first(), "box-shadow");
-    if (info.project.name.startsWith("desktop")) {
-      expect(shadow).toBe("none");
-    } else {
-      expect(shadow).not.toBe("none");
-    }
+    expect(shadow).not.toBe("none");
   });
 
   test("Tools links the wiki with its count", async ({ page }) => {
