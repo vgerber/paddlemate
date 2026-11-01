@@ -30,8 +30,9 @@ export const materialKeys = {
   detail: (id: number) => [...materialKeys.all, id] as const,
 };
 
-export function useMaterials(filters: MaterialFilters = {}) {
+export function useMaterials(filters: MaterialFilters = {}, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: materialKeys.list(filters),
     queryFn: ({ signal }) => materialsApi.list(filters, signal),
   });

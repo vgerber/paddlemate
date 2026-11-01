@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import MaterialsView from "@/components/materials/MaterialsView";
 import WikiPage from "@/components/materials/WikiPage";
 import { fabSx } from "@/components/PaneFab";
+import { requireMaterials } from "@/lib/features";
 import { AddIcon } from "@/lib/icons";
 import {
   type MaterialWikiSearch,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/materials/materials";
 
 export const Route = createFileRoute("/materials/")({
+  beforeLoad: () => requireMaterials(),
   validateSearch: parseMaterialSearch,
   component: MaterialWikiPage,
 });

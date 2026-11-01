@@ -591,6 +591,7 @@ in `playwright.config.ts`.
 | `ANALYTICS_URL` | unset | HTTP URL of a ClickHouse; set to record one anonymous event per API request (see doc/setup.md). Unset: no task, nothing sent. Analytics measures which features are used, never who: no IP, raw user agent, token, user id, per-person hash or free text, ever; only coarse browser and OS families from a fixed list (decided 2026-11-01) |
 | `ANALYTICS_USER` / `ANALYTICS_PASSWORD` | unset | ClickHouse login for the insert (and the schema at start) |
 | `ANALYTICS_DATABASE` | `paddlemate` | ClickHouse database; letters, digits and underscores only |
+| `MATERIALS_ENABLED` | `true` | `false` does not mount `/materials` (404) and keeps the image mirror from starting, whatever `DISABLE_MATERIAL_MIRROR` says. Pair it with `VITE_FEATURE_MATERIALS=false` in the frontend build |
 | `VAPID_SUBJECT` | unset | `mailto:` or `https:` contact that push services may reach about this server |
 
 ### Search

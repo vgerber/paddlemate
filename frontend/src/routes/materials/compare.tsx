@@ -4,6 +4,7 @@ import ComparisonTable from "@/components/materials/ComparisonTable";
 import WikiPage from "@/components/materials/WikiPage";
 import EmptyState from "@/components/states/EmptyState";
 import QueryStates from "@/components/states/QueryStates";
+import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { CompareIcon } from "@/lib/icons";
@@ -16,6 +17,7 @@ import {
 import { plural } from "@/lib/text/format";
 
 export const Route = createFileRoute("/materials/compare")({
+  beforeLoad: () => requireMaterials(),
   validateSearch: (search: Record<string, unknown>) => ({
     ids: searchText(search.ids) ?? "",
   }),
