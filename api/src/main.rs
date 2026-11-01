@@ -192,10 +192,19 @@ async fn main() {
 
     let base_url = config.base_url.clone();
     let limits = RateLimits::from_config(&config);
+    let analytics = paddlemate_api::analytics::start(&config, &limits);
 
     let protected = ApiRouter::new()
-        .nest_api_service("/users", users_routes(state.clone()))
-        .nest_api_service("/groups", group_routes(state.clone()))
+        .nest_api_service(
+            "/users",
+            users_routes(state.clone())
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+        )
+        .nest_api_service(
+            "/groups",
+            group_routes(state.clone())
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+        )
         // Inside sign-in, so a write is charged to the user.
         .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
         .layer(middleware::from_fn(paddlemate_api::metrics::tag_client))
@@ -208,13 +217,38 @@ async fn main() {
         .nest_api_service(
             "/waterways",
             waterways_routes(state.clone())
-                .nest_api_service("/gauges", gauges_routes(state.clone())),
+                .nest_api_service(
+                    "/gauges",
+                    gauges_routes(state.clone())
+                        .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+                )
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
         )
-        .nest_api_service("/descents", descents_routes(state.clone()))
-        .nest_api_service("/materials", materials_routes(state.clone()))
-        .nest_api_service("/geo", geo_routes(state.clone()))
-        .nest_api_service("/proposals", proposals_routes(state.clone()))
-        .nest_api_service("/trips", trips_routes(state.clone()))
+        .nest_api_service(
+            "/descents",
+            descents_routes(state.clone())
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+        )
+        .nest_api_service(
+            "/materials",
+            materials_routes(state.clone())
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+        )
+        .nest_api_service(
+            "/geo",
+            geo_routes(state.clone())
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+        )
+        .nest_api_service(
+            "/proposals",
+            proposals_routes(state.clone())
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+        )
+        .nest_api_service(
+            "/trips",
+            trips_routes(state.clone())
+                .layer(middleware::from_fn(paddlemate_api::metrics::tag_route)),
+        )
         .layer(middleware::from_fn_with_state(limits.clone(), limit_writes))
         .layer(middleware::from_fn(paddlemate_api::metrics::tag_client))
         .layer(middleware::from_fn_with_state(
@@ -319,7 +353,7 @@ async fn main() {
 
     // After every layer above, so scrapes are not counted or limited. It sits
     // at the host root, outside the base path a reverse proxy forwards.
-    let app = paddlemate_api::metrics::wrap(app, metrics, Some(db.clone()));
+    let app = paddlemate_api::metrics::wrap(app, metrics, Some(db.clone()), analytics);
 
     let port = config.port.clone();
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}"))

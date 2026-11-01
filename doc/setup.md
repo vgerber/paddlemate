@@ -151,6 +151,48 @@ settings and secrets. Both files stay out of git.
   would panic), `down`, `up -d`. There are no down migrations, and production
   data changes go through a migration in the next release, never by hand.
 
+## Analytics and privacy
+
+The API can record one event per request in ClickHouse for a Grafana
+dashboard (which routes are used, errors, slow routes, popular searches). It is
+off unless `ANALYTICS_URL` is set; Prometheus `/metrics` is separate and stays.
+
+**Locally**
+
+```
+docker compose --profile analytics up -d clickhouse
+ANALYTICS_URL=http://localhost:8123 ANALYTICS_USER=paddlemate ANALYTICS_PASSWORD=paddlemate cargo run
+```
+
+The API creates the database, tables and views itself (`api/analytics/*.sql`,
+`CREATE ... IF NOT EXISTS`); a later change is a new numbered file. Events are
+sent in batches (1000 rows or 5 s); a failed insert drops the batch with a
+warning and counts `analytics_events_dropped_total`, requests never wait.
+
+**On the NAS**: run ClickHouse (about 1 GB server memory, data volume in the
+backups), set `ANALYTICS_URL` in `deploy/backend/.env` to its address on the
+NAS network (never the internet), use a user that may INSERT on
+`paddlemate.*` (and create the schema, or apply `api/analytics/0001_events.sql`
+once as an admin with `{database}` replaced), and give Grafana a read-only user
+on the datasource uid `clickhouse`. Import
+`deploy/analytics/api-usage.dashboard.json` (uid `paddlemate-api-usage`).
+
+**Privacy: what is stored**
+
+| Stored | How long |
+|---|---|
+| time, route template (`/api/v1/waterways/{id}`, never the real path), method, status, latency, response size, client kind (anonymous, api_token, app), browser family (browser, app, curl, python, other) | 90 days; hourly counts per route, status class and client for 3 years |
+| `caller`: SHA-256 of a random salt, the client address and the user agent, cut to 16 hex characters | 90 days |
+| search and filter values (`q` cut to 64 characters, `category`, `discipline`, `page`) | 30 days |
+
+The salt exists only in the API's memory and is replaced at UTC midnight, so
+callers cannot be linked across days or recovered from the hash. Never stored:
+the IP address, user id, token, raw user agent, other query parameters, request
+or response bodies, headers. Search terms are the one free-text field; they
+can in principle contain a name, which is why they expire after 30 days. The
+legal basis is legitimate interest (operating and improving the service); the
+data is not shared and not used for profiling. Country is not recorded.
+
 ## Backups
 
 The database and the uploaded and mirrored photos are backed up every night

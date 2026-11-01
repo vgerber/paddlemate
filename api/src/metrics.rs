@@ -23,6 +23,7 @@ use axum::{
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use sqlx::PgPool;
 
+use crate::analytics::Sink;
 use crate::layers::auth::{AuthMethod, AuthMethodKind};
 
 /// Route label for requests no route matched (404s, scanners).
@@ -50,6 +51,12 @@ impl ClientKind {
         }
     }
 }
+
+/// The matched route template, carried out on the response by `tag_route`.
+/// The outermost layer runs before routing, so only a layer inside the
+/// routers can see the template of a nested route.
+#[derive(Clone, Debug)]
+struct RouteTemplate(String);
 
 /// Installs the global recorder once and returns its handle.
 pub fn install() -> PrometheusHandle {
@@ -99,6 +106,20 @@ pub async fn tag_client(req: Request<Body>, next: Next) -> Response {
     res
 }
 
+/// Layer each nested router with this, at the nesting site: inside the
+/// router it runs after routing and sees the full route template, which the
+/// outermost layer cannot (it runs before nested routers match).
+pub async fn tag_route(req: Request<Body>, next: Next) -> Response {
+    let route = req.extensions().get::<MatchedPath>().cloned();
+    let mut res = next.run(req).await;
+    // The innermost layer answered first and knows the real template.
+    if let (Some(route), None) = (route, res.extensions().get::<RouteTemplate>()) {
+        res.extensions_mut()
+            .insert(RouteTemplate(route.as_str().to_string()));
+    }
+    res
+}
+
 struct InFlight;
 
 impl InFlight {
@@ -115,16 +136,27 @@ impl Drop for InFlight {
 }
 
 /// Outermost layer on the API router: counts and times every request.
-pub async fn track_requests(req: Request<Body>, next: Next) -> Response {
+/// With a sink, every request also becomes one analytics event.
+pub async fn track_requests(
+    State(analytics): State<Option<Sink>>,
+    req: Request<Body>,
+    next: Next,
+) -> Response {
     let _in_flight = InFlight::enter();
     let start = Instant::now();
     let method = req.method().as_str().to_string();
-    let route = req
+    let outer_route = req
         .extensions()
         .get::<MatchedPath>()
-        .map(|p| p.as_str().to_string())
-        .unwrap_or_else(|| UNMATCHED.to_string());
+        .map(|p| p.as_str().to_string());
+    let seen = analytics.as_ref().map(|sink| sink.see(&req, &method));
     let res = next.run(req).await;
+    let route = res
+        .extensions()
+        .get::<RouteTemplate>()
+        .map(|r| r.0.clone())
+        .or(outer_route)
+        .unwrap_or_else(|| UNMATCHED.to_string());
     let client = res
         .extensions()
         .get::<ClientKind>()
@@ -138,8 +170,14 @@ pub async fn track_requests(req: Request<Body>, next: Next) -> Response {
         "client" => client.as_str(),
     )
     .increment(1);
-    metrics::histogram!("http_request_duration_seconds", "method" => method, "route" => route)
+    metrics::histogram!("http_request_duration_seconds", "method" => method, "route" => route.clone())
         .record(start.elapsed().as_secs_f64());
+    if let (Some(sink), Some(seen)) = (&analytics, seen) {
+        let bytes = axum::body::HttpBody::size_hint(res.body())
+            .exact()
+            .unwrap_or(0);
+        sink.record(seen, &route, res.status().as_u16(), client, bytes);
+    }
     res
 }
 
@@ -167,11 +205,19 @@ async fn scrape(State(s): State<Scrape>) -> Response {
 /// Counts every request to `app`, then adds `/metrics` next to it. The route
 /// is merged after the layer, so scrapes are not counted, and callers must
 /// add their rate limits to `app` first, so scrapes are not limited.
-pub fn wrap(app: Router, handle: PrometheusHandle, pool: Option<PgPool>) -> Router {
+pub fn wrap(
+    app: Router,
+    handle: PrometheusHandle,
+    pool: Option<PgPool>,
+    analytics: Option<Sink>,
+) -> Router {
     // An explicit fallback, or the default one skips the layer and 404s are
     // not counted.
     app.fallback(|| async { StatusCode::NOT_FOUND })
-        .layer(axum::middleware::from_fn(track_requests))
+        .layer(axum::middleware::from_fn_with_state(
+            analytics,
+            track_requests,
+        ))
         .merge(route(handle, pool))
 }
 

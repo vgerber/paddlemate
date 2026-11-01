@@ -14,6 +14,7 @@ macro_rules! doc_fn {
     };
 }
 
+pub mod analytics;
 pub mod config;
 pub mod error;
 pub mod importers;

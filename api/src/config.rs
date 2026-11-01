@@ -35,6 +35,15 @@ pub struct VapidSettings {
     pub subject: String,
 }
 
+/// Request analytics sink; present only when ANALYTICS_URL is set.
+#[derive(Clone, Debug)]
+pub struct AnalyticsSettings {
+    pub url: String,
+    pub user: Option<String>,
+    pub password: Option<String>,
+    pub database: String,
+}
+
 #[derive(Clone, Debug)]
 pub struct Config {
     pub database_url: String,
@@ -51,6 +60,7 @@ pub struct Config {
     pub trusted_proxies_raw: Option<String>,
     pub media_dir: PathBuf,
     pub vapid: Option<VapidSettings>,
+    pub analytics: Option<AnalyticsSettings>,
     pub disable_gauge_readers: bool,
     pub disable_material_mirror: bool,
 }
@@ -123,6 +133,45 @@ pub fn parse_vapid(key: Option<String>, subject: Option<String>) -> Option<Vapid
     })
 }
 
+/// Unset or blank turns analytics off. The URL must be http(s) and the
+/// database a plain identifier, since it is written into SQL.
+pub fn parse_analytics(
+    url: Option<String>,
+    user: Option<String>,
+    password: Option<String>,
+    database: Option<String>,
+) -> Result<Option<AnalyticsSettings>, String> {
+    let Some(url) = url
+        .map(|u| u.trim().trim_end_matches('/').to_string())
+        .filter(|u| !u.is_empty())
+    else {
+        return Ok(None);
+    };
+    let valid_url = reqwest::Url::parse(&url)
+        .map(|u| matches!(u.scheme(), "http" | "https") && u.host().is_some())
+        .unwrap_or(false);
+    if !valid_url {
+        return Err("ANALYTICS_URL must be an http(s) URL".to_string());
+    }
+    let database = database
+        .filter(|d| !d.trim().is_empty())
+        .unwrap_or_else(|| "paddlemate".to_string());
+    let plain = !database.is_empty()
+        && database.len() <= 63
+        && database
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_');
+    if !plain {
+        return Err("ANALYTICS_DATABASE must be letters, digits and underscores".to_string());
+    }
+    Ok(Some(AnalyticsSettings {
+        url,
+        user: user.filter(|u| !u.is_empty()),
+        password: password.filter(|p| !p.is_empty()),
+        database,
+    }))
+}
+
 impl Config {
     pub fn from_env() -> Result<Self, String> {
         Self::from_lookup(var)
@@ -173,6 +222,12 @@ impl Config {
                 get("MEDIA_DIR").unwrap_or_else(|| DEFAULT_MEDIA_DIR.to_string()),
             ),
             vapid: parse_vapid(get("VAPID_PRIVATE_KEY"), get("VAPID_SUBJECT")),
+            analytics: parse_analytics(
+                get("ANALYTICS_URL"),
+                get("ANALYTICS_USER"),
+                get("ANALYTICS_PASSWORD"),
+                get("ANALYTICS_DATABASE"),
+            )?,
             disable_gauge_readers: get("DISABLE_GAUGE_READERS").as_deref() == Some("true"),
             disable_material_mirror: get("DISABLE_MATERIAL_MIRROR").as_deref() == Some("true"),
         })
@@ -221,6 +276,7 @@ mod tests {
         assert!(config.trusted_proxies.is_none());
         assert_eq!(config.media_dir, PathBuf::from("media"));
         assert!(config.vapid.is_none());
+        assert!(config.analytics.is_none());
         assert!(!config.disable_gauge_readers);
         assert!(!config.disable_material_mirror);
     }
@@ -284,5 +340,30 @@ mod tests {
         assert!(parse_vapid(Some("k".into()), None).is_none());
         assert!(parse_vapid(Some("".into()), Some("mailto:a".into())).is_none());
         assert!(parse_vapid(Some("k".into()), Some("mailto:a".into())).is_some());
+    }
+
+    #[test]
+    fn analytics_is_off_unless_url_is_set() {
+        assert!(parse_analytics(None, None, None, None).unwrap().is_none());
+        assert!(
+            parse_analytics(Some(" ".into()), None, None, None)
+                .unwrap()
+                .is_none()
+        );
+        let on = parse_analytics(Some("http://ch:8123/".into()), None, None, None)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            (on.url.as_str(), on.database.as_str()),
+            ("http://ch:8123", "paddlemate")
+        );
+    }
+
+    #[test]
+    fn analytics_rejects_bad_url_and_database() {
+        assert!(parse_analytics(Some("ftp://x".into()), None, None, None).is_err());
+        assert!(parse_analytics(Some("nonsense".into()), None, None, None).is_err());
+        let bad = parse_analytics(Some("http://x".into()), None, None, Some("a; DROP".into()));
+        assert!(bad.is_err());
     }
 }

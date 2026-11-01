@@ -82,6 +82,7 @@ water levels, and a shared logbook.
   per-group visibility of logs.
 - **Access** - Keycloak (OIDC) sign-in, API tokens for programmatic use,
   public read access to rivers and water data.
+- **API analytics** - optional, anonymous per-request events in ClickHouse and a Grafana dashboard (routes, errors, latency, searches); off unless `ANALYTICS_URL` is set, see [Setup](doc/setup.md#analytics-and-privacy)
 - **Monitoring** - Prometheus metrics at `/metrics` (requests, latency, rate
   limit rejections, database pool, process), see [Setup](doc/setup.md).
 
