@@ -1,0 +1,65 @@
+# Suggested Prometheus alert rules for the Paddlemate API (job "paddlemate-api").
+groups:
+  - name: paddlemate-api
+    rules:
+      - alert: PaddlemateApiDown
+        expr: up{job="paddlemate-api"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Paddlemate API is down"
+          description: "Prometheus could not scrape {{ $labels.instance }} for 5 minutes."
+
+      - alert: PaddlemateApiHighErrorRatio
+        expr: |
+          sum(rate(http_requests_total{job="paddlemate-api",status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{job="paddlemate-api"}[5m])) > 0.05
+          and sum(rate(http_requests_total{job="paddlemate-api"}[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "More than 5% of API requests fail"
+          description: "{{ $value | humanizePercentage }} of requests returned 5xx over the last 5 minutes."
+
+      - alert: PaddlemateApiSlow
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_request_duration_seconds_bucket{job="paddlemate-api"}[5m]))) > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency above 2s"
+          description: "p95 request latency is {{ $value | humanizeDuration }}."
+
+      - alert: PaddlemateApiWriteRateLimited
+        expr: sum(rate(rate_limit_rejections_total{job="paddlemate-api",budget="write"}[5m])) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Writes are being rate limited"
+          description: "The write budget rejects {{ $value | humanize }} requests per second; a client may be misbehaving or the budget is too low."
+
+      - alert: PaddlemateApiDbPoolExhausted
+        expr: |
+          db_pool_idle_connections{job="paddlemate-api"} == 0
+          and db_pool_connections{job="paddlemate-api"} - db_pool_idle_connections{job="paddlemate-api"}
+            == db_pool_connections{job="paddlemate-api"}
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API database pool exhausted"
+          description: "No idle connections for 5 minutes; every pooled connection is in use and requests may queue."
+
+      - alert: PaddlemateImageMirrorFailing
+        expr: sum(increase(material_image_mirror_total{job="paddlemate-api",result=~"failed|blocked"}[1h])) > 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Material image mirroring keeps failing"
+          description: "{{ $value | humanize }} image fetches failed or were blocked in the last hour."

@@ -132,6 +132,10 @@ settings and secrets. Both files stay out of git.
   `process_*` gauges (CPU, memory, fds, start time). No label carries a user
   id, address or token. Scrapes are neither counted nor rate limited. Code:
   `api/src/metrics.rs`.
+  A Grafana dashboard and suggested alert rules for these series are in
+  `deploy/monitoring/` (`paddlemate-api.dashboard.json`,
+  `paddlemate-api.alerts.yml`); the NAS stack (Prometheus + Grafana, run from
+  the node-setup project) provisions them.
 - **Frontend**: build on the dev machine with the production `VITE_*` values
   (`frontend/.env`), check `grep -c localhost frontend/dist/assets/*.js` is 0,
   then `deploy/frontend/deploy.sh`, right after the API (it deletes old hashed
