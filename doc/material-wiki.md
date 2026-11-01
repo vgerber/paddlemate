@@ -515,6 +515,13 @@ picks the entry's; `PendingProposalNote` draws them. `ProposalDiffTable` and
 Specs: `frontend/e2e/material-proposals/` (signs in as `jonas` through
 `e2e/support/signIn.ts`).
 
+Suggest a change: the model page ends its facts with `SuggestChange`, a quiet
+line naming what the entry lacks (`lib/materials/missing.ts`, e.g. "No photo,
+volume or release year yet", else "Something wrong?") and a "Suggest a change"
+button that opens the edit form (`?edit=true`); signed out it shows the sign-in
+card and returns to the form. Photos cannot be proposed yet. Specs:
+`frontend/e2e/materials/suggestChange.spec.ts`.
+
 Adding a measurement is one row in `MATERIAL_SPECS` plus its column: the
 list row, the detail view, the comparison and the entry form all read that
 list.

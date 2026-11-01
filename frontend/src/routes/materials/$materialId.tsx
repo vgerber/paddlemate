@@ -11,6 +11,7 @@ import PageFrame from "@/components/PageFrame";
 import EmptyState from "@/components/states/EmptyState";
 import ErrorState from "@/components/states/ErrorState";
 import LoadingBox from "@/components/states/LoadingBox";
+import SignInGate from "@/components/states/SignInGate";
 import type { Material } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 import { requireMaterials } from "@/lib/features";
@@ -48,7 +49,7 @@ function MaterialPage() {
   const { materialId } = Route.useParams();
   const { edit } = Route.useSearch();
   const id = Number(materialId);
-  const { isAuthenticated, isAdmin, user } = useSession();
+  const { isAuthenticated, isAdmin, isLoading, user } = useSession();
   const pending = useOwnPendingMaterialProposals(id, user?.id);
   const query = useMaterial(Number.isInteger(id) && id > 0 ? id : undefined);
   const remove = useDeleteMaterial();
@@ -87,7 +88,12 @@ function MaterialPage() {
     );
   }
 
-  if (edit && isAuthenticated) {
+  if (edit && !isAuthenticated && !isLoading) {
+    return (
+      <SignInGate icon={<MaterialIcon />} title="Sign in to suggest a change" />
+    );
+  }
+  if (edit) {
     return <EditMaterial material={material} onDone={() => setEdit(false)} />;
   }
 
@@ -124,7 +130,11 @@ function MaterialPage() {
       })}
     >
       <PendingProposalNote proposals={pending.data ?? []} />
-      <MaterialDetailView material={material} onPickSize={pickSize} />
+      <MaterialDetailView
+        material={material}
+        onPickSize={pickSize}
+        onSuggest={() => setEdit(true)}
+      />
       <ConfirmDialog
         open={photoToRemove != null}
         title="Remove this photo?"

@@ -9,6 +9,7 @@ import AllSizesTable from "@/components/materials/AllSizesTable";
 import MaterialGallery from "@/components/materials/MaterialGallery";
 import SizePicker from "@/components/materials/SizePicker";
 import SourceList, { type SourceLink } from "@/components/materials/SourceList";
+import SuggestChange from "@/components/materials/SuggestChange";
 import RowMenu, { type RowAction } from "@/components/RowMenu";
 import SectionHeading from "@/components/SectionHeading";
 import FilterChip from "@/components/search/FilterChip";
@@ -134,8 +135,10 @@ function AvailabilityCaption({ material }: { material: Material }) {
 export default function MaterialDetailView({
   material,
   onPickSize,
+  onSuggest,
 }: {
   material: Material;
+  onSuggest: () => void;
   /** Opens another size of the model: the URL holds the entry id. */
   onPickSize: (id: number) => void;
 }) {
@@ -313,6 +316,8 @@ export default function MaterialDetailView({
           <AllSizesTable materials={siblings.data} pickedId={material.id} />
         </Box>
       )}
+
+      <SuggestChange material={material} onSuggest={onSuggest} />
 
       <DetailCard heading="Sources">
         <SourceList links={links} />
