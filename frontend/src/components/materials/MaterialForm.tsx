@@ -14,24 +14,26 @@ import { apiErrorMessage } from "@/lib/api/client";
 import { useSession } from "@/lib/hooks/useSession";
 import { ConfirmIcon } from "@/lib/icons";
 import {
+  canSaveMaterial,
+  type MaterialFormValues,
+  materialFormToBody,
+} from "@/lib/materials/form";
+import {
   CATEGORIES,
   CATEGORY_LABELS,
   CONSTRUCTIONS,
-  canSaveMaterial,
   DISCIPLINES,
-  enumLabel,
   MATERIAL_LIMITS,
   MATERIAL_SPECS,
-  type MaterialFormValues,
-  materialFormToBody,
   PADDLE_SPECS,
   type PaddleKey,
   SHAFT_MATERIALS,
   SHAFTS,
   SPEC_GROUP_LABELS,
   type SpecKey,
-} from "@/lib/materials/materials";
+} from "@/lib/materials/specs";
 import { unitLabel, useUnits } from "@/lib/prefs/units";
+import { humanize, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -211,7 +213,7 @@ export default function MaterialForm({
               <MenuItem value="">Unstated</MenuItem>
               {DISCIPLINES.map((discipline) => (
                 <MenuItem key={discipline} value={discipline}>
-                  {enumLabel(discipline)}
+                  {sentenceCase(humanize(discipline))}
                 </MenuItem>
               ))}
             </TextField>
@@ -229,7 +231,7 @@ export default function MaterialForm({
               <MenuItem value="">Unstated</MenuItem>
               {CONSTRUCTIONS.map((construction) => (
                 <MenuItem key={construction} value={construction}>
-                  {enumLabel(construction)}
+                  {sentenceCase(humanize(construction))}
                 </MenuItem>
               ))}
             </TextField>
@@ -295,7 +297,7 @@ export default function MaterialForm({
                 <MenuItem value="">Unstated</MenuItem>
                 {SHAFTS.map((shaft) => (
                   <MenuItem key={shaft} value={shaft}>
-                    {enumLabel(shaft)}
+                    {sentenceCase(humanize(shaft))}
                   </MenuItem>
                 ))}
               </TextField>
@@ -313,7 +315,7 @@ export default function MaterialForm({
                 <MenuItem value="">Unstated</MenuItem>
                 {SHAFT_MATERIALS.map((material) => (
                   <MenuItem key={material} value={material}>
-                    {enumLabel(material)}
+                    {sentenceCase(humanize(material))}
                   </MenuItem>
                 ))}
               </TextField>

@@ -10,20 +10,19 @@ import type { MaterialSort } from "@/lib/api";
 import { CloseIcon } from "@/lib/icons";
 import {
   activeFilterCount,
-  CONSTRUCTIONS,
-  enumLabel,
   MAX_FITS_KG,
   type MaterialWikiSearch,
   SORT_LABELS,
   SORTS,
-} from "@/lib/materials/materials";
+} from "@/lib/materials/search";
+import { CONSTRUCTIONS } from "@/lib/materials/specs";
 import {
   parseInput,
   toInputText,
   unitLabel,
   useUnits,
 } from "@/lib/prefs/units";
-import { plural } from "@/lib/text/format";
+import { humanize, plural, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -87,7 +86,7 @@ export function FilterFields({
           options={CONSTRUCTIONS}
           value={search.construction}
           onChange={(construction) => onChange({ construction })}
-          labelOf={enumLabel}
+          labelOf={(value) => sentenceCase(humanize(value))}
         />
       </Group>
       <TextField

@@ -7,13 +7,15 @@ import { fabSx } from "@/components/PaneFab";
 import { requireMaterials } from "@/lib/features";
 import { AddIcon } from "@/lib/icons";
 import {
-  type MaterialWikiSearch,
   parseCompareIds,
-  parseMaterialSearch,
   serializeCompareIds,
   toggleCompareId,
   toggleModelCompare,
-} from "@/lib/materials/materials";
+} from "@/lib/materials/compare";
+import {
+  type MaterialWikiSearch,
+  parseMaterialSearch,
+} from "@/lib/materials/search";
 
 export const Route = createFileRoute("/materials/")({
   beforeLoad: () => requireMaterials(),

@@ -13,7 +13,7 @@ import { ChevronRightIcon, ExpandIcon, MaterialIcon } from "@/lib/icons";
 import {
   type MaterialWikiSearch,
   toMaterialFilters,
-} from "@/lib/materials/materials";
+} from "@/lib/materials/search";
 import {
   pathOf,
   type TreePath,

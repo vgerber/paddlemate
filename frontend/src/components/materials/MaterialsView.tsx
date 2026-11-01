@@ -6,13 +6,11 @@ import ListPaneHeader from "@/components/ListPaneHeader";
 import { fabRoom } from "@/components/PaneFab";
 import FilterChip from "@/components/search/FilterChip";
 import { TreeIcon } from "@/lib/icons";
-import {
-  activeFilterCount,
-  enumLabel,
-  formatFits,
-} from "@/lib/materials/materials";
+import { formatFits } from "@/lib/materials/facts";
+import { activeFilterCount } from "@/lib/materials/search";
 import { pathPatch, type TreePath } from "@/lib/materials/tree";
 import { useUnits } from "@/lib/prefs/units";
+import { humanize, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
 import BrowseSheet from "./BrowseSheet";
 import MaterialBreadcrumb from "./MaterialBreadcrumb";
@@ -73,7 +71,7 @@ function PhoneWiki(props: MaterialsViewProps) {
           />
           {search.construction && (
             <FilterChip
-              label={enumLabel(search.construction)}
+              label={sentenceCase(humanize(search.construction))}
               set
               onClick={() => setFiltersOpen(true)}
               onDelete={() => onChange({ construction: undefined })}

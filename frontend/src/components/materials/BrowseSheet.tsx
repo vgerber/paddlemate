@@ -13,7 +13,7 @@ import {
   CloseIcon,
   MaterialIcon,
 } from "@/lib/icons";
-import { enumLabel, type MaterialWikiSearch } from "@/lib/materials/materials";
+import { type MaterialWikiSearch } from "@/lib/materials/search";
 import {
   CATEGORY_PLURALS,
   pathOf,
@@ -21,6 +21,7 @@ import {
   type TreePath,
   treeFilters,
 } from "@/lib/materials/tree";
+import { humanize, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -40,9 +41,9 @@ function levelAt(tree: MaterialTree | undefined, at: TreePath) {
   const disc = cat?.disciplines.find((d) => d.discipline === at.discipline);
   if (cat && disc) {
     return {
-      title: enumLabel(disc.discipline),
+      title: sentenceCase(humanize(disc.discipline)),
       trail: CATEGORY_PLURALS[cat.category],
-      all: `All ${enumLabel(disc.discipline)}`,
+      all: `All ${sentenceCase(humanize(disc.discipline))}`,
       rows: disc.brands.map(
         (b): Choice => ({
           label: b.brand,
@@ -60,7 +61,7 @@ function levelAt(tree: MaterialTree | undefined, at: TreePath) {
       all: `All ${CATEGORY_PLURALS[cat.category]}`,
       rows: cat.disciplines.map(
         (d): Choice => ({
-          label: enumLabel(d.discipline),
+          label: sentenceCase(humanize(d.discipline)),
           count: d.models,
           path: { ...at, discipline: d.discipline },
           deeper: d.brands.length > 0,

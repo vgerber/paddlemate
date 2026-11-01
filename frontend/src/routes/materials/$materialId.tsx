@@ -25,17 +25,13 @@ import {
 import { useOwnPendingMaterialProposals } from "@/lib/hooks/useProposals";
 import { useSession } from "@/lib/hooks/useSession";
 import { MaterialIcon } from "@/lib/icons";
-import {
-  CATEGORY_LABELS,
-  EMPTY_MATERIAL_SEARCH,
-  enumLabel,
-  materialTitle,
-  materialToForm,
-  modelTitle,
-  sinceLabel,
-} from "@/lib/materials/materials";
+import { materialTitle, modelTitle, sinceLabel } from "@/lib/materials/facts";
+import { materialToForm } from "@/lib/materials/form";
+import { EMPTY_MATERIAL_SEARCH } from "@/lib/materials/search";
+import { CATEGORY_LABELS } from "@/lib/materials/specs";
 import { currentUnits } from "@/lib/prefs/units";
 import { isProposal } from "@/lib/proposals";
+import { humanize, sentenceCase } from "@/lib/text/format";
 import { PANEL_HEIGHT } from "@/lib/theme/theme";
 
 export const Route = createFileRoute("/materials/$materialId")({
@@ -107,7 +103,7 @@ function MaterialPage() {
 
   const subtitle = [
     CATEGORY_LABELS[material.category],
-    material.discipline && enumLabel(material.discipline),
+    material.discipline && sentenceCase(humanize(material.discipline)),
     sinceLabel(material),
   ]
     .filter(Boolean)
