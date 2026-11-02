@@ -59,10 +59,10 @@ const SPEC_HINTS = {
 } as const;
 
 /** Number fields sit in a grid that drops to one column when two would be
- * narrower than a value needs. */
+ * narrower than a label needs; rem so larger text gets one column too. */
 const fieldGridSx = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(9.5rem, 1fr))",
   gap: 1.5,
 } as const;
 
