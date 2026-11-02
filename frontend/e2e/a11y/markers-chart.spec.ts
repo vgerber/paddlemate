@@ -38,8 +38,9 @@ test.describe("map markers", () => {
       expect(name, "marker button has its own name").toBeTruthy();
       expect(name).not.toBe("Map marker");
       const box = await b.boundingBox();
-      expect(box?.width).toBeGreaterThanOrEqual(44);
-      expect(box?.height).toBeGreaterThanOrEqual(44);
+      // Rounded: the map's sub-pixel transform reports 43.99999 for 44.
+      expect(Math.round(box?.width ?? 0)).toBeGreaterThanOrEqual(44);
+      expect(Math.round(box?.height ?? 0)).toBeGreaterThanOrEqual(44);
     }
   });
 });
