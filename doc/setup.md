@@ -143,12 +143,6 @@ settings and secrets. Both files stay out of git.
   over, a snackbar says "A new version is ready." with a Reload button, so an
   open form is not lost. Bundles already in the field (released before that
   listener existed) do not show it and need one manual reload after this deploy.
-- **Hiding the material wiki**: until the wiki is ready, production sets
-  `MATERIALS_ENABLED=false` (API: `/materials` returns 404, no image mirror, no
-  wiki proposals) in `deploy/backend/.env` and `VITE_FEATURE_MATERIALS=false` in
-  `frontend/.env` before building (no Tools entry, no "Wiki" proposal filter,
-  `/materials*` redirects to `/tools`). Unset, both default to on, so local
-  development has the wiki. Code: `frontend/src/lib/features.ts`.
 - **Rollback**: the schema is additive, so roll back code only. Tag the running
   image `paddlemate-api:previous` before deploying and keep `dist.prev`; the
   backend deploy takes the database dump and media snapshot itself (see

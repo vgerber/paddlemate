@@ -259,15 +259,7 @@ async fn the_tree_counts_models_and_entries_per_level(pool: PgPool) {
     put_in(&pool, "kayak", &["creek"], "Dagger", "Mamba", "M").await;
     put_in(&pool, "kayak", &["playboat"], "Dagger", "Rewind", "M").await;
     put_in(&pool, "kayak", &["other"], "Dagger", "Old", "M").await;
-    put_in(
-        &pool,
-        "canoe",
-        &["recreational"],
-        "Old Town",
-        "Pack",
-        "M",
-    )
-    .await;
+    put_in(&pool, "canoe", &["recreational"], "Old Town", "Pack", "M").await;
 
     let app = app(pool);
     let r = get(&app, "/materials/tree").await;
@@ -293,7 +285,15 @@ async fn the_tree_counts_models_and_entries_per_level(pool: PgPool) {
 async fn a_model_in_several_groups_counts_under_each(pool: PgPool) {
     clear_catalogue(&pool).await;
     for size in ["S", "M"] {
-        put_in(&pool, "kayak", &["creek", "river_runner"], "Pyranha", "Jed", size).await;
+        put_in(
+            &pool,
+            "kayak",
+            &["creek", "river_runner"],
+            "Pyranha",
+            "Jed",
+            size,
+        )
+        .await;
     }
     put_in(&pool, "kayak", &["river_runner"], "Dagger", "Mamba", "M").await;
 
@@ -309,7 +309,10 @@ async fn a_model_in_several_groups_counts_under_each(pool: PgPool) {
             .iter()
             .find(|d| d["discipline"] == group)
             .unwrap();
-        (d["models"].as_i64().unwrap(), d["entries"].as_i64().unwrap())
+        (
+            d["models"].as_i64().unwrap(),
+            d["entries"].as_i64().unwrap(),
+        )
     };
     assert_eq!(count("creek"), (1, 2));
     assert_eq!(count("river_runner"), (2, 3));
@@ -330,15 +333,7 @@ async fn the_tree_honours_filters_but_not_its_own_levels(pool: PgPool) {
     clear_catalogue(&pool).await;
     put_in(&pool, "kayak", &["creek"], "Pyranha", "Jed", "M").await;
     put_in(&pool, "kayak", &["playboat"], "Dagger", "Rewind", "M").await;
-    put_in(
-        &pool,
-        "canoe",
-        &["recreational"],
-        "Old Town",
-        "Pack",
-        "M",
-    )
-    .await;
+    put_in(&pool, "canoe", &["recreational"], "Old Town", "Pack", "M").await;
 
     let app = app(pool);
     let r = get(&app, "/materials/tree?q=pyranha").await;

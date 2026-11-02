@@ -8,8 +8,6 @@ interface ImportMetaEnv {
   readonly VITE_AUTH_SERVER: string;
   readonly VITE_AUTH_REALM: string;
   readonly VITE_AUTH_CLIENT_ID: string;
-  /** "false" hides the material wiki; anything else (or unset) shows it. */
-  readonly VITE_FEATURE_MATERIALS?: string;
 }
 
 declare const __COMMIT_HASH__: string;

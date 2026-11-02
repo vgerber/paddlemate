@@ -413,19 +413,14 @@ doc_fn!(delete_material_docs, op =>
         .tag("Materials")
 );
 
-/// Mounts the wiki at `/materials`, or leaves `app` alone when it is off so
-/// every wiki path is a 404.
+/// Mounts the wiki at `/materials`.
 pub fn mount_materials<S>(
     app: aide::axum::ApiRouter<S>,
-    enabled: bool,
     state: AppState,
 ) -> aide::axum::ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
 {
-    if !enabled {
-        return app;
-    }
     app.nest_api_service(
         "/materials",
         materials_routes(state).layer(axum::middleware::from_fn(crate::metrics::tag_route)),

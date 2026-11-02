@@ -15,7 +15,6 @@ import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
 import type { Material } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
-import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import {
   useDeleteMaterial,
@@ -42,7 +41,6 @@ import { currentUnits } from "@/lib/prefs/units";
 import { isProposal } from "@/lib/proposals";
 
 export const Route = createFileRoute("/materials/$materialId")({
-  beforeLoad: () => requireMaterials(),
   validateSearch: (search: Record<string, unknown>) => ({
     edit: search.edit === true || search.edit === "true",
   }),

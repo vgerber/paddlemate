@@ -5,7 +5,6 @@ import MaterialsView from "@/components/materials/MaterialsView";
 import { WIKI_WIDTH } from "@/components/materials/wikiLayout";
 import PageFrame from "@/components/PageFrame";
 import { fabSx } from "@/components/PaneFab";
-import { requireMaterials } from "@/lib/features";
 import { AddIcon } from "@/lib/icons";
 import {
   parseCompareIds,
@@ -19,7 +18,6 @@ import {
 } from "@/lib/materials/search";
 
 export const Route = createFileRoute("/materials/")({
-  beforeLoad: () => requireMaterials(),
   validateSearch: parseMaterialSearch,
   component: MaterialWikiPage,
 });

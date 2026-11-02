@@ -27,7 +27,6 @@ import type {
   ProposalOperation,
   ProposalStatus,
 } from "@/lib/api";
-import { features } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useSwipeTabs } from "@/lib/hooks/ui/useSwipeTabs";
 import { useProposals } from "@/lib/hooks/useProposals";
@@ -47,9 +46,7 @@ const ENTITY_TABS: { value: ProposalEntityType | ""; label: string }[] = [
   { value: "waterway", label: "Rivers" },
   { value: "water_section", label: "Sections" },
   { value: "feature", label: "Features" },
-  ...(features.materials
-    ? [{ value: "material" as const, label: "Wiki" }]
-    : []),
+  { value: "material", label: "Wiki" },
 ];
 
 const OPERATION_TABS: { value: ProposalOperation | ""; label: string }[] = [

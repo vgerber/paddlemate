@@ -4,7 +4,6 @@ import MaterialForm from "@/components/materials/MaterialForm";
 import { wikiPageTrail } from "@/components/materials/wikiLayout";
 import LoadingBox from "@/components/states/LoadingBox";
 import SignInGate from "@/components/states/SignInGate";
-import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useCreateMaterial } from "@/lib/hooks/useMaterials";
 import { useSession } from "@/lib/hooks/useSession";
@@ -14,7 +13,6 @@ import { EMPTY_MATERIAL_SEARCH } from "@/lib/materials/search";
 import { isProposal } from "@/lib/proposals";
 
 export const Route = createFileRoute("/materials/new")({
-  beforeLoad: () => requireMaterials(),
   component: NewMaterialPage,
 });
 
