@@ -10,9 +10,9 @@ use crate::{config::Config, layers::limit::RateLimits, state::AppState};
 /// How often idle callers are dropped from the rate limiter.
 const LIMITER_PRUNE_INTERVAL: Duration = Duration::from_secs(60);
 
-/// Whether the catalogue image mirror starts: never while the wiki is off.
+/// Whether the catalogue image mirror starts.
 pub fn mirror_runs(config: &Config) -> bool {
-    config.materials_enabled && !config.disable_material_mirror
+    !config.disable_material_mirror
 }
 
 /// Starts every background task. Each runs for the life of the server.

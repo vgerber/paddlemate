@@ -367,27 +367,6 @@ async fn the_paddler_filter_keeps_boats_that_state_no_range(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn a_disabled_wiki_is_not_mounted(pool: PgPool) {
-    use paddlemate_api::routes::materials::mount_materials;
-    let mut api = OpenApi::default();
-    let off = mount_materials(ApiRouter::new(), false, state(pool.clone()))
-        .layer(middleware::from_fn(fake_auth))
-        .finish_api(&mut api);
-    for path in ["/materials", "/materials/models"] {
-        let r = call(&off, Method::GET, path, Who::Admin, None).await;
-        assert_eq!(r.status, StatusCode::NOT_FOUND, "{path}");
-    }
-    let r = add(&off, Who::Admin, entry("Zedboats", "Firecracker")).await;
-    assert_eq!(r.status, StatusCode::NOT_FOUND);
-
-    let on = mount_materials(ApiRouter::new(), true, state(pool))
-        .layer(middleware::from_fn(fake_auth))
-        .finish_api(&mut api);
-    let r = call(&on, Method::GET, "/materials", Who::Anyone, None).await;
-    assert_eq!(r.status, StatusCode::OK);
-}
-
-#[sqlx::test]
 async fn the_editor_note_reaches_admins_only(pool: PgPool) {
     people(&pool).await;
     let app = app(pool.clone());

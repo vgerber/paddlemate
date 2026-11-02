@@ -6,7 +6,6 @@ import { WIKI_WIDTH, wikiPageTrail } from "@/components/materials/wikiLayout";
 import PageFrame from "@/components/PageFrame";
 import EmptyState from "@/components/states/EmptyState";
 import QueryStates from "@/components/states/QueryStates";
-import { requireMaterials } from "@/lib/features";
 import { useGoBack } from "@/lib/hooks/ui/useGoBack";
 import { useMaterialComparison } from "@/lib/hooks/useMaterials";
 import { AddIcon, CompareIcon } from "@/lib/icons";
@@ -18,7 +17,6 @@ import {
 import { EMPTY_MATERIAL_SEARCH, searchText } from "@/lib/materials/search";
 
 export const Route = createFileRoute("/materials/compare")({
-  beforeLoad: () => requireMaterials(),
   validateSearch: (search: Record<string, unknown>) => ({
     ids: searchText(search.ids) ?? "",
   }),
