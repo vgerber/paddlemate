@@ -157,7 +157,8 @@ are the same boat.
 
 An entry opens with its photos, each captioned "Photo: <credit>" (the maker,
 or the shop when the picture comes from a shop's page) and linking to the page
-it came from; a click on a photo opens it full size in the photo
+it came from; on a phone the photos are a row to swipe, one at a time with the
+next peeking and a "1 of 2" position below (a grid on a desktop); a click on a photo opens it full size in the photo
 viewer (arrow keys, buttons or a swipe step through the photos, Esc closes),
 then an **Overview** card: type (category and groups), construction, built
 ("since 2021", "about 2010"), availability with its check date and source link
