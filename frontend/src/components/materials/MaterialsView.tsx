@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useState } from "react";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -7,11 +6,10 @@ import ListPaneHeader from "@/components/ListPaneHeader";
 import { fabRoom } from "@/components/PaneFab";
 import FilterChip from "@/components/search/FilterChip";
 import SearchField from "@/components/search/SearchField";
-import { TreeIcon } from "@/lib/icons";
 import { AVAILABILITY_LABELS } from "@/lib/materials/availability";
 import { formatFits } from "@/lib/materials/facts";
 import { activeFilterCount } from "@/lib/materials/search";
-import { pathPatch, type TreePath } from "@/lib/materials/tree";
+import { browseLabel, pathPatch, type TreePath } from "@/lib/materials/tree";
 import { useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
@@ -49,42 +47,24 @@ function PhoneWiki(props: MaterialsViewProps) {
           gap: 0.75,
         }}
       >
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <SearchField
-              label="Brand or model"
-              maxLength={100}
-              value={text}
-              onChange={setText}
-            />
-          </Box>
-          <Button
-            data-testid="browse-button"
-            variant="outlined"
-            startIcon={<TreeIcon />}
-            aria-label="Browse"
-            onClick={() => setBrowseOpen(true)}
-            sx={{
-              alignSelf: "stretch",
-              flexShrink: 0,
-              // On the narrowest phones the icon alone leaves the search room.
-              "@media (max-width: 359px)": {
-                minWidth: 0,
-                "& .MuiButton-startIcon": { m: 0 },
-                "& .browse-label": { display: "none" },
-              },
-            }}
-          >
-            <Box component="span" className="browse-label">
-              Browse
-            </Box>
-          </Button>
-        </Box>
+        <SearchField
+          label="Brand or model"
+          maxLength={100}
+          value={text}
+          onChange={setText}
+        />
         <Breadcrumb
           chips
           crumbs={wikiSteps(search, select)}
           lead={
             <>
+              <FilterChip
+                testId="browse-button"
+                label={browseLabel(search)}
+                set={false}
+                dropdown
+                onClick={() => setBrowseOpen(true)}
+              />
               <FilterChip
                 testId="filters-chip"
                 label={filterCount > 0 ? `Filters · ${filterCount}` : "Filters"}

@@ -5,6 +5,7 @@ import ChoiceChips from "@/components/filters/ChoiceChips";
 import FilterGroup from "@/components/filters/FilterGroup";
 import FilterSheetFrame from "@/components/filters/FilterSheetFrame";
 import type { MaterialSort } from "@/lib/api";
+import { useBackToClose } from "@/lib/hooks/ui/useBackToClose";
 import { AVAILABILITY_LABELS } from "@/lib/materials/availability";
 import {
   activeFilterCount,
@@ -135,6 +136,7 @@ export default function MaterialFiltersSheet({
   total: number;
   onChange: (patch: Partial<MaterialWikiSearch>) => void;
 }) {
+  useBackToClose(open, onClose);
   return (
     <BottomSheet
       state={open ? "open" : "closed"}

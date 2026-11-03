@@ -198,6 +198,12 @@ export function crumbs(search: MaterialWikiSearch): Crumb[] {
   return out;
 }
 
+/** What the Browse chip says: where the list stands in the tree. */
+export function browseLabel(search: MaterialWikiSearch): string {
+  const steps = crumbs(search);
+  return steps.length ? steps.map((c) => c.label).join(" \u00b7 ") : "All gear";
+}
+
 function totals(node: { models: number; entries: number }) {
   return { models: node.models, entries: node.entries };
 }

@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react";
 import { lockDirection } from "@/lib/gestures/swipe";
+import { useBackToClose } from "@/lib/hooks/ui/useBackToClose";
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "@/lib/icons";
 import { withAlpha } from "@/lib/theme/alpha";
 import { durations, useReducedMotion } from "@/lib/theme/motion";
@@ -95,6 +96,7 @@ export default function PhotoViewer({
   const phone = useMediaQuery(theme.breakpoints.down("md"));
   const touch = useRef<{ x: number; y: number } | null>(null);
   const open = index !== null && photos[index] !== undefined;
+  useBackToClose(open, onClose);
   const current = open ? photos[index] : null;
   const many = photos.length > 1;
 
