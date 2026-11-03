@@ -17,7 +17,15 @@ const MAX_EDGE: u32 = 1600;
 const THUMB_EDGE: u32 = 400;
 /// Most pixels a decoded upload may have. An 8 MB PNG can describe a canvas
 /// of gigapixels; decoding it would hold gigabytes.
-const MAX_PIXELS: u64 = 60_000_000;
+const MAX_PIXELS: u64 = 25_000_000;
+/// Allocation ceiling handed to the decoder, so a header claiming more than
+/// this is refused before any buffer is made.
+const MAX_DECODE_ALLOC: u64 = 256 * 1024 * 1024;
+/// Decode and encode jobs allowed at once, for uploads and the mirror alike.
+const MAX_CONCURRENT_DECODES: usize = 2;
+
+static DECODE_SLOTS: tokio::sync::Semaphore =
+    tokio::sync::Semaphore::const_new(MAX_CONCURRENT_DECODES);
 /// Re-encode quality for the stored JPEG.
 const JPEG_QUALITY: u8 = 82;
 
@@ -64,8 +72,8 @@ pub fn url_for(storage_key: &str) -> String {
 }
 
 /// Composite any transparency onto white. JPEG has no alpha, and a bare
-/// RGB conversion would turn cut-outs (product shots) black. Done before
-/// resizing so edges do not pick up dark fringes.
+/// RGB conversion would turn cut-outs (product shots) black. Done after the
+/// downscale so the full-size copy is never held.
 fn flatten_alpha(img: image::DynamicImage) -> image::DynamicImage {
     if !img.color().has_alpha() {
         return img;
@@ -76,26 +84,35 @@ fn flatten_alpha(img: image::DynamicImage) -> image::DynamicImage {
     image::DynamicImage::ImageRgba8(canvas)
 }
 
+fn decode_limits() -> image::Limits {
+    let mut limits = image::Limits::default();
+    limits.max_alloc = Some(MAX_DECODE_ALLOC);
+    limits
+}
+
 /// Decode `bytes` and encode the display copy and the thumbnail as JPEG,
 /// returning both and the display size.
 fn encode_copies(bytes: &[u8]) -> anyhow::Result<(Vec<u8>, Vec<u8>, u32, u32)> {
     let unreadable = || anyhow::anyhow!("not a readable image (jpeg, png, webp or gif)");
-    let (width, height) = image::ImageReader::new(Cursor::new(bytes))
-        .with_guessed_format()
-        .map_err(|_| unreadable())?
-        .into_dimensions()
-        .map_err(|_| unreadable())?;
+    let reader = || {
+        let mut reader = image::ImageReader::new(Cursor::new(bytes))
+            .with_guessed_format()
+            .map_err(|_| unreadable())?;
+        reader.limits(decode_limits());
+        Ok::<_, anyhow::Error>(reader)
+    };
+    let (width, height) = reader()?.into_dimensions().map_err(|_| unreadable())?;
     if u64::from(width) * u64::from(height) > MAX_PIXELS {
         anyhow::bail!("image is too large in pixels");
     }
-    let decoded = image::load_from_memory(bytes).map_err(|_| unreadable())?;
+    let decoded = reader()?.decode().map_err(|_| unreadable())?;
 
-    let decoded = flatten_alpha(decoded);
     let display = if decoded.width().max(decoded.height()) > MAX_EDGE {
         decoded.resize(MAX_EDGE, MAX_EDGE, image::imageops::FilterType::Lanczos3)
     } else {
         decoded
     };
+    let display = flatten_alpha(display);
     // Only ever shrink: resizing to the box would blow a small image up to
     // 400px, making the "thumbnail" larger than the picture it stands for.
     let thumb = if display.width().max(display.height()) > THUMB_EDGE {
@@ -129,6 +146,12 @@ fn encode_copies(bytes: &[u8]) -> anyhow::Result<(Vec<u8>, Vec<u8>, u32, u32)> {
 /// under `media_dir()`. Fails when the bytes are not a supported image.
 pub async fn store_image(bytes: &[u8]) -> anyhow::Result<StoredImage> {
     // Decoding and encoding are CPU work: keep them off the async runtime.
+    // At most MAX_CONCURRENT_DECODES run at once: a decode can hold hundreds
+    // of MB, and uploads and the mirror job both come through here.
+    let _slot = DECODE_SLOTS
+        .acquire()
+        .await
+        .map_err(|_| anyhow::anyhow!("image slots closed"))?;
     let owned = bytes.to_vec();
     let (display_bytes, thumb_bytes, width, height) =
         tokio::task::spawn_blocking(move || encode_copies(&owned))
@@ -304,6 +327,57 @@ mod tests {
         bytes[29..33].copy_from_slice(&(!crc).to_be_bytes());
         let err = encode_copies(&bytes).unwrap_err().to_string();
         assert!(err.contains("too large"), "{err}");
+    }
+
+    fn png_claiming(w: u32, h: u32) -> Vec<u8> {
+        let mut png = Cursor::new(Vec::new());
+        image::DynamicImage::new_luma8(2, 2)
+            .write_to(&mut png, ImageFormat::Png)
+            .unwrap();
+        let mut bytes = png.into_inner();
+        bytes[16..20].copy_from_slice(&w.to_be_bytes());
+        bytes[20..24].copy_from_slice(&h.to_be_bytes());
+        let mut crc = 0xffff_ffffu32;
+        for byte in &bytes[12..29] {
+            crc ^= u32::from(*byte);
+            for _ in 0..8 {
+                crc = if crc & 1 == 1 {
+                    (crc >> 1) ^ 0xedb8_8320
+                } else {
+                    crc >> 1
+                };
+            }
+        }
+        bytes[29..33].copy_from_slice(&(!crc).to_be_bytes());
+        bytes
+    }
+
+    #[test]
+    fn pixel_cap_is_25_million() {
+        // 5001 x 5000 is just over the cap.
+        let err = encode_copies(&png_claiming(5001, 5000))
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("too large"), "{err}");
+    }
+
+    #[test]
+    fn decoder_limits_cap_allocation() {
+        let limits = decode_limits();
+        assert_eq!(limits.max_alloc, Some(256 * 1024 * 1024));
+        // A header whose pixels need more than the cap is refused by the
+        // decoder before it allocates.
+        let bytes = png_claiming(4000, 4000);
+        let mut reader = image::ImageReader::new(Cursor::new(&bytes))
+            .with_guessed_format()
+            .unwrap();
+        let mut tight = decode_limits();
+        tight.max_alloc = Some(1024);
+        reader.limits(tight);
+        assert!(matches!(
+            reader.decode().unwrap_err(),
+            image::ImageError::Limits(_)
+        ));
     }
 
     #[tokio::test]
