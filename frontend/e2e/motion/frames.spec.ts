@@ -49,16 +49,11 @@ test("folding the features card causes no long task", async ({ page }) => {
   await gotoSection(page, "lower");
   const card = page.getByTestId("features-card").filter({ visible: true });
   await expect(card).toBeVisible();
-  const head = card
-    .locator('[data-band="range"]')
-    .first()
-    .locator("[data-row]")
-    .first();
+  // The card's own fold: on a phone a band head opens the sheet instead.
+  const head = card.getByTestId("features-fold");
   await watchLongTasks(page);
   await head.click();
-  await expect(
-    card.locator('[data-band="range"] > [data-fold]').first(),
-  ).toHaveAttribute("data-fold", "shut");
+  await expect(card).toHaveAttribute("data-folded", "");
   await page.waitForTimeout(800);
   await head.click();
   await page.waitForTimeout(800);

@@ -38,7 +38,10 @@ async function openRiver(page: Page): Promise<Motion> {
     };
     const frame = () => {
       const el = target();
-      const anim = el?.getAnimations().find((a) => a instanceof Animation);
+      // Not the CSS transitions (a scrollbar-color one starts with the card).
+      const anim = el
+        ?.getAnimations()
+        .find((a) => !(a instanceof CSSTransition));
       if (!el || !anim || win.motion) return requestAnimationFrame(frame);
       const t = anim.effect?.getComputedTiming();
       const delay = Number(t?.delay ?? 0);
