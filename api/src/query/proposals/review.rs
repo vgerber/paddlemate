@@ -54,20 +54,49 @@ pub async fn unvote_proposal(
     Ok(())
 }
 
+#[derive(sqlx::FromRow)]
+struct Withdrawn {
+    entity_type: String,
+    entity_id: Option<i64>,
+    proposed_data: serde_json::Value,
+    submitted_by: String,
+    created_at: chrono::DateTime<chrono::Utc>,
+}
+
 /// Delete a proposal by ID. Existence, ownership and status checks are handled
 /// by the route handler. Associated votes are removed via ON DELETE CASCADE.
 /// Returns true if a row was removed.
 pub async fn delete_proposal(db: &PgPool, proposal_id: i64) -> Result<bool, sqlx::Error> {
     let mut tx = db.begin().await?;
-    let gone: Option<(String, Option<i64>, serde_json::Value)> = sqlx::query_as(
-        "DELETE FROM proposals WHERE id = $1 RETURNING entity_type, entity_id, proposed_data",
+    let gone: Option<Withdrawn> = sqlx::query_as(
+        "DELETE FROM proposals WHERE id = $1 \
+         RETURNING entity_type, entity_id, proposed_data, submitted_by, created_at",
     )
     .bind(proposal_id)
     .fetch_optional(&mut *tx)
     .await?;
-    let Some((entity_type, entity_id, data)) = gone else {
+    let Some(Withdrawn {
+        entity_type,
+        entity_id,
+        proposed_data: data,
+        submitted_by: user_id,
+        created_at,
+    }) = gone
+    else {
         return Ok(false);
     };
+    // A withdrawn entry proposal keeps counting toward the daily cap.
+    if entity_type == "material" {
+        sqlx::query(
+            "WITH pruned AS (DELETE FROM material_proposal_withdrawals \
+                 WHERE user_id = $1 AND submitted_at < NOW() - INTERVAL '1 day') \
+             INSERT INTO material_proposal_withdrawals (user_id, submitted_at) VALUES ($1, $2)",
+        )
+        .bind(&user_id)
+        .bind(created_at)
+        .execute(&mut *tx)
+        .await?;
+    }
     // A withdrawn photo proposal takes its photo with it.
     let file = if entity_type == "material_photo" {
         super::material::discard_photo(&mut tx, entity_id, &data).await?

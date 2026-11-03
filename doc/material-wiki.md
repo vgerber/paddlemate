@@ -208,7 +208,9 @@ it is not shown to anyone, the admin sees it on the proposals screen (filter
 photo is deleted, file included; you can withdraw your own waiting photo from
 the proposals screen. Admins remove any live photo with "Remove photo".
 Limits: 8 MB, JPEG, PNG, WebP or GIF (never SVG), 10 photos a day, 5 waiting
-at once, 6 uploaded photos per model.
+at once, 6 uploaded photos per model (live photos plus your own waiting ones;
+others' waiting photos do not count). Withdrawn or rejected photos and
+withdrawn entry proposals still count toward the daily limits.
 
 An entry a user has corrected is never overwritten by a later import of the
 catalogue.
@@ -490,15 +492,15 @@ proposal `entity_type = material_photo`, `entity_id` the entry, operation
 file's address is not in it: pending proposals are listed publicly and the
 photo is not public until approved (the reviewer's page loads the picture from
 the preview route, which needs sign-in). Approval sets the row `fetched`;
-rejection and withdrawal delete the row in the same transaction and the files
-after commit. `media::sweep_orphans` counts every `material_images.file`, so a
+rejection and withdrawal set the row `removed` (so it still counts toward the
+daily cap) in the same transaction and delete the files after commit. `media::sweep_orphans` counts every `material_images.file`, so a
 crash in between is cleaned up.
 
 | Guard | Where | Test (`api/tests/material_photos.rs`) |
 | --- | --- | --- |
 | Rights statement required | route | `the_rights_statement_is_required` |
 | 8 MB, real image, no SVG, at most 60 megapixels | route, `media::encode_copies` | `only_real_images_within_the_size_limit_are_accepted`, `media::tests::svg_and_huge_canvases_are_refused` |
-| 10 a day, 5 waiting, 6 per model, under locks | `materials::photos::check_in` | `a_user_may_upload_ten_photos_a_day`, `a_member_may_have_five_photos_waiting`, `a_model_holds_six_uploaded_photos_across_its_sizes` |
+| 10 a day, 5 waiting, 6 per model, under locks | `materials::photos::check_in` | `a_user_may_upload_ten_photos_a_day`, `withdrawn_photos_still_count_toward_the_daily_cap`, `photos_waiting_from_others_do_not_fill_the_model`, `a_member_may_have_five_photos_waiting`, `a_model_holds_six_uploaded_photos_across_its_sizes` |
 | Cap checked before decoding; no file left behind | route | `a_capped_upload_is_refused_before_decoding_and_leaves_no_file` |
 | Entry exists, sign-in | route, `check_in` | `uploads_need_sign_in_and_an_existing_entry` |
 | Preview only for the uploader or an admin | `photos::preview_file` | `a_member_photo_waits_for_review_and_shows_after_approval` |
@@ -562,7 +564,8 @@ then go to `query::proposals::material::submit`, which snapshots the entry for
 update and delete (`original_data`, in `MaterialBody` shape plus `id`; 404 if
 it does not exist), and under the user's advisory lock (the one
 `materials::create` takes) refuses with 429 at `MAX_PER_DAY` (30, any
-operation) proposals in a day or `MAX_PENDING` (50) waiting. A user may hold one
+operation, withdrawn ones counted through `material_proposal_withdrawals`)
+proposals in a day or `MAX_PENDING` (50) waiting. A user may hold one
 pending update or delete per entry: the partial unique index
 `uniq_proposals_material_pending_change` (migration `0061`) enforces it and the
 violation answers 409 "You already have a change waiting for review on this

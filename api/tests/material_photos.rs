@@ -538,3 +538,44 @@ async fn the_sweeper_keeps_files_under_review(pool: PgPool) {
     assert!(exists(&file) && exists(&media::thumb_key(&file)));
     assert!(!stray.exists());
 }
+
+#[sqlx::test]
+async fn withdrawn_photos_still_count_toward_the_daily_cap(pool: PgPool) {
+    let (app, small, ..) = start(&pool).await;
+    for i in 0..10 {
+        let r = upload(&app, small, MARA, form(png())).await;
+        assert_eq!(r.status, StatusCode::ACCEPTED, "{i}: {}", r.body);
+        let id = r.body["id"].as_i64().unwrap();
+        let gone = call(
+            &app,
+            Method::DELETE,
+            &format!("/proposals/{id}"),
+            MARA,
+            None,
+        )
+        .await;
+        assert_eq!(gone.status, StatusCode::NO_CONTENT);
+    }
+    assert!(images_of(&app, small).await.is_empty());
+    let r = upload(&app, small, MARA, form(png())).await;
+    assert_eq!(r.status, StatusCode::TOO_MANY_REQUESTS);
+}
+
+#[sqlx::test]
+async fn photos_waiting_from_others_do_not_fill_the_model(pool: PgPool) {
+    let (app, small, ..) = start(&pool).await;
+    for i in 0..6 {
+        sqlx::query(
+            "INSERT INTO material_images (material_id, source_url, host, page_url, credit, \
+             file, status, source_kind, uploaded_by, rights_confirmed_at) \
+             VALUES ($1, $2, 'upload.invalid', '', 'x', 'p.png', 'review', 'user', 'noa-1', NOW())",
+        )
+        .bind(small)
+        .bind(format!("https://upload.invalid/pending-{i}"))
+        .execute(&pool)
+        .await
+        .unwrap();
+    }
+    let r = upload(&app, small, MARA, form(png())).await;
+    assert_eq!(r.status, StatusCode::ACCEPTED, "{}", r.body);
+}

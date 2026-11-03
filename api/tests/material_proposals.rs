@@ -328,3 +328,37 @@ async fn material_proposals_list_filter_and_take_votes(pool: PgPool) {
     .await;
     assert_eq!(r.body["upvotes"], 1);
 }
+
+#[sqlx::test]
+async fn withdrawn_proposals_still_count_toward_the_daily_cap(pool: PgPool) {
+    people(&pool).await;
+    let app = app(pool);
+    for i in 0..30 {
+        let id = propose(
+            &app,
+            Method::POST,
+            "/materials",
+            MARA,
+            Some(entry(&format!("Cycle {i}"))),
+        )
+        .await;
+        let r = call(
+            &app,
+            Method::DELETE,
+            &format!("/proposals/{id}"),
+            MARA,
+            None,
+        )
+        .await;
+        assert_eq!(r.status, StatusCode::NO_CONTENT, "{i}: {}", r.body);
+    }
+    let r = call(
+        &app,
+        Method::POST,
+        "/materials",
+        MARA,
+        Some(entry("One more")),
+    )
+    .await;
+    assert_eq!(r.status, StatusCode::TOO_MANY_REQUESTS, "{}", r.body);
+}
