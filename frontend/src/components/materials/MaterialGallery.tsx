@@ -2,10 +2,11 @@ import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { type UIEvent, useState } from "react";
 import PhotoViewer from "@/components/media/PhotoViewer";
 import type { Material } from "@/lib/api";
 import { OpenExternalIcon } from "@/lib/icons";
+import { useReducedMotion } from "@/lib/theme/motion";
 import { theme } from "@/lib/theme/theme";
 
 const { tokens } = theme;
@@ -16,6 +17,8 @@ const { tokens } = theme;
  * photo, plain text for one a paddler added. */
 export default function MaterialGallery({ material }: { material: Material }) {
   const [viewing, setViewing] = useState<number | null>(null);
+  const [current, setCurrent] = useState(0);
+  const reduced = useReducedMotion();
   if (material.images.length === 0) return null;
   const alt = `${material.brand} ${material.model}`;
   const photos = material.images.map((image) => ({
@@ -25,21 +28,49 @@ export default function MaterialGallery({ material }: { material: Material }) {
     credit: image.credit,
     creditUrl: image.page_url ?? undefined,
   }));
+  const many = material.images.length > 1;
+  // The photo whose left edge is nearest the row's start is the current one.
+  const onScroll = (e: UIEvent<HTMLElement>) => {
+    const row = e.currentTarget;
+    const start = row.getBoundingClientRect().left + tokens.phone.edge;
+    let best = 0;
+    let bestGap = Number.POSITIVE_INFINITY;
+    Array.from(row.children).forEach((child, i) => {
+      const gap = Math.abs(child.getBoundingClientRect().left - start);
+      if (gap < bestGap) {
+        bestGap = gap;
+        best = i;
+      }
+    });
+    setCurrent(best);
+  };
   return (
     <>
       <Box
         component="ul"
         data-testid="material-gallery"
+        onScroll={many ? onScroll : undefined}
         sx={{
-          display: "grid",
+          display: { xs: many ? "flex" : "block", md: "grid" },
           gridTemplateColumns:
             "repeat(auto-fill, minmax(min(100%, 240px), 1fr))",
           gap: 1,
           listStyle: "none",
           m: 0,
           p: 0,
-          mx: { xs: `${tokens.phone.edge}px`, md: 0 },
+          px: { xs: `${tokens.phone.edge}px`, md: 0 },
           mb: 1,
+          // One photo per view on a phone, the next one peeking.
+          overflowX: { xs: "auto", md: "visible" },
+          scrollSnapType: { xs: "x mandatory", md: "none" },
+          scrollPaddingInline: { xs: `${tokens.phone.edge}px`, md: 0 },
+          scrollBehavior: reduced ? "auto" : "smooth",
+          overscrollBehaviorX: "contain",
+          "& > li": {
+            flex: { xs: many ? "0 0 85%" : "1 1 auto", md: "none" },
+            minWidth: 0,
+            scrollSnapAlign: { xs: "start", md: "none" },
+          },
         }}
       >
         {material.images.map((image, i) => (
@@ -75,6 +106,21 @@ export default function MaterialGallery({ material }: { material: Material }) {
           </Box>
         ))}
       </Box>
+      {many && (
+        <Typography
+          variant="body2"
+          data-testid="gallery-position"
+          aria-live="polite"
+          sx={{
+            display: { xs: "block", md: "none" },
+            textAlign: "center",
+            color: "text.secondary",
+            mb: 1,
+          }}
+        >
+          {current + 1} of {material.images.length}
+        </Typography>
+      )}
       <PhotoViewer
         photos={photos}
         index={viewing}
