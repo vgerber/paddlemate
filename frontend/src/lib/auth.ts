@@ -123,8 +123,18 @@ export async function initiateSignup(): Promise<void> {
   });
 }
 
+// Ends the Keycloak session too: removing only the local user would let the
+// next "Sign in" on a shared device log the previous person back in through
+// the SSO cookie. Keycloak sends the browser back to the app root.
 export async function logout(): Promise<void> {
-  await getUserManager().removeUser();
+  try {
+    await getUserManager().signoutRedirect({
+      post_logout_redirect_uri: `${window.location.origin}/`,
+    });
+  } catch {
+    // Identity provider unreachable: still drop the local session.
+    await getUserManager().removeUser();
+  }
 }
 
 // Self-service account console (email/password/sessions). Opened in a new

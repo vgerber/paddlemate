@@ -143,6 +143,22 @@ settings and secrets. Both files stay out of git.
   over, a snackbar says "A new version is ready." with a Reload button, so an
   open form is not lost. Bundles already in the field (released before that
   listener existed) do not show it and need one manual reload after this deploy.
+- **Security headers and the CSP**: `deploy/frontend/nginx.conf` sends a
+  Content-Security-Policy, `X-Content-Type-Options`, `Referrer-Policy`,
+  `X-Frame-Options: DENY` and a Permissions-Policy on every response. The CSP
+  allows only `'self'` plus OpenFreeMap and Esri (map style, tiles, glyphs,
+  sprites, satellite) and the Keycloak origin in `connect-src`; MapLibre's
+  workers need `worker-src blob:`; `style-src 'unsafe-inline'` stays because
+  MUI/emotion injects styles (scripts get no inline allowance, which is why the
+  pre-paint script is `public/theme-init.js`). A new external host (tiles, an
+  image source, another auth origin) must be added to the CSP in the same
+  change, or the browser blocks it silently. The production API is same-origin
+  (`/api/`), so `VITE_API_URL` must stay the app's own origin.
+- **Sign-out** ends the Keycloak session (`signoutRedirect`) and returns to the
+  app root, so the production `paddlemate-web` client needs the app's origin
+  under *Valid post logout redirect URIs* (`https://paddle.vgerber.io/*`; the
+  dev realm in `keycloak/` has the local origins). Without it Keycloak shows
+  an "Invalid redirect uri" page on sign-out.
 - **Rollback**: the schema is additive, so roll back code only. Tag the running
   image `paddlemate-api:previous` before deploying and keep `dist.prev`; the
   backend deploy takes the database dump and media snapshot itself (see

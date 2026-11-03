@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import type { User } from "oidc-client-ts";
 import { useCallback, useSyncExternalStore } from "react";
 import { showErrorSnackbar } from "@/components/AppSnackbar";
@@ -47,6 +48,7 @@ function userToSession(
 }
 
 export function useSession(): UseSessionReturn {
+  const queryClient = useQueryClient();
   const { user: oidcUser, renewing } = useSyncExternalStore(
     subscribeSession,
     getSessionState,
@@ -71,8 +73,10 @@ export function useSession(): UseSessionReturn {
   const logout = useCallback(async () => {
     // While the token still works: the server entry needs it.
     await forgetThisDevice();
+    // Nothing the signed-in person loaded may outlive them on this device.
+    queryClient.clear();
     await authLogout();
-  }, []);
+  }, [queryClient]);
 
   const refresh = useCallback(async (): Promise<boolean> => {
     return (await renewSession()) !== null;
