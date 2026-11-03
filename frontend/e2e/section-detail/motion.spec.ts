@@ -9,6 +9,10 @@ const EASE_IN_OUT = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 const card = (page: Page) =>
   page.getByTestId("features-card").filter({ visible: true });
+const isPhone = (page: Page) => (page.viewportSize()?.width ?? 0) < 768;
+/** Below md a feature opens in the map's sheet and its band stays open, so
+ * only wider screens fold a band. */
+const BAND_FOLD = "a phone opens a feature in the sheet; its band stays open";
 const band = (page: Page) => card(page).locator('[data-band="range"]').first();
 
 async function open(page: Page, reduced = false) {
@@ -76,6 +80,7 @@ test.describe("features card motion", () => {
   test("a band folds by grid rows on the base time, in-out", async ({
     page,
   }) => {
+    test.skip(isPhone(page), BAND_FOLD);
     await open(page);
     const fold = band(page).locator(":scope > [data-fold]");
     const head = band(page).locator("[data-row]").first();
@@ -93,6 +98,7 @@ test.describe("features card motion", () => {
   test("the rows fade first when it closes, last when it opens", async ({
     page,
   }) => {
+    test.skip(isPhone(page), BAND_FOLD);
     await open(page);
     const fold = band(page).locator(":scope > [data-fold]");
     const body = fold.locator(":scope > [data-fold-body]");
@@ -114,6 +120,7 @@ test.describe("features card motion", () => {
   });
 
   test("a shut band leaves its rows out of reach", async ({ page }) => {
+    test.skip(isPhone(page), BAND_FOLD);
     await open(page);
     const fold = band(page).locator(":scope > [data-fold]");
     await band(page).locator("[data-row]").first().click();
@@ -166,6 +173,7 @@ test.describe("features card motion", () => {
 
 test.describe("features card motion, reduced", () => {
   test("the band snaps after a short fade", async ({ page }) => {
+    test.skip(isPhone(page), BAND_FOLD);
     await open(page, true);
     const fold = band(page).locator(":scope > [data-fold]");
     const body = fold.locator(":scope > [data-fold-body]");
@@ -199,6 +207,20 @@ test.describe("features card motion, reduced", () => {
       .poll(() => fold.evaluate((el) => el.getBoundingClientRect().height))
       .toBe(0);
   });
+});
+
+test("a band head on a phone opens the sheet and the band stays open", async ({
+  page,
+}) => {
+  test.skip(!isPhone(page), "the sheet is the phone's");
+  await open(page);
+  await band(page).locator("[data-row]").first().click();
+  await expect(page.getByTestId("feature-sheet")).toBeVisible();
+  await page.getByRole("button", { name: "Back to the list" }).click();
+  await expect(band(page).locator(":scope > [data-fold]")).toHaveAttribute(
+    "data-fold",
+    "open",
+  );
 });
 
 const NAMES = [
@@ -235,13 +257,12 @@ test.describe("every feature shows on a phone", () => {
         await open(page, reduced);
         await expectAllNamed(page);
         const bands = card(page).locator("[data-band]");
+        // Below md a band head opens the sheet and the band stays open.
         for (let i = 0; i < (await bands.count()); i++) {
           const head = bands.nth(i).locator("[data-row]").first();
           await head.click();
-          await expect(
-            bands.nth(i).locator(":scope > [data-fold]"),
-          ).toHaveAttribute("data-fold", "shut");
-          await head.click();
+          await expect(page.getByTestId("feature-sheet")).toBeVisible();
+          await page.getByRole("button", { name: "Back to the list" }).click();
           await expect(
             bands.nth(i).locator(":scope > [data-fold]"),
           ).toHaveAttribute("data-fold", "open");
