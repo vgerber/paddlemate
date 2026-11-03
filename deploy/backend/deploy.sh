@@ -23,7 +23,8 @@ echo "🔨 Building API image..."
 docker build -t paddlemate-api ./api
 
 echo "📤 Copying config files to NAS..."
-ssh "${NAS_USER}@${NAS_HOST}" "mkdir -p ${NAS_PATH}/data/postgres ${NAS_PATH}/data/media && chmod 777 ${NAS_PATH}/data/postgres ${NAS_PATH}/data/media"
+# 755: both containers start as root, so no other NAS account needs write access.
+ssh "${NAS_USER}@${NAS_HOST}" "mkdir -p ${NAS_PATH}/data/postgres ${NAS_PATH}/data/media && chmod 755 ${NAS_PATH}/data ${NAS_PATH}/data/postgres ${NAS_PATH}/data/media"
 rsync -az -e ssh deploy/backend/docker-compose.yml deploy/backend/restore.sh deploy/backend/backup.sh "${ENV_FILE}" \
     "${NAS_USER}@${NAS_HOST}::${NAS_RSYNC_MODULE}/"
 
