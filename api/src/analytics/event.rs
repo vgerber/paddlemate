@@ -8,6 +8,8 @@
 
 use std::collections::BTreeMap;
 
+use crate::query::materials::MAX_COMPARE_IDS;
+
 use serde::{Serialize, de::DeserializeOwned};
 
 use crate::models::material::{
@@ -89,6 +91,17 @@ fn known<T: DeserializeOwned>(value: &str) -> String {
     }
 }
 
+/// How many entries a comparison asks for, never which: "1" up to the
+/// comparison limit, else "other".
+fn compare_count(value: &str) -> String {
+    let n = value.split(',').filter(|id| !id.trim().is_empty()).count();
+    if (1..=MAX_COMPARE_IDS).contains(&n) {
+        n.to_string()
+    } else {
+        OTHER.to_string()
+    }
+}
+
 /// The feature parameters of a query string and their normalised values;
 /// every other key is dropped. The first occurrence of a key wins.
 pub fn allowed_query(raw: &str) -> BTreeMap<String, String> {
@@ -105,6 +118,7 @@ pub fn allowed_query(raw: &str) -> BTreeMap<String, String> {
             "discipline" => known::<MaterialDiscipline>(&value),
             "construction" => known::<MaterialConstruction>(&value),
             "sort" => known::<MaterialSort>(&value),
+            "ids" => compare_count(&value),
             _ => continue,
         };
         out.insert(key.into_owned(), value);
@@ -121,6 +135,14 @@ mod tests {
         let q = allowed_query("q=weser&token=secret&user_id=4&page=2&category=kayak&sort=newest");
         let keys: Vec<&str> = q.keys().map(String::as_str).collect();
         assert_eq!(keys, ["category", "sort"]);
+    }
+
+    #[test]
+    fn a_comparison_records_its_size_not_its_ids() {
+        assert_eq!(allowed_query("ids=10024,10347,9851")["ids"], "3");
+        assert_eq!(allowed_query("ids=10024")["ids"], "1");
+        assert_eq!(allowed_query("ids=")["ids"], OTHER);
+        assert_eq!(allowed_query("ids=1,2,3,4,5,6,7,8,9")["ids"], OTHER);
     }
 
     #[test]
