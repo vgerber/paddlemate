@@ -137,6 +137,21 @@ impl Drop for InFlight {
     }
 }
 
+/// The method as a label: a fixed set, so a client cannot mint series or
+/// put free text into analytics with an arbitrary method token.
+pub fn method_label(method: &axum::http::Method) -> &'static str {
+    match method.as_str() {
+        "GET" => "GET",
+        "HEAD" => "HEAD",
+        "POST" => "POST",
+        "PUT" => "PUT",
+        "PATCH" => "PATCH",
+        "DELETE" => "DELETE",
+        "OPTIONS" => "OPTIONS",
+        _ => "other",
+    }
+}
+
 /// Outermost layer on the API router: counts and times every request.
 /// With a sink, every request also becomes one analytics event.
 pub async fn track_requests(
@@ -146,7 +161,7 @@ pub async fn track_requests(
 ) -> Response {
     let _in_flight = InFlight::enter();
     let start = Instant::now();
-    let method = req.method().as_str().to_string();
+    let method = method_label(req.method()).to_string();
     let outer_route = req
         .extensions()
         .get::<MatchedPath>()
@@ -236,4 +251,21 @@ fn route(handle: PrometheusHandle, pool: Option<PgPool>) -> Router {
             pool,
             process: std::sync::Arc::new(collector),
         })
+}
+
+#[cfg(test)]
+mod method_tests {
+    use super::*;
+    use axum::http::Method;
+
+    #[test]
+    fn standard_methods_pass_and_others_collapse() {
+        for m in ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] {
+            assert_eq!(method_label(&Method::from_bytes(m.as_bytes()).unwrap()), m);
+        }
+        for m in ["ZZPROBE1", "TRACE", "CONNECT", "get"] {
+            let method = Method::from_bytes(m.as_bytes()).unwrap();
+            assert_eq!(method_label(&method), "other");
+        }
+    }
 }
