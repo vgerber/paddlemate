@@ -97,10 +97,12 @@ pub async fn check_in(
     let on_model: i64 = sqlx::query_scalar(&format!(
         "SELECT COUNT(*) FROM material_images i JOIN materials s ON s.id = i.material_id \
          JOIN materials t ON t.id = $1 AND {} \
-         WHERE i.source_kind = 'user' AND i.status IN ('fetched', 'review')",
+         WHERE i.source_kind = 'user' AND (i.status = 'fetched' \
+             OR (i.status = 'review' AND i.uploaded_by = $2))",
         super::images::same_model("s", "t")
     ))
     .bind(material_id)
+    .bind(user_id)
     .fetch_one(&mut *conn)
     .await?;
     if on_model >= MAX_PER_MODEL {
@@ -182,16 +184,19 @@ pub async fn approve_in(
     Ok(())
 }
 
-/// Delete a photo that is still under review (rejected or withdrawn) and
+/// Take down a photo that is still under review (rejected or withdrawn) and
 /// return its file for the caller to delete once the transaction commits.
+/// The row stays as `removed`, so it keeps counting toward the daily cap.
 pub async fn discard_in(
     conn: &mut PgConnection,
     material_id: Option<MaterialId>,
     image_id: i64,
 ) -> Result<Option<String>, sqlx::Error> {
     let row = sqlx::query(
-        "DELETE FROM material_images WHERE id = $1 AND status = 'review' \
-         AND ($2::bigint IS NULL OR material_id = $2) RETURNING file",
+        "WITH old AS (SELECT id, file FROM material_images WHERE id = $1 \
+             AND status = 'review' AND ($2::bigint IS NULL OR material_id = $2) FOR UPDATE) \
+         UPDATE material_images i SET status = 'removed', file = NULL FROM old \
+         WHERE i.id = old.id RETURNING old.file",
     )
     .bind(image_id)
     .bind(material_id)

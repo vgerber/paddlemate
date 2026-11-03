@@ -72,7 +72,9 @@ pub async fn submit(
         .execute(&mut *tx)
         .await?;
     let (recent, pending): (i64, i64) = sqlx::query_as(
-        "SELECT COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '1 day'), \
+        "SELECT COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '1 day') + \
+                    (SELECT COUNT(*) FROM material_proposal_withdrawals \
+                     WHERE user_id = $1 AND submitted_at > NOW() - INTERVAL '1 day'), \
                 COUNT(*) FILTER (WHERE status = 'pending') \
          FROM proposals WHERE entity_type = 'material' AND submitted_by = $1",
     )
