@@ -8,12 +8,16 @@ const html = readFileSync(
   "utf8",
 );
 
-/** Runs the inline script of index.html against a fake page. */
+const prePaintScript = readFileSync(
+  new URL("../../../public/theme-init.js", import.meta.url),
+  "utf8",
+);
+
+/** Runs public/theme-init.js (loaded by index.html) against a fake page. */
 function runInline(stored: string | null | "throws", prefersDark: boolean) {
   const attrs: Record<string, string> = {};
   const meta: Record<string, string> = {};
-  const script = /<script>([\s\S]*?)<\/script>/.exec(html)?.[1];
-  if (!script) throw new Error("no inline script in index.html");
+  const script = prePaintScript;
   const fakeDocument = {
     documentElement: {
       setAttribute: (k: string, v: string) => {
@@ -72,7 +76,7 @@ describe("themeColorFor", () => {
   });
 });
 
-describe("the inline script in index.html", () => {
+describe("the pre-paint script, theme-init.js", () => {
   const stored = ["dark", "light", "system", null, "sepia"] as const;
   for (const mode of stored) {
     for (const prefersDark of [false, true]) {
@@ -92,7 +96,7 @@ describe("the inline script in index.html", () => {
   });
 
   test("reads the key colorMode.ts stores under", () => {
-    expect(html).toContain(`"${MODE_KEY}"`);
+    expect(prePaintScript).toContain(`"${MODE_KEY}"`);
   });
 });
 

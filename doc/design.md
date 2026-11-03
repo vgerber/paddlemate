@@ -270,7 +270,7 @@ Rules for new work:
 
 - `tokens` is `toVars(lightTokens)`: every colour is `var(--pm-*)`; MUI runs in
   CSS-variables mode with both schemes and `data-theme` on `html`.
-- A small script in `index.html` reads the stored mode
+- A small script (`public/theme-init.js`, loaded by `index.html`) reads the stored mode
   (`paddlemate-color-mode`) and the device preference before first paint, sets
   `data-theme` and the light-media meta; it mirrors `resolveScheme` in
   [`lib/prefs/colorMode.ts`](../frontend/src/lib/prefs/colorMode.ts), and
