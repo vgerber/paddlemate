@@ -10,13 +10,9 @@ import BottomSheet from "@/components/BottomSheet";
 import PanelHeader from "@/components/PanelHeader";
 import QueryStates from "@/components/states/QueryStates";
 import type { MaterialTree } from "@/lib/api";
+import { useBackToClose } from "@/lib/hooks/ui/useBackToClose";
 import { useMaterialTree } from "@/lib/hooks/useMaterials";
-import {
-  BackIcon,
-  ChevronRightIcon,
-  CloseIcon,
-  MaterialIcon,
-} from "@/lib/icons";
+import { ChevronRightIcon, CloseIcon, MaterialIcon } from "@/lib/icons";
 import type { MaterialWikiSearch } from "@/lib/materials/search";
 import { disciplineLabel } from "@/lib/materials/specs";
 import {
@@ -118,6 +114,14 @@ function Content({
     onClose();
   };
   const atRoot = !at.category;
+  useBackToClose(true, () => {
+    if (atRoot) {
+      onClose();
+      return false;
+    }
+    setAt(up(at));
+    return true;
+  });
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
@@ -145,18 +149,6 @@ function Content({
           data-testid="browse-rows"
           sx={{ overflowY: "auto", minHeight: 0, pb: 2 }}
         >
-          {!atRoot && (
-            <BrowseRow
-              testId="browse-up"
-              onClick={() => setAt(up(at))}
-              sx={{ color: "text.secondary" }}
-            >
-              <BackIcon fontSize="small" />
-              <Box component="span" sx={{ flex: 1 }}>
-                Back to {levelAt(query.data, up(at)).title}
-              </Box>
-            </BrowseRow>
-          )}
           <BrowseRow
             testId="browse-all"
             onClick={() => pick(at)}

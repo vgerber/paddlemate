@@ -40,9 +40,9 @@ test.describe("category tree on a desktop", () => {
     await expect(page).toHaveURL(/discipline=creek/);
     await expect(page).toHaveURL(/brand=Pyranha/);
     const trail = page.getByRole("navigation", { name: "Breadcrumb" });
-    await expect(trail.getByText("Kayaks")).toBeVisible();
+    await expect(trail.getByText("Kayaks", { exact: true })).toBeVisible();
     await expect(trail.getByText("Creek")).toBeVisible();
-    await expect(trail.getByText("Pyranha")).toHaveAttribute(
+    await expect(trail.getByText("Pyranha", { exact: true })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -166,8 +166,8 @@ test.describe("browse sheet on a phone", () => {
     await expect(rows(page)).toHaveCount(9);
     await expect(page).toHaveURL(/brand=Pyranha/);
     const trail = page.getByRole("navigation", { name: "Breadcrumb" });
-    await expect(trail.getByText("Kayaks")).toBeVisible();
-    await expect(trail.getByText("Pyranha")).toBeVisible();
+    await expect(trail.getByText("Kayaks", { exact: true })).toBeVisible();
+    await expect(trail.getByText("Pyranha", { exact: true })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
@@ -178,7 +178,7 @@ test.describe("browse sheet on a phone", () => {
     await page.getByTestId("browse-button").click();
     const sheet = page.getByRole("dialog", { name: "Browse" });
     await sheet.getByRole("button", { name: /^Kayaks/ }).click();
-    await sheet.getByRole("button", { name: "Back to Browse" }).click();
+    await sheet.getByRole("button", { name: "Back" }).first().click();
     await expect(sheet.getByRole("button", { name: /^Canoes/ })).toBeVisible();
     await sheet.getByRole("button", { name: /^Kayaks/ }).click();
     await sheet.getByRole("button", { name: /^All Kayaks/ }).click();
@@ -188,7 +188,7 @@ test.describe("browse sheet on a phone", () => {
     // A step of the path is a way back up.
     await page.goto(`/materials${PATH}`);
     const trail = page.getByRole("navigation", { name: "Breadcrumb" });
-    await trail.getByRole("button", { name: "Kayaks" }).click();
+    await trail.getByRole("button", { name: "Kayaks", exact: true }).click();
     await expect(page).not.toHaveURL(/brand=/);
   });
 });

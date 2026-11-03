@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import type { MaterialTree } from "@/lib/api";
-import { crumbs, nodeId, pathPatch, selectedTotals, treeRows } from "./tree";
+import {
+  browseLabel,
+  crumbs,
+  nodeId,
+  pathPatch,
+  selectedTotals,
+  treeRows,
+} from "./tree";
 
 const tree: MaterialTree = {
   categories: [
@@ -121,5 +128,14 @@ describe("paths", () => {
         brand: "pyranha",
       }),
     ).toEqual({ models: 5, entries: 8 });
+  });
+});
+
+describe("browseLabel", () => {
+  test("says All gear without a path, else the path levels", () => {
+    expect(browseLabel({})).toBe("All gear");
+    expect(browseLabel({ category: "kayak", discipline: "creek" })).toBe(
+      "Kayaks \u00b7 Creek",
+    );
   });
 });

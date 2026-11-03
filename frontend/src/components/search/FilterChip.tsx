@@ -1,5 +1,6 @@
+import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import { CloseIcon } from "@/lib/icons";
+import { CloseIcon, ExpandIcon } from "@/lib/icons";
 import { withAlpha } from "@/lib/theme/alpha";
 import { focusRingSx } from "@/lib/theme/focusRing";
 import { theme } from "@/lib/theme/theme";
@@ -16,7 +17,10 @@ export default function FilterChip({
   plain = false,
   compact = false,
   testId,
+  dropdown = false,
 }: {
+  /** A chevron after the label: the chip opens a picker. */
+  dropdown?: boolean;
   testId?: string;
   label: string;
   set: boolean;
@@ -101,7 +105,19 @@ export default function FilterChip({
             boxShadow: tokens.elevation.e1,
           }),
       }}
-      label={label}
+      label={
+        dropdown ? (
+          <Box
+            component="span"
+            sx={{ display: "inline-flex", alignItems: "center", gap: 0.25 }}
+          >
+            {label}
+            <ExpandIcon fontSize="small" />
+          </Box>
+        ) : (
+          label
+        )
+      }
     />
   );
 }
