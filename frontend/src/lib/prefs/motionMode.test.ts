@@ -24,9 +24,9 @@ describe("parseMotionMode", () => {
   });
 });
 
-describe("index.html pre-paint script", () => {
+describe("theme-init.js pre-paint script", () => {
   test("reads the same key and sets data-motion", () => {
-    const html = readFileSync("index.html", "utf8");
+    const html = readFileSync("public/theme-init.js", "utf8");
     expect(html).toContain(`getItem("${MOTION_KEY}")`);
     expect(html).toContain('"data-motion"');
   });
