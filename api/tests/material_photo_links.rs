@@ -9,10 +9,9 @@ const PHOTOS: [&str; 2] = [
     include_str!("../migrations/0067_materials_photo_links_https.sql"),
 ];
 
-const NEW_HOSTS: [&str; 7] = [
+const NEW_HOSTS: [&str; 6] = [
     "cdn.myshoptet.com",
     "www.kajakshop.sk",
-    "www.kayaksession.com",
     "s2s-shop.com",
     "images.wildernesssupply.ca",
     "lettmann-shop.de",

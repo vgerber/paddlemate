@@ -12,6 +12,7 @@ use sqlx::PgPool;
 
 /// The part of the availability migration that fills the rows; the DDL above
 /// it ran once when the test database was migrated.
+const RECHECK: &str = include_str!("../migrations/0080_catalogue_playak_recheck.sql");
 const FILL: &str = include_str!("../migrations/0065_materials_availability.sql");
 
 fn app(pool: PgPool) -> Router {
@@ -248,6 +249,8 @@ async fn the_catalogue_carries_availability_and_a_rerun_changes_nothing(pool: Pg
     let before = counts(&pool).await;
     let fill = &FILL[FILL.find("CREATE TEMP TABLE").unwrap()..];
     sqlx::raw_sql(fill).execute(&pool).await.unwrap();
+    // The fill is the 2026-11-01 research; 0080 resets what rested on no maker.
+    sqlx::raw_sql(RECHECK).execute(&pool).await.unwrap();
     assert_eq!(counts(&pool).await, before);
 }
 

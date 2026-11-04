@@ -47,9 +47,11 @@ OLD_BRANDS = {"Spade Kayaks": "Spade", "Waka Kayaks": "Waka", "Fluid Kayaks": "F
               "AT Paddles": "AT", "VE Paddles": "VE", "Lendal (Celtic Paddles)": "Lendal"}
 
 # A paddle is filed by use, a boat by the kind of boat (chk_materials_discipline).
+BOAT_DISCIPLINES = {"creek", "river_runner", "half_slice", "playboat", "slalom", "downriver",
+                    "touring", "sea", "expedition", "recreational", "crossover", "freestyle",
+                    "other"}
 DISCIPLINES = {
-    "kayak": {"creek", "river_runner", "half_slice", "playboat", "slalom", "downriver",
-              "crossover", "freestyle", "other"},
+    "kayak": BOAT_DISCIPLINES, "canoe": BOAT_DISCIPLINES, "packraft": BOAT_DISCIPLINES,
     "paddle": {"whitewater", "freestyle", "slalom", "wildwater", "touring", "canoe", "polo",
                "other"},
 }
@@ -113,6 +115,10 @@ MAKER_HOSTS = {
     "perceptionkayaks.com", "prijon.com", "pyranha.com", "riotkayaks.com", "robson.cz",
     "rtmkayaks.com", "select-paddles.com", "shop.vajdagroup.com", "spadekayaks.com",
     "wakakayaks.com", "wavesport.com", "wernerpaddles.com", "kober-paddel.de",
+    "alpackaraft.com", "anfibio.com", "aquabound.com", "cdkayak.com", "deltakayaks.com",
+    "esquif.com", "nelo.eu", "novacraft.com", "phseakayaks.com", "placidboatworks.com",
+    "seakayakinguk.com", "seawardkayaks.com", "silverbirchcanoes.com", "valleyseakayaks.com",
+    "venturekayaks.com", "wildernesssystems.com", "zastera.cz",
 }
 SHOP_HOSTS = {
     "kayak-shop.eu": "kayak-shop.eu",
@@ -150,6 +156,8 @@ def photo_source(page_url, brand):
     ('maker', 'NRS')
     >>> photo_source("https://www.confluenceoutdoor.com/dagger-x", "Dagger")
     ('maker', 'Dagger')
+    >>> photo_source("https://seakayakinguk.com/articles-paddles/blade-shapes", "Celtic")
+    ('maker', 'Celtic')
     """
     host = page_host(page_url)
     shop = SHOP_HOSTS.get(host)
@@ -320,8 +328,9 @@ def clean_common(e, out, category):
 
 
 def kayak(e):
+    """A boat row; the category is the entry's own (kayak, canoe, packraft), default kayak."""
     out = {}
-    clean_common(e, out, "kayak")
+    clean_common(e, out, e.get("category") or "kayak")
     a, b = out["paddler_weight_min_kg"], out["paddler_weight_max_kg"]
     if a is not None and b is not None and b < a:
         add_note(out, f"paddler_weight_max_kg as published: {b}.")
@@ -333,7 +342,9 @@ def paddle(e):
     out = {}
     e = dict(e)
     g = e.get("weight_g")
-    e["weight_kg"] = round(g / 1000, 3) if num(g) and g > 0 else None
+    if num(g):
+        e["weight_kg"] = round(g / 1000, 3) if g > 0 else None
+    e.setdefault("weight_kg", None)
     clean_common(e, out, "paddle")
     out["weight_kg"] = e["weight_kg"] if e["weight_kg"] and e["weight_kg"] <= 500 else None
     out["blade_material"] = (e.get("blade_material") or "").strip()[:80] or None
@@ -343,7 +354,7 @@ def paddle(e):
     out["lengths_cm"] = [x for x in (e.get("lengths_cm") or []) if num(x) and 0 < x <= 400][:20] or None
     out["feather_deg"] = [int(x) for x in (e.get("feather_deg") or [])
                           if num(x) and 0 <= x <= 360][:12] or None
-    lo, hi = out["length_min_cm"], out["length_max_cm"]
+    lo, hi = out.get("length_min_cm"), out.get("length_max_cm")
     if lo is not None and hi is not None and hi < lo:
         add_note(out, f"length_max_cm as published: {hi}.")
         out["length_max_cm"] = None
@@ -368,12 +379,18 @@ def split_paddles(entries):
         text = (e.get("variant") or "") + " " + (e.get("notes") or "")
         other = "cranked" if re.search(r"crank", text, re.I) else "bent"
         straight = dict(e)
+        straight.pop("other_shaft_material", None)
         second = dict(e)
+        second.pop("other_shaft_material", None)
         straight["variant"] = ", ".join(x for x in (e.get("variant"), "straight") if x)
         second["variant"] = ", ".join(x for x in (e.get("variant"), other) if x)
         second["shaft"] = other
+        # The alternative shaft can be made of something else.
+        if e.get("other_shaft_material"):
+            second["shaft_material"] = e["other_shaft_material"]
         # Weight and angles were stated for the straight shaft only.
         second["weight_g"] = None
+        second["weight_kg"] = None
         second["notes"] = ((e.get("notes") or "") + " Shaft type listed as an alternative of the "
                            "straight model; weight not stated for it.").strip()
         out += [straight, second]
@@ -411,7 +428,7 @@ def model_availability():
         research = {(r["brand"].lower(), r["model"].lower(), (r["variant"] or "").lower()): r
                     for r in json.load(fh)}
     with open(os.path.join(DATA, "kayaks.json"), encoding="utf-8") as fh:
-        kayaks = [("kayak", e) for e in json.load(fh)]
+        kayaks = [(e.get("category") or "kayak", e) for e in json.load(fh)]
     with open(os.path.join(DATA, "paddles.json"), encoding="utf-8") as fh:
         paddles = [("paddle", e) for e in json.load(fh)]
     found = {}
@@ -421,7 +438,7 @@ def model_availability():
             raise SystemExit(f"no availability row for {category} {e['brand']} {e['model']} "
                              f"{e.get('variant')}")
         for split in split_paddles([e]) if category == "paddle" else [e]:
-            row = kayak(split) if category == "kayak" else paddle(split)
+            row = paddle(split) if category == "paddle" else kayak(split)
             found.setdefault(model_key(row), (row, []))[1].append(r)
     out = []
     for row, rs in found.values():
@@ -432,7 +449,7 @@ def model_availability():
         years = [r["year_to"] for r in rs if r["status"] == "discontinued" and r["year_to"]]
         out.append({"category": row["category"], "brand": row["brand"], "model": row["model"],
                     "variant": row["variant"], "availability": status,
-                    "availability_source": pick["source"][:500],
+                    "availability_source": pick["source"][:500] if pick["source"] else None,
                     "availability_checked": pick["checked"],
                     "year_to": max(years) if status == "discontinued" and years else None})
     return out
@@ -785,7 +802,202 @@ ON CONFLICT (material_id, source_url) DO NOTHING;
 """
 
 
+ROUND2_DIR = os.environ.get("ROUND2_DIR") or os.path.join(
+    ROOT, ".claude", "handoffs", "materials-data", "round2")
+ROUND2_CHECKED = "2026-11-04"
+
+# Shaft materials as the makers write them, mapped to the enum where the
+# closest class is obvious. A mixed build is `hybrid`.
+SHAFT_MATERIAL_MAP = {
+    "100% carbon": "carbon", "100% carbon, ovalized": "carbon", "t-700 carbon": "carbon",
+    "3k plain weave carbon": "carbon", "glass fibre": "fiberglass", "fibreglass": "fiberglass",
+    "carbon-glass fibre mix": "hybrid", "fibreglass/carbon": "hybrid",
+    "plastic wrapped aluminium": "aluminium",
+}
+
+
+def boat_identity(e, category):
+    size, variant = split_variant(category, e.get("variant"))
+    return (category, e["brand"].lower().strip(), e["model"].lower().strip(),
+            (variant or "").lower(), (size or "").lower())
+
+
+def merge_entries(base, other):
+    """Fold a second research entry for the same boat into the first.
+
+    The base wins every field it has; what it lacks comes from the other, and
+    the sources, photos and colours are the union.
+    """
+    out = dict(base)
+    for k, v in other.items():
+        if k in ("sources", "images", "colors", "notes", "disciplines"):
+            continue
+        if out.get(k) is None and v is not None:
+            out[k] = v
+    out["sources"] = {**(other.get("sources") or {}), **(base.get("sources") or {})}
+    urls = {i["url"] for i in base.get("images") or []}
+    out["images"] = (base.get("images") or []) + [
+        i for i in other.get("images") or [] if i["url"] not in urls]
+    out["colors"] = base.get("colors") or other.get("colors") or []
+    out["disciplines"] = base["disciplines"]
+    out["notes"] = ((base.get("notes") or "") + " Merged from two research files.").strip()
+    return out
+
+
+def normalise_round2(e, mappings):
+    """One research entry in the shape of the data files; `mappings` collects what changed."""
+    e = {k: v for k, v in e.items() if not k.startswith("_")}
+    label = f"{e['brand']} {e['model']} {e.get('variant') or ''}".strip()
+    if e["category"] == "kayak" and e["brand"] == "Venture" and e["model"] == "Islay" \
+            and e.get("variant") == "Cruiser":
+        e["model"], e["variant"] = "Islay Cruiser", None
+        mappings.append(f"{label}: renamed to Islay Cruiser")
+    sm = e.get("shaft_material")
+    if sm and sm not in SHAFT_MATERIALS:
+        mapped = sm.strip().lower()
+        if mapped not in SHAFT_MATERIALS:
+            mapped = SHAFT_MATERIAL_MAP.get(mapped)
+            if mapped is None:
+                raise SystemExit(f"unmapped shaft_material {sm!r} on {label}")
+            mappings.append(f"{label}: shaft_material {sm!r} -> {mapped}")
+        e["shaft_material"] = mapped
+    if e.get("shaft") and e["shaft"] not in SHAFTS:
+        mappings.append(f"{label}: shaft {e['shaft']!r} -> null (kept in the editor note)")
+    for im in e.get("images") or []:
+        for k in ("url", "page_url"):
+            if im[k].startswith("http://paddles.braca-sport.com/"):
+                im[k] = "https://" + im[k][len("http://"):]
+        for k in ("source_kind", "source_name"):
+            im.pop(k, None)
+    if e["brand"] == "Eddyline" and e["model"] == "Sky" and e.get("variant") == "120":
+        e["length_cm"] = None
+        e["sources"].pop("length_cm", None)
+        e["notes"] = e["notes"].replace(
+            "length_cm kept as printed.",
+            "Length left empty: the page prints 336 cm but also 12 ft (366 cm), which contradict.")
+    e.pop("category")
+    return e
+
+
+def merge_round2():
+    """Add the round-2 research to the data files, once.
+
+    Skips what the data files already hold (same category, brand, model,
+    variant and size), folds the two Venture files into one entry per boat
+    and writes the availability rows next to them. Entries carry
+    "import": "round2" so --import-migration can pick them out.
+    Returns (added per category, skipped, mappings).
+    """
+    paths = {n: os.path.join(DATA, n + ".json") for n in ("kayaks", "paddles", "availability")}
+    data = {}
+    for n, path in paths.items():
+        with open(path, encoding="utf-8") as fh:
+            data[n] = json.load(fh)
+    known = {boat_identity(e, e.get("category") or "kayak") for e in data["kayaks"]}
+    known |= {boat_identity(e, "paddle") for e in data["paddles"]}
+    research = []
+    for root, _, files in sorted(os.walk(ROUND2_DIR)):
+        for name in sorted(files):
+            if name.endswith(".json"):
+                with open(os.path.join(root, name), encoding="utf-8") as fh:
+                    research += json.load(fh)
+    mappings, skipped, fresh, avail = [], 0, {}, {}
+    for raw in research:
+        category = raw["category"]
+        e = normalise_round2(raw, mappings)
+        key = boat_identity(e, category)
+        if key in known:
+            skipped += 1
+            continue
+        row = {"brand": e["brand"], "model": e["model"], "variant": e.get("variant"),
+               "status": e.pop("availability"), "year_to": None,
+               "source": e.pop("availability_source"), "checked": ROUND2_CHECKED,
+               "note": "Round-2 research"}
+        if key in fresh:
+            # The entry with more sourced fields is the base; its availability stays.
+            if len(e.get("sources") or {}) > len(fresh[key].get("sources") or {}):
+                fresh[key], avail[key] = merge_entries(e, fresh[key]), row
+            else:
+                fresh[key] = merge_entries(fresh[key], e)
+            continue
+        fresh[key], avail[key] = e, row
+    added = {}
+    for key, e in fresh.items():
+        category = key[0]
+        e["import"] = "round2"
+        if category == "paddle":
+            data["paddles"].append(e)
+        else:
+            if category != "kayak":
+                e["category"] = category
+            data["kayaks"].append(e)
+        data["availability"].append(avail[key])
+        added[category] = added.get(category, 0) + 1
+    for n, path in paths.items():
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(data[n], indent=1, ensure_ascii=False) + "\n")
+    return added, skipped, mappings
+
+
+def render_import_migration(batch):
+    """Seed the entries tagged `import: batch`, with their availability.
+
+    The same upsert as the full seed (photos included), cut to the batch, then
+    the availability columns per row. An entry a user edited is left alone.
+    """
+    entries = []
+    for name, make in (("kayaks", kayak), ("paddles", paddle)):
+        with open(os.path.join(DATA, name + ".json"), encoding="utf-8") as fh:
+            raw = json.load(fh)
+        if name == "paddles":
+            raw = split_paddles(raw)
+        entries += [(e, make(e)) for e in raw if e.get("import") == batch]
+    with open(os.path.join(DATA, "availability.json"), encoding="utf-8") as fh:
+        research = {(r["brand"].lower(), r["model"].lower(), (r["variant"] or "").lower()): r
+                    for r in json.load(fh)}
+    rows, states = [], []
+    for e, row in entries:
+        row["editor_note"], row["notes"] = row["notes"], None
+        rows.append(row)
+        r = research[(e["brand"].lower(), e["model"].lower(), (e.get("variant") or "").lower())]
+        states.append({"category": row["category"], "brand": row["brand"], "model": row["model"],
+                       "variant": row["variant"], "size": row["size"],
+                       "availability": r["status"], "availability_source": r["source"],
+                       "availability_checked": r["checked"]})
+    payload = json.dumps(states, ensure_ascii=False, separators=(",", ":"))
+    return render(rows) + f"""
+UPDATE materials m SET
+    availability = s.availability,
+    availability_source = s.availability_source,
+    availability_checked = s.availability_checked
+FROM jsonb_to_recordset($seed${payload}$seed$::jsonb) AS s(
+    category material_category, brand text, model text, variant text, size text,
+    availability material_availability, availability_source text, availability_checked date
+)
+WHERE m.category = s.category
+  AND lower(btrim(m.brand)) = lower(btrim(s.brand))
+  AND lower(btrim(m.model)) = lower(btrim(s.model))
+  AND lower(btrim(COALESCE(m.variant, ''))) = lower(btrim(COALESCE(s.variant, '')))
+  AND lower(btrim(COALESCE(m.size, ''))) = lower(btrim(COALESCE(s.size, '')))
+  AND m.created_by = 'system-catalogue'
+  AND m.updated_by IS NULL;
+"""
+
+
 def main():
+    if sys.argv[1:2] == ["--merge-round2"]:
+        added, skipped, mappings = merge_round2()
+        print("added:", added, "skipped (already in the catalogue):", skipped)
+        for m in mappings:
+            print("  mapped:", m)
+        return
+    if sys.argv[1:2] == ["--import-migration"]:
+        sql = render_import_migration(sys.argv[2])
+        if len(sys.argv) < 4:
+            sys.stdout.write(sql)
+        else:
+            open(sys.argv[3], "w", encoding="utf-8").write(sql)
+        return
     if sys.argv[1:2] == ["--merge-groups"]:
         merged, unmatched = merge_groups()
         print("entries updated:", merged, "unmatched research rows:", len(unmatched))

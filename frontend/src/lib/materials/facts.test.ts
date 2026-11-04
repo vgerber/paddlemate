@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { Material, MaterialModel } from "@/lib/api";
 import { IMPERIAL, METRIC } from "@/lib/prefs/units";
 import {
+  hasCommunitySource,
   materialFieldLabel,
   materialFieldValue,
   materialTitle,
@@ -145,6 +146,51 @@ describe("paddle facts", () => {
 
   test("states nothing for a bare entry", () => {
     expect(paddleFacts(material({ category: "paddle" }), METRIC)).toEqual([]);
+  });
+});
+
+describe("hasCommunitySource", () => {
+  test("a value sourced on playak.com counts, subdomains too", () => {
+    expect(
+      hasCommunitySource({
+        weight_kg: "https://www.example.com/a",
+        length_cm: "https://playak.com/buyers-guide/boats-boards/aire-force",
+      }),
+    ).toBe(true);
+    expect(
+      hasCommunitySource({ weight_kg: "http://adrian.playak.com/x" }),
+    ).toBe(true);
+  });
+
+  test("maker sources and look-alike hosts do not", () => {
+    expect(hasCommunitySource({ weight_kg: "https://www.dagger.com/a" })).toBe(
+      false,
+    );
+    expect(hasCommunitySource({ weight_kg: "https://notplayak.com/a" })).toBe(
+      false,
+    );
+    expect(
+      hasCommunitySource({ weight_kg: "https://playak.com.example.org/a" }),
+    ).toBe(false);
+    expect(
+      hasCommunitySource({ weight_kg: "https://example.org/?u=playak.com" }),
+    ).toBe(false);
+  });
+
+  test("a link or photo on playak.com is not a spec", () => {
+    expect(
+      hasCommunitySource({
+        product_url: "https://playak.com/x",
+        images: "https://playak.com/y",
+      }),
+    ).toBe(false);
+  });
+
+  test("no sources, or junk, is false", () => {
+    expect(hasCommunitySource(null)).toBe(false);
+    expect(hasCommunitySource("playak.com")).toBe(false);
+    expect(hasCommunitySource({ weight_kg: "not a url" })).toBe(false);
+    expect(hasCommunitySource({ weight_kg: 5 })).toBe(false);
   });
 });
 

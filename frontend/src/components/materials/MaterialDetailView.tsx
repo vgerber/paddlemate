@@ -18,7 +18,11 @@ import {
   availabilityValue,
   sourceHost,
 } from "@/lib/materials/availability";
-import { sinceLabel, sourceLinks } from "@/lib/materials/facts";
+import {
+  hasCommunitySource,
+  sinceLabel,
+  sourceLinks,
+} from "@/lib/materials/facts";
 import { type SpecRow, specRows } from "@/lib/materials/specRows";
 import { CATEGORY_LABELS, disciplinesLabel } from "@/lib/materials/specs";
 import { type Units, useUnits } from "@/lib/prefs/units";
@@ -188,6 +192,17 @@ export default function MaterialDetailView({
             </>
           ) : (
             <SpecCards material={material} units={units} first={sideBySide} />
+          )}
+          {hasCommunitySource(material.sources) && (
+            <Typography
+              data-testid="community-source-note"
+              variant="body2"
+              color="textSecondary"
+              sx={{ px: { xs: `${tokens.phone.edge}px`, md: 0 }, py: 1 }}
+            >
+              Some specs come from a community source and are not confirmed by
+              the maker.
+            </Typography>
           )}
         </Box>
 

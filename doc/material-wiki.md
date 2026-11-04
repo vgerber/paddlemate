@@ -2,7 +2,7 @@
 
 The gear catalog paddlers keep between them: one row per model, each with its
 sizes, searchable by name, and comparable side by side. It ships with a researched catalogue of
-whitewater kayaks and paddles (see Catalogue below); canoes, packrafts and
+whitewater, touring, sea and racing kayaks, canoes, packrafts and paddles (see Catalogue below);
 SUPs share the kayak fields.
 
 Open it from **Tools → Material wiki**, or go straight to `/materials`.
@@ -175,7 +175,10 @@ scrolls): the size headings choose the
 size (the URL holds the entry) and the picked column is tinted. A model with
 one size shows its specs as plain lists (hull, cockpit, paddler) instead. A paddle shows its own specs
 (blade area, lengths, shaft, angles, weight) in your units. A Sources list
-links every page a value came from. Rows in the list carry a small
+links every page a value came from. Under the specs, one quiet line says
+"Some specs come from a community source and are not confirmed by the maker."
+when any value of the entry still has a source on playak.com (the entry's
+`sources`, host match). Rows in the list carry a small
 thumbnail that opens the model, not the viewer. Every action of an entry is in the header menu, in this order:
 **Suggest a change**, **Add photo**, **Compare sizes** (a model with several
 sizes), then after a rule the admin's "Remove photo: <credit>" (one per photo,
@@ -185,7 +188,8 @@ card and the photo dialog offers sign-in. The page itself holds no buttons for
 them; the Overview card closes with one prompt, only when data is missing ("No
 photo or volume yet" and **Suggest a change**). Removing asks first.
 
-About 530 whitewater kayaks and 170 paddles come pre-filled, each size and
+About 700 kayaks (whitewater, touring, sea and racing), 75 canoes, 37 packrafts and 370 paddles
+come pre-filled, each size and
 shaft type as its own entry. They carry colourways as the maker names them,
 and a link to the page each value came from. Where a year rests on a weak
 source (an archive's first capture, a listing year, a search snippet) the
@@ -326,6 +330,23 @@ copies them into `kayaks.json` (a model's sizes get the union), and
 `--groups-migration` writes the migration (0070 and its completion 0071). They
 touch only rows with `updated_by` NULL.
 
+### Round-2 import (migration 0079)
+
+Touring, sea and racing kayaks, canoes, packrafts and more paddles were added by
+`build_seed.py --merge-round2` (reads `ROUND2_DIR`, default
+`.claude/handoffs/materials-data/round2`; skips any boat already in the data
+files; folds a boat found in two research files into one entry; writes the
+availability rows next to the entries, which carry `"import": "round2"`) and
+`--import-migration round2 <out.sql>` (the seed of those entries, their photos as pending
+`material_images` rows, and their availability). The mirror's allowlist is the
+set of hosts in `material_images`, so the makers' hosts join it with the rows.
+Shaft materials outside the enum are mapped only where obvious (`glass fibre` to
+`fiberglass`, a carbon-glass mix to `hybrid`); a shaft that is "straight or bent"
+is left empty with the wording in the editor note. A length the maker prints
+two ways (Eddyline Sky 120: 336 cm and 12 ft) is left empty.
+Photos hosted by a group owner (Celtic on seakayakinguk.com) credit the brand, as
+Dagger does on confluenceoutdoor.com. `api/tests/catalogue_round2.rs` checks the import.
+
 ### Brand names
 
 A brand is its name without the product suffix: Spade, Waka, Fluid, EXO, Zet,
@@ -361,6 +382,23 @@ a straight and a bent shaft becomes one entry per shaft (the second without
 weight). `year_approximate` is set when the year source is Playak or the
 archive, or the notes call the year weak. `system-catalogue` is hidden from the
 user list.
+
+Migration 0080 (`scripts/materials/diff_migration.py <old data dir>`, the
+difference between the old and the current data files, one UPDATE per column)
+carries the Playak re-check to databases already seeded. Each value that
+rested on playak.com was looked up at the maker: confirmed ones keep their
+value and name the maker's page in `sources`, corrected ones take the
+maker's value and page, unverifiable ones stay as they were (their Playak
+source keeps the app's community-source line on the page). Colour lists
+were not corrected (a maker page names one model year's colours). The
+migration also applies the quality review's maker-sourced fixes, sets
+availability to `unknown` (source cleared) where `current` or `discontinued`
+rested on a retailer, a magazine, Playak, an archive's absence or contradicted
+the entry's own note, retires doubtful photos (`removed`, as in 0076) and
+clears construction that no source states. Rows are matched by brand, model,
+variant and size and only untouched catalogue rows (`updated_by IS NULL`) are
+changed. A paddle sold in two shaft types takes `other_shaft_material` for the
+second shaft (`split_paddles()`).
 
 Migration `0058_material_size.sql` adds `materials.size` and moves the size
 out of `variant` on untouched catalogue rows (`updated_by IS NULL`, matched by
