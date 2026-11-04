@@ -6858,5 +6858,4885 @@
   "source": "https://kayak-shop.eu/en/zet-kayaks",
   "checked": "2026-11-01",
   "note": "Weak: retailer lists it in stock, no discontinued label; maker site not readable (SSL error)"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Adirondack",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/adirondack/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Avalon",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/avalon/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Canyon",
+  "variant": "T-Formex",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/canyon/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Canyon",
+  "variant": "T-Formex Lite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/canyon/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Cargo",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/cargo-15/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Cargo",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/cargo/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Echo 2.0",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/echo-2-0/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Echo",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/echo/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Heron",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/heron/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Huron",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/hugo-17/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Huron",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/huron-15/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Huron",
+  "variant": "16 T-Formex",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/huron-16/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Huron",
+  "variant": "16 T-Formex Lite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/huron-16/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Mallard",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/le-mallard/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "L'Edge",
+  "variant": "Lite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/ledge-lite/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "L'Edge",
+  "variant": "SuperLite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/ledge-superlite/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Miramichi",
+  "variant": "18",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/miramichi-18/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Miramichi",
+  "variant": "20",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/miramichi/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Ocoee",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/ocoee/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Pocket Canyon",
+  "variant": "T-Formex",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/pocket-canyon/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Pocket Canyon",
+  "variant": "T-Formex Lite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/pocket-canyon/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Presage",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/presage/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Prospecteur",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/prospecteur-15/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Prospecteur",
+  "variant": "16",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/prospecteur-16/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Prospecteur",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/prospecteur-17/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Prospecteur Sport",
+  "variant": "T-Formex",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/prospecteur-sport/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Prospecteur Sport",
+  "variant": "T-Formex Lite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/prospecteur-sport/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Rangeley",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/rangeley-15/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Rangeley",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/rangeley-17/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Raven",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Scout",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/scout/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Spanish Fly",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/spanish-fly/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Spark",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/spark/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Vertige Aventure",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/vertige-aventure/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Vertige X",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/vertige-x/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Vertige",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.esquif.com/canots/vertige/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Esquif",
+  "model": "Zephyr 2.0",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Angler",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/recreational/angler-15/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Bob Special",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/recreational/bob-special-15/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Cronje",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/cruiser/cronje-17/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "Flagship 16",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/flagship-prospector/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Fox",
+  "variant": "14 Solo",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/cruiser/fox-14-solo/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Haida",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/cruiser/haida-17/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Lure",
+  "variant": "15 ft 7 in",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/recreational/lure-15-7/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Moisie",
+  "variant": "16 ft 6 in",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/whitewater/moisie-16-6/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Muskoka",
+  "variant": "15 ft 10 in",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/recreational/muskoka-15-10/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Pal",
+  "variant": "16",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/recreational/pal-16/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "14 Solo",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-14-solo/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "15 SP3",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-15-sp3/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-15/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "16 SP3",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-16-sp3/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "16",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-16/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "17 SP3",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-17-sp3/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-17/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "18",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/prospector-18/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Prospector",
+  "variant": "Special Edition 16",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/prospector/special-edition-prospector/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Supernova",
+  "variant": "14 ft 10 in Solo",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/whitewater/supernova-14-10/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Teddy",
+  "variant": "12 Kids",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/recreational/teddy-12-kids/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nova Craft",
+  "model": "Trapper",
+  "variant": "12 Solo",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.novacraft.com/canoes/recreational/trapper-12-solo/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Placid Boatworks",
+  "model": "SpitFire",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://placidboatworks.com/our-boats/spitfire/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Placid Boatworks",
+  "model": "SpitFire 13",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://placidboatworks.com/our-boats/spitfire-13/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Placid Boatworks",
+  "model": "Oseetah",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://placidboatworks.com/our-boats/oseetah/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Placid Boatworks",
+  "model": "RapidFire",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://placidboatworks.com/our-boats/rapidfire/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Placid Boatworks",
+  "model": "Shadow",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://placidboatworks.com/our-boats/shadow/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Placid Boatworks",
+  "model": "Ohneka",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://placidboatworks.com/our-boats/ohneka/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Broadland",
+  "variant": "15",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-broadland-15-735",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Broadland",
+  "variant": "16",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-broadland-16-700",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Broadland",
+  "variant": "16 Highline",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-broadland-16-700",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Firefly",
+  "variant": "14 Solo",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-firefly-14-solo-2163",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Firefly",
+  "variant": "14 Tandem",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-firefly-14-tandem-2164",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Covert",
+  "variant": "10.5 Solo",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/sb-covert-105-solo-2169",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Covert",
+  "variant": "10.5 Tandem",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/sb-covert-105-tandem-2170",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Covert",
+  "variant": "9.3 DuraTough",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-covert-9-3-duratough-2212",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Covert",
+  "variant": "9.3 Hydrolite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-covert-9-3-hydrolite-2213",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Silverbirch",
+  "model": "Rebel",
+  "variant": "11",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.silverbirchcanoes.com/shop/silverbirch-rebel-11-771",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Gnarwhal",
+  "variant": "Small",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/gnarwhal",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Gnarwhal",
+  "variant": "Medium",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/gnarwhal",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Gnarwhal",
+  "variant": "Large",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/gnarwhal",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Gnarwhal",
+  "variant": "X-Large",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/gnarwhal",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Expedition",
+  "variant": "Small",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/expedition",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Expedition",
+  "variant": "Medium",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/expedition",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Expedition",
+  "variant": "Large",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/expedition",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Expedition",
+  "variant": "X-Large",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/expedition",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Mage",
+  "variant": "Small",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/mage",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Mage",
+  "variant": "Medium",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/mage",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Mage",
+  "variant": "Large",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/mage",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Mage",
+  "variant": "X-Large",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/mage",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Valkyrie",
+  "variant": "V3 Medium",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/valkyrie-v3",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Valkyrie",
+  "variant": "V3 Large",
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/valkyrie-v3",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Caribou",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/caribou",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Mule",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/mule",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Ranger",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/ranger",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Forager",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/forager",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Rendezvous",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/rendezvous",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Scout",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/scout",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Aleutian",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/aleutian",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Zephyr",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/zephyr",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Alpacka Raft",
+  "model": "Chinook",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://alpackaraft.com/products/chinook",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Revo",
+  "variant": "CL",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Revo",
+  "variant": "XL+",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Omega",
+  "variant": "C2(+)",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Omega",
+  "variant": "C2B+",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Rebel",
+  "variant": "3KL+",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Rebel",
+  "variant": "Duo(+)",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Sigma",
+  "variant": "TXLB+",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Sigma",
+  "variant": "TXL(+)",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Sigma",
+  "variant": "TX",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Rebel",
+  "variant": "2K",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Delta",
+  "variant": "MX",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Alpha",
+  "variant": "XC",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Nano",
+  "variant": "RTC",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Anfibio",
+  "model": "Nano",
+  "variant": "SL",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.anfibio.com/en/packrafting-gear/packrafts/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Eagle Ray Hybrid",
+  "variant": "2 piece, Snap-Button, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Carbon",
+  "variant": "2 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Carbon",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Carbon",
+  "variant": "4 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Carbon",
+  "variant": "4 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Fiberglass",
+  "variant": "2 piece, Snap-Button, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Fiberglass",
+  "variant": "4 piece, Snap-Button, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Hybrid",
+  "variant": "2 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Hybrid",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Hybrid",
+  "variant": "4 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Manta Ray Hybrid",
+  "variant": "4 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Carbon",
+  "variant": "2 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Carbon",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Carbon",
+  "variant": "4 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Carbon",
+  "variant": "4 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Fiberglass",
+  "variant": "2 piece, Snap-Button, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Fiberglass",
+  "variant": "4 piece, Snap-Button, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Hybrid",
+  "variant": "2 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Hybrid",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Hybrid",
+  "variant": "4 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Sting Ray Hybrid",
+  "variant": "4 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Carbon",
+  "variant": "2 piece, Posi-Lok, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Carbon",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Carbon",
+  "variant": "2 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Carbon",
+  "variant": "4 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Fiberglass",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Fiberglass",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Fiberglass",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Tango Fiberglass",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Ultralight Tetra",
+  "variant": "2 piece, Posi-Lok, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Ultralight Tetra",
+  "variant": "2 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Ultralight Tetra",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Carbon",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Carbon",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Carbon",
+  "variant": "2 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Carbon",
+  "variant": "4 piece, Posi-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Fiberglass",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Fiberglass",
+  "variant": "2 piece, Versa-Lok, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Fiberglass",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Aqua-Bound",
+  "model": "Whiskey Fiberglass",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Polo Kinetic",
+  "variant": "735",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-polo/braca-polo-kinetic.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Polo Kinetic",
+  "variant": "660",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-polo/braca-polo-kinetic.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Polo Rapid",
+  "variant": "730",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-polo/braca-polo-rapid.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Polo Rapid",
+  "variant": "660",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-polo/braca-polo-rapid.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Polo Spoon",
+  "variant": "690",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-polo/braca-polo-spoon.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Hurricane",
+  "variant": "720, 100% carbon",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-sea-and-recreation/braca-hurricane.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Hurricane",
+  "variant": "720, 60% carbon",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-sea-and-recreation/braca-hurricane.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Hurricane",
+  "variant": "660, 100% carbon",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-sea-and-recreation/braca-hurricane.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Hurricane",
+  "variant": "660, 60% carbon",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-sea-and-recreation/braca-hurricane.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Typhoon",
+  "variant": "690, 100% carbon",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-sea-and-recreation/braca-typhoon.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Typhoon",
+  "variant": "690, 60% carbon",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/kayak-sea-and-recreation/braca-typhoon.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Slalom Rocky 1",
+  "variant": "835",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-slalom/braca-canoe-slalom-rocky-1-2.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Slalom Rocky 1",
+  "variant": "805",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-slalom/braca-canoe-slalom-rocky-1-2.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Slalom Rocky 2",
+  "variant": "835",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-slalom/braca-canoe-slalom-rocky-1-2.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Slalom Rocky 2",
+  "variant": "805",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-slalom/braca-canoe-slalom-rocky-1-2.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Slalom Rocky 4",
+  "variant": "835",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-slalom/braca-canoe-slalom-rocky-4.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Down River On Roll",
+  "variant": "765",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-down-river/braca-canoe-down-river.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Down River On Roll",
+  "variant": "745",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-down-river/braca-canoe-down-river.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe 20/21.5",
+  "variant": "20",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-20-21-5.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe 20/21.5",
+  "variant": "21.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-20-21-5.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Medium",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-medium.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "19",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "19.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "20",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "20.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "21",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "21.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "22",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "22.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni 2000",
+  "variant": "23",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-2000.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "20",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "20.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "21",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "21.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "22",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "22.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "23",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "23.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "24",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "24.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "25",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "25.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Extra Wide",
+  "variant": "26",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-extra-wide.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "20",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "20.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "21",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "21.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "22",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "22.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "23",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "23.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "24",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "24.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Uni Super Fat",
+  "variant": "25",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-uni-super-fat.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Children",
+  "variant": "16",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-children.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Children",
+  "variant": "16.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-children.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Children",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-children.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Children",
+  "variant": "17.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-children.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Children",
+  "variant": "18",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-children.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Braca",
+  "model": "Canoe Children",
+  "variant": "18.5",
+  "status": "current",
+  "year_to": null,
+  "source": "http://paddles.braca-sport.com/canoe-flatwater/braca-canoe-children.html",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Kinetic",
+  "variant": "575",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Kinetic",
+  "variant": "600",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Kinetic",
+  "variant": "650",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Kinetic",
+  "variant": "700",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Kinetic",
+  "variant": "750",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Omega",
+  "variant": "575",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Omega",
+  "variant": "600",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Omega",
+  "variant": "650",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Omega",
+  "variant": "700",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Omega",
+  "variant": "750",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Nordkapp",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Archipelago",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Reef",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Fusion",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Celtic",
+  "model": "Mania",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Vision Pro",
+  "variant": "2 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/touring-paddles/2293-12683-vision-pro-2-piece",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Vision",
+  "variant": "2 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/touring-paddles/2294-12686-vision-2-piece-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Vision",
+  "variant": "1 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/touring-paddles/2490-18910-vision-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Drift",
+  "variant": "1 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/recreation-paddles/2192-12690-drift-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Drift",
+  "variant": "2 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/recreation-paddles/2193-11408-drift-2-piece-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Drift Pro",
+  "variant": "1 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/recreation-paddles/2199-11423-drift-pro-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Drift Pro",
+  "variant": "2 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/recreation-paddles/2198-11420-drift-pro-2-piece-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Colt",
+  "variant": "1 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/recreation-paddles/2194-11410-colt-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Colt Pro",
+  "variant": "1 piece",
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/recreation-paddles/2200-11426-colt-pro-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Palm",
+  "model": "Otter canoe paddle",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://palm.equipment/gb/canoe-paddles/279-3829-otter-canoe-paddle",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "X.Blade",
+  "variant": "1 piece",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "X.TR",
+  "variant": "1 piece",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "X.Trek",
+  "variant": "1 piece",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "X.Line",
+  "variant": "1 piece",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "X.One",
+  "variant": "1 piece",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "X.Gorm",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "C1 Touring",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "C1 White Water",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "Player SL",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "Track HD",
+  "variant": "650",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "Track HD",
+  "variant": "680",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "Track HD",
+  "variant": "700",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "Track SL",
+  "variant": "650",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "Track SL",
+  "variant": "680",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Select",
+  "model": "Track SL",
+  "variant": "700",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Algonquin",
+  "variant": "1 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Algonquin",
+  "variant": "adjustable, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Athena",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Athena",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Bandit",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Bandit",
+  "variant": "adjustable, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Bandit Carbon",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Bandit Carbon",
+  "variant": "adjustable, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Bandito",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Bandito",
+  "variant": "adjustable, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Camano",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Camano",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Camano",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Camano Carbon",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Camano Carbon",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Camano Carbon",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Churchill",
+  "variant": "1 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Churchill",
+  "variant": "adjustable, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Corryvreckan",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Corryvreckan",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Corryvreckan",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Corryvreckan Carbon",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Corryvreckan Carbon",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Corryvreckan Carbon",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Cyprus",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Cyprus",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Cyprus",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Guide Stick",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Ikelos",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Ikelos",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Ikelos",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Journey",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Journey",
+  "variant": "1 piece, straight shaft, wood grip",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Journey Carbon",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Journey Carbon",
+  "variant": "1 piece, straight shaft, wood grip",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Kalliste",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Kalliste",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Kalliste",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Little Dipper",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Little Dipper",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Nantahala",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Nantahala",
+  "variant": "adjustable, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Nomad",
+  "variant": "1 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Ovation",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Ovation",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Pack-Tour M",
+  "variant": "adjustable, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Shuna",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Shuna",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Shuna",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Shuna Carbon",
+  "variant": "2 piece, bent shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Shuna Carbon",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Shuna Carbon",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Shuna Hooked",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Skagit CF",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Skagit FG",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Skagit FG",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Tybee CF",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Tybee FG",
+  "variant": "2 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Werner",
+  "model": "Tybee FG",
+  "variant": "4 piece, straight shaft",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Barbusa",
+  "variant": "Carbolight",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Barbusa",
+  "variant": "Flexible",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Barbusa",
+  "variant": "Mixt",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Caipi",
+  "variant": "Profi",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Caipi",
+  "variant": "Flexible",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Caipi",
+  "variant": "Diolen",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Anik",
+  "variant": "Diolen",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Dino",
+  "variant": "Diolen",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Dino",
+  "variant": "Mixt",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Anik",
+  "variant": "Mixt",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Barbusa",
+  "variant": "Diolen",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Caipi",
+  "variant": "Mixt",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Fugu",
+  "variant": "Carbolight",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Fugu",
+  "variant": "Profi",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Mexxl",
+  "variant": "Carbolight",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Mexxl",
+  "variant": "Profi",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Mexxl",
+  "variant": "Flexible",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Omakase",
+  "variant": "Carbolight",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Omakase",
+  "variant": "Profi",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Omakase",
+  "variant": "Flexible",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Tik Tak",
+  "variant": "Mixt",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Tik Tak",
+  "variant": "Diolen",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Sonic Boom XXL",
+  "variant": "Carbolight",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Sonic Boom XXL",
+  "variant": "Profi",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Galasport",
+  "model": "Sonic Boom XXL",
+  "variant": "Flexible",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Zastera",
+  "model": "Lizard",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.zastera.cz/lode-pro-sjezd-na-divoke-vode/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Zastera",
+  "model": "Savage 2000",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.zastera.cz/lode-pro-sjezd-na-divoke-vode/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Zastera",
+  "model": "Clipper",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.zastera.cz/lode-pro-sjezd-na-divoke-vode/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Zastera",
+  "model": "Dynamic",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.zastera.cz/lode-pro-sjezd-na-divoke-vode/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Zastera",
+  "model": "Corvette",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.zastera.cz/lode-pro-sjezd-na-divoke-vode/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Zastera",
+  "model": "Aggressor",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.zastera.cz/lode-pro-sjezd-na-divoke-vode/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Lettmann",
+  "model": "Akaroa",
+  "variant": "65 LV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://lettmann.de/boote/seekajak-einer",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Lettmann",
+  "model": "Akaroa",
+  "variant": "80 MV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://lettmann.de/boote/seekajak-einer",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Lettmann",
+  "model": "Akaroa",
+  "variant": "95 HV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://lettmann.de/boote/seekajak-einer",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Lettmann",
+  "model": "Maxi Touring Plus",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://lettmann.de/boote/touren-einer",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Lettmann",
+  "model": "Star Light MV / 85 Touring Plus",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://lettmann.de/boote/touren-einer",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Lettmann",
+  "model": "Star Light LV / 65 Touring Plus",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://lettmann.de/boote/touren-einer",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nelo",
+  "model": "Ammasalik",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.nelo.eu/product-brands/nelo-touring/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nelo",
+  "model": "Azores",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.nelo.eu/product-brands/nelo-touring/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nelo",
+  "model": "K2 Berlengas",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.nelo.eu/product-brands/nelo-touring/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nelo",
+  "model": "C-Trek",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.nelo.eu/product-brands/nelo-touring/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nelo",
+  "model": "Inuk",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.nelo.eu/product-brands/nelo-touring/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nelo",
+  "model": "K2 Waterman",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.nelo.eu/product-brands/nelo-touring/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Nelo",
+  "model": "Navigator",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.nelo.eu/product-brands/nelo-touring/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Aries",
+  "variant": "150",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Aries",
+  "variant": "155",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Cetus",
+  "variant": "HV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Cetus",
+  "variant": "LV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Cetus",
+  "variant": "MV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Delphin",
+  "variant": "150",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Delphin II",
+  "variant": "155",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Leo",
+  "variant": "HV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Leo",
+  "variant": "MV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Scorpio II",
+  "variant": "HV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Scorpio II",
+  "variant": "LV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Scorpio II",
+  "variant": "MV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Valkyrie",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Virgo",
+  "variant": "HV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Virgo",
+  "variant": "LV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Virgo",
+  "variant": "MV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Volan",
+  "variant": "156",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Volan",
+  "variant": "158",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Volan",
+  "variant": "160",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Volan",
+  "variant": "162",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "P&H",
+  "model": "Virgo",
+  "variant": "Composite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.phseakayaks.com/kayaks.php",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Seatron",
+  "variant": "Sport",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Seatron",
+  "variant": "GT",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Grizzly",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Seayak",
+  "variant": "Classic",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Lavie",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Aruna",
+  "variant": "PriLite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Neptun",
+  "variant": "PriLite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Marlin LV",
+  "variant": "PriLite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Marlin",
+  "variant": "PriLite",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Touryak",
+  "variant": "500",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Touryak",
+  "variant": "470 LV",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Enduro",
+  "variant": "450",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Vivoo",
+  "variant": "Laminat",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Neptun",
+  "variant": "Laminat",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Falcon",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Falcon Tour",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Barracuda",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Marlin LV",
+  "variant": "Laminat",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Millenium",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Prijon",
+  "model": "Proteus",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.prijon.com/medien/medienpool/techdat-2026-d-4.pdf",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Etain",
+  "variant": "17-7",
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/etain/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Etain",
+  "variant": "17-5",
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/etain/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Etain",
+  "variant": "17-1",
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/etain/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Sirona",
+  "variant": "16-1 RM",
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/sirona/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Genesis",
+  "variant": "14-10",
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/genesis/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Genesis",
+  "variant": "15-1",
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/genesis/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Nordkapp Førti",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/nordkapp-forti/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Anas Acuta",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/anas-acuta/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Aleut II",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/aleut2/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Valley",
+  "model": "Rapier",
+  "variant": "20",
+  "status": "current",
+  "year_to": null,
+  "source": "https://valleyseakayaks.com/rapier/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Venture",
+  "model": "Flex",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.venturekayaks.com/kayaks.php?model=flex",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Venture",
+  "model": "Islay",
+  "variant": "12",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.venturekayaks.com/kayaks.php?model=islay-12",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Venture",
+  "model": "Islay",
+  "variant": "14",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.venturekayaks.com/kayaks.php?model=islay-14",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Venture",
+  "model": "Islay Cruiser",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.venturekayaks.com/kayaks.php?model=islay-cruiser",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Solstice GT",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/solstice-gt-177-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Solstice GTS",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/solstice-gts-177-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Solstice GT Titan",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/solstice-gt-titan-177-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Equinox GT",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/equinox-gt-16-touring-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Equinox GTS",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/equinox-gts-16-touring-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Kestrel",
+  "variant": "120",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/kestrel-120/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Kestrel",
+  "variant": "140",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/kestrel-140/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Raven",
+  "variant": "120",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/raven-120-kids-kayak/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Vision",
+  "variant": "120 SP",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/vision-120-sp-kayak/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Vision",
+  "variant": "130",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/vision-130-kayak/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Vision",
+  "variant": "140",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/vision-140-kayak/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Double Vision",
+  "variant": "168",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/double-vision-168-tandem-kayak/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Karla",
+  "variant": "153",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/karla-153-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Prana",
+  "variant": "17",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/prana-17-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Sisu",
+  "variant": "16",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/sisu-16-kayak-custom/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Current Designs",
+  "model": "Unity",
+  "variant": "21",
+  "status": "current",
+  "year_to": null,
+  "source": "https://cdkayak.com/unity-21-tandem-kayak-stock/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "10AR",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-10ar/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "12AR",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-12ar/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "12.10",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-12-10/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "12s",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-12s/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "14",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-14/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "15s",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-15s/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "15.5GT",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-15gt/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "16",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-16/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "17",
+  "variant": null,
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-17/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Delta",
+  "model": "Traverse",
+  "variant": "17.5T",
+  "status": "current",
+  "year_to": null,
+  "source": "https://www.deltakayaks.com/delta-traverse-17-5t/",
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Sitka",
+  "variant": "140",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Sitka",
+  "variant": "145",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Sitka",
+  "variant": "150",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Sky",
+  "variant": "100",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Sky",
+  "variant": "120",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Sandpiper",
+  "variant": "120",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Sandpiper",
+  "variant": "130",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Eddyline",
+  "model": "Rio",
+  "variant": "120",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Perception",
+  "model": "Expression",
+  "variant": "14.5",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Perception",
+  "model": "Expression",
+  "variant": "11.5",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Perception",
+  "model": "Carolina",
+  "variant": "14",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Perception",
+  "model": "Conduit",
+  "variant": "13",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Perception",
+  "model": "Cove",
+  "variant": "14.5 T",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Perception",
+  "model": "Access",
+  "variant": "11.5",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Perception",
+  "model": "Access",
+  "variant": "9.5",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Cosma",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Mantra",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Ascente",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Ascente",
+  "variant": "X3",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Aurora",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Chilco",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Chilco",
+  "variant": "X3",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Gemini",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Gemini",
+  "variant": "XLC",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Guide 17",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Legend",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Luna",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Passat",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Passat G3",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Passat G3",
+  "variant": "XLC",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Quantum",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Quest",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Quest",
+  "variant": "X3",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Shadow",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Silhouette",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Southwind",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Tyee",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Tyee",
+  "variant": "XLC",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Seaward",
+  "model": "Vision",
+  "variant": null,
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Tempest",
+  "variant": "170",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Tempest",
+  "variant": "165",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Tsunami",
+  "variant": "125",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Tsunami",
+  "variant": "145",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Zephyr",
+  "variant": "155",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Zephyr",
+  "variant": "160",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Tempest",
+  "variant": "165 Pro",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Tempest",
+  "variant": "170 Pro",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Tempest",
+  "variant": "180 Pro",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Pungo",
+  "variant": "120",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Pungo",
+  "variant": "140",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Aspire",
+  "variant": "105",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
+ },
+ {
+  "brand": "Wilderness Systems",
+  "model": "Pamlico",
+  "variant": "145T",
+  "status": "unknown",
+  "year_to": null,
+  "source": null,
+  "checked": "2026-11-04",
+  "note": "Round-2 research"
  }
 ]
