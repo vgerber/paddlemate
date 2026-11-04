@@ -296,3 +296,24 @@ export function sourceLinks(
     return { url, host, fields };
   });
 }
+
+/** Source keys that are not a spec: links and photos. */
+const NOT_A_SPEC = new Set(["product_url", "images", "availability"]);
+
+/** True when a shown spec still rests on playak.com, a community site the
+ * maker has not confirmed. Matches the host (playak.com and its subdomains),
+ * never a look-alike such as notplayak.com or playak.com.example.org. */
+export function hasCommunitySource(sources: unknown): boolean {
+  if (!sources || typeof sources !== "object") return false;
+  return Object.entries(sources).some(([field, url]) => {
+    if (NOT_A_SPEC.has(field) || typeof url !== "string") return false;
+    try {
+      const { protocol, hostname } = new URL(url);
+      if (protocol !== "http:" && protocol !== "https:") return false;
+      const host = hostname.toLowerCase();
+      return host === "playak.com" || host.endsWith(".playak.com");
+    } catch {
+      return false;
+    }
+  });
+}
