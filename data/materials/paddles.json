@@ -533,7 +533,7 @@
    30
   ],
   "shaft_diameter": null,
-  "weight_g": 1077,
+  "weight_g": 1219,
   "year_from": 2010,
   "year_to": null,
   "colors": [],
@@ -546,13 +546,13 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-flexi",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-flexi",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-flexi",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-flexi",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-flexi",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-flexi",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-at2-flexi"
   },
   "notes": "Playak buyers guide, model year 2010; weight 38.0 oz converted to 1077 g. Most flexible paddle of the F-Core series; 30 deg offset standard, custom available. shaft_material: carbon and fiberglass braid"
@@ -566,7 +566,7 @@
   ],
   "pieces": 1,
   "shaft": "bent",
-  "shaft_material": "carbon",
+  "shaft_material": "hybrid",
   "blade_material": "carbon braid, urethane foam core",
   "blade_shape": null,
   "blade_area_cm2": 710,
@@ -586,7 +586,7 @@
    30
   ],
   "shaft_diameter": null,
-  "weight_g": 1148,
+  "weight_g": 1191,
   "year_from": 2010,
   "year_to": null,
   "colors": [],
@@ -599,14 +599,14 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
-   "feather_deg": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superduty",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superduty",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superduty",
+   "feather_deg": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superduty",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superduty",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superduty",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superduty",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superduty"
   },
   "notes": "Weight 40.5 oz converted. Model year 2010 per Playak, MSRP USD 500. Originally an underground custom model."
@@ -640,7 +640,7 @@
    30
   ],
   "shaft_diameter": null,
-  "weight_g": 1049,
+  "weight_g": 1135,
   "year_from": 2010,
   "year_to": null,
   "colors": [],
@@ -653,14 +653,14 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
-   "feather_deg": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superlight",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superlight",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superlight",
+   "feather_deg": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superlight",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superlight",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superlight",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/at2-superlight",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-at2-superlight"
   },
   "notes": "Weight 37.0 oz converted. Model year 2010 per Playak, MSRP USD 460. Custom lengths available."
@@ -709,13 +709,13 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon"
   },
   "notes": "Playak buyers guide; year is Playak model year (review source). Custom lengths available. Weight converted/as listed (oz and g). Moderately sized blade, all-round river running and play."
@@ -766,13 +766,13 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-carbon",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-carbon"
   },
   "notes": "Playak buyers guide; year is Playak model year (review source). Custom lengths available. Weight converted/as listed (oz and g)."
@@ -821,13 +821,13 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
    "shaft_diameter": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass"
   },
@@ -879,13 +879,13 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/hercules-glass",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass",
    "shaft_diameter": "https://playak.com/buyers-guide/paddles/at-paddle-hercules-glass"
   },
@@ -935,14 +935,14 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "feather_deg": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "feather_deg": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon"
   },
   "notes": "Weight converted from 36.5 oz as listed (1035 g). Model year 2013 per Playak buyers guide (year from review source). Custom lengths available."
@@ -993,14 +993,14 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "feather_deg": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "feather_deg": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-carbon",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-carbon"
   },
   "notes": "Weight 30.5 oz / 865 g as listed. Model year 2013 per Playak. Custom lengths available."
@@ -1049,14 +1049,14 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "feather_deg": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "feather_deg": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass"
   },
   "notes": "Weight 40.25 oz / 1141 g as listed. Model year 2013 per Playak. A UK retailer lists Samurai as discontinued. shaft_material: carbon blend (Duraweave with Innegra)"
@@ -1107,14 +1107,14 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "feather_deg": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "feather_deg": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/samurai-glass",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-samurai-glass"
   },
   "notes": "Weight 35.5 oz, about 1006 g (Playak text truncated; 1006 g matches a catalogue listing). Model year 2013 per Playak. shaft_material: carbon blend (Duraweave with Innegra)"
@@ -1165,14 +1165,14 @@
   ],
   "product_url": null,
   "sources": {
-   "blade_area_cm2": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
-   "weight_g": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
-   "lengths_cm": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
-   "feather_deg": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
-   "shaft_material": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
-   "blade_material": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
+   "blade_area_cm2": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/titan",
+   "weight_g": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/titan",
+   "lengths_cm": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/titan",
+   "feather_deg": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/titan",
+   "shaft_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/titan",
+   "blade_material": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/titan",
    "year_from": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
-   "shaft": "https://playak.com/buyers-guide/paddles/at-paddle-titan",
+   "shaft": "https://web.archive.org/web/20160215152148/http://www.atpaddles.com/us/products/titan",
    "pieces": "https://playak.com/buyers-guide/paddles/at-paddle-titan"
   },
   "notes": "Sport series. Weight 37.5 oz / 1063 g. Model year 2014 per Playak. Shaft type (straight or ergo) not stated on the page; recorded as straight, unverified."
@@ -4685,10 +4685,10 @@
   "images": [],
   "product_url": null,
   "sources": {
-   "blade_length_cm": "https://playak.com/buyers-guide/paddles/robson-combat",
-   "weight_g": "https://playak.com/buyers-guide/paddles/robson-combat",
-   "length_min_cm": "https://playak.com/buyers-guide/paddles/robson-combat",
-   "blade_material": "https://playak.com/buyers-guide/paddles/robson-combat",
+   "blade_length_cm": "https://web.archive.org/web/20081201103629/http://www.robsonpaddle.de/robsonpaddle/site08/paddle.php?id=22&char=whitewater",
+   "weight_g": "https://web.archive.org/web/20081201103629/http://www.robsonpaddle.de/robsonpaddle/site08/paddle.php?id=22&char=whitewater",
+   "length_min_cm": "https://web.archive.org/web/20081201103629/http://www.robsonpaddle.de/robsonpaddle/site08/paddle.php?id=22&char=whitewater",
+   "blade_material": "https://web.archive.org/web/20081201103629/http://www.robsonpaddle.de/robsonpaddle/site08/paddle.php?id=22&char=whitewater",
    "shaft": "https://playak.com/buyers-guide/paddles/robson-combat",
    "pieces": "https://playak.com/buyers-guide/paddles/robson-combat"
   },
@@ -4704,7 +4704,7 @@
   "pieces": 1,
   "shaft": "straight",
   "shaft_material": "fiberglass",
-  "blade_material": "fiberglass",
+  "blade_material": "Flowtech",
   "blade_shape": null,
   "blade_area_cm2": null,
   "blade_length_cm": null,
@@ -4723,9 +4723,9 @@
   "images": [],
   "product_url": null,
   "sources": {
-   "weight_g": "https://playak.com/buyers-guide/paddles/robson-hellsbells",
-   "length_min_cm": "https://playak.com/buyers-guide/paddles/robson-hellsbells",
-   "blade_material": "https://playak.com/buyers-guide/paddles/robson-hellsbells",
+   "weight_g": "https://web.archive.org/web/20110505142548/http://www.robsonpaddle.de/robsonpaddle/site08/paddle.php?id=59&char=whitewater",
+   "length_min_cm": "https://web.archive.org/web/20110505142548/http://www.robsonpaddle.de/robsonpaddle/site08/paddle.php?id=59&char=whitewater",
+   "blade_material": "https://web.archive.org/web/20110505142548/http://www.robsonpaddle.de/robsonpaddle/site08/paddle.php?id=59&char=whitewater",
    "shaft": "https://playak.com/buyers-guide/paddles/robson-hellsbells",
    "pieces": "https://playak.com/buyers-guide/paddles/robson-hellsbells"
   },
@@ -4798,12 +4798,7 @@
   "year_from": null,
   "year_to": null,
   "colors": [],
-  "images": [
-   {
-    "url": "https://d2qyesv2yl91ku.cloudfront.net/images/products/Sawyer-Paddles-Oars/Copperhead-II-Kayak-Paddle-2.png",
-    "page_url": "https://paddling.com/gear/copperhead-ii-kayak-paddle"
-   }
-  ],
+  "images": [],
   "product_url": null,
   "sources": {
    "length_min_cm": "https://paddling.com/gear/copperhead-ii-kayak-paddle",
@@ -4884,12 +4879,7 @@
   "year_from": null,
   "year_to": null,
   "colors": [],
-  "images": [
-   {
-    "url": "https://d2qyesv2yl91ku.cloudfront.net/images/products/Sawyer-Paddles-Oars/CrossCut_Left_Up.png",
-    "page_url": "https://paddling.com/gear/crosscut4-kayak-paddle"
-   }
-  ],
+  "images": [],
   "product_url": null,
   "sources": {
    "length_min_cm": "https://paddling.com/gear/crosscut4-kayak-paddle",
@@ -5228,9 +5218,11 @@
    "blade_material": "https://select-paddles.com/produit/w1-alu/",
    "feather_deg": "https://select-paddles.com/produit/w1-alu/",
    "year_from": "https://playak.com/buyers-guide/paddles/select-w1",
-   "shaft": "https://select-paddles.com/produit/w1-alu/"
+   "shaft": "https://select-paddles.com/produit/w1-alu/",
+   "shaft_material": "https://select-paddles.com/produit/w1-alu/"
   },
-  "notes": "Angles 30/45 left or right; straight or ergo (bent) shaft. Mono and adjustable versions. year_from: Playak model year for the W1 (listing year; the Alu variant may be later) shaft_material: carbon / glass"
+  "notes": "Angles 30/45 left or right; straight or ergo (bent) shaft. Mono and adjustable versions. year_from: Playak model year for the W1 (listing year; the Alu variant may be later) shaft_material: carbon / glass",
+  "other_shaft_material": "carbon"
  },
  {
   "brand": "Select",
@@ -5287,9 +5279,11 @@
    "blade_material": "https://select-paddles.com/produit/w1-alu/",
    "feather_deg": "https://select-paddles.com/produit/w1-alu/",
    "year_from": "https://playak.com/buyers-guide/paddles/select-w1",
-   "shaft": "https://select-paddles.com/produit/w1-alu/"
+   "shaft": "https://select-paddles.com/produit/w1-alu/",
+   "shaft_material": "https://select-paddles.com/produit/w1-alu/"
   },
-  "notes": "Angles 30/45 left or right; straight or ergo (bent) shaft. Mono and adjustable versions. year_from: Playak model year for the W1 (listing year; the Alu variant may be later) shaft_material: carbon / glass"
+  "notes": "Angles 30/45 left or right; straight or ergo (bent) shaft. Mono and adjustable versions. year_from: Playak model year for the W1 (listing year; the Alu variant may be later) shaft_material: carbon / glass",
+  "other_shaft_material": "carbon"
  },
  {
   "brand": "Select",
@@ -5461,9 +5455,11 @@
    "lengths_cm": "https://select-paddles.com/produit/wild-alium-mono/",
    "blade_material": "https://select-paddles.com/produit/wild-alium-mono/",
    "feather_deg": "https://select-paddles.com/produit/wild-alium-mono/",
-   "shaft": "https://select-paddles.com/produit/wild-alium-mono/"
+   "shaft": "https://select-paddles.com/produit/wild-alium-mono/",
+   "shaft_material": "https://select-paddles.com/produit/wild-alium-mono/"
   },
-  "notes": "Angles 30/45 left or right; straight or ergo (bent) shaft. Mono and adjustable (Quick-Lock) versions; the blade has an aluminium edge (name Alium). shaft_material: carbon / glass"
+  "notes": "Angles 30/45 left or right; straight or ergo (bent) shaft. Mono and adjustable (Quick-Lock) versions; the blade has an aluminium edge (name Alium). shaft_material: carbon / glass",
+  "other_shaft_material": "carbon"
  },
  {
   "brand": "Select",

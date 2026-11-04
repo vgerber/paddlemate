@@ -379,10 +379,15 @@ def split_paddles(entries):
         text = (e.get("variant") or "") + " " + (e.get("notes") or "")
         other = "cranked" if re.search(r"crank", text, re.I) else "bent"
         straight = dict(e)
+        straight.pop("other_shaft_material", None)
         second = dict(e)
+        second.pop("other_shaft_material", None)
         straight["variant"] = ", ".join(x for x in (e.get("variant"), "straight") if x)
         second["variant"] = ", ".join(x for x in (e.get("variant"), other) if x)
         second["shaft"] = other
+        # The alternative shaft can be made of something else.
+        if e.get("other_shaft_material"):
+            second["shaft_material"] = e["other_shaft_material"]
         # Weight and angles were stated for the straight shaft only.
         second["weight_g"] = None
         second["weight_kg"] = None

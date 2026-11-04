@@ -169,7 +169,10 @@ scrolls): the size headings choose the
 size (the URL holds the entry) and the picked column is tinted. A model with
 one size shows its specs as plain lists (hull, cockpit, paddler) instead. A paddle shows its own specs
 (blade area, lengths, shaft, angles, weight) in your units. A Sources list
-links every page a value came from. Rows in the list carry a small
+links every page a value came from. Under the specs, one quiet line says
+"Some specs come from a community source and are not confirmed by the maker."
+when any value of the entry still has a source on playak.com (the entry's
+`sources`, host match). Rows in the list carry a small
 thumbnail that opens the model, not the viewer. Every action of an entry is in the header menu, in this order:
 **Suggest a change**, **Add photo**, **Compare sizes** (a model with several
 sizes), then after a rule the admin's "Remove photo: <credit>" (one per photo,
@@ -349,6 +352,23 @@ a straight and a bent shaft becomes one entry per shaft (the second without
 weight). `year_approximate` is set when the year source is Playak or the
 archive, or the notes call the year weak. `system-catalogue` is hidden from the
 user list.
+
+Migration 0080 (`scripts/materials/diff_migration.py <old data dir>`, the
+difference between the old and the current data files, one UPDATE per column)
+carries the Playak re-check to databases already seeded. Each value that
+rested on playak.com was looked up at the maker: confirmed ones keep their
+value and name the maker's page in `sources`, corrected ones take the
+maker's value and page, unverifiable ones stay as they were (their Playak
+source keeps the app's community-source line on the page). Colour lists
+were not corrected (a maker page names one model year's colours). The
+migration also applies the quality review's maker-sourced fixes, sets
+availability to `unknown` (source cleared) where `current` or `discontinued`
+rested on a retailer, a magazine, Playak, an archive's absence or contradicted
+the entry's own note, retires doubtful photos (`removed`, as in 0076) and
+clears construction that no source states. Rows are matched by brand, model,
+variant and size and only untouched catalogue rows (`updated_by IS NULL`) are
+changed. A paddle sold in two shaft types takes `other_shaft_material` for the
+second shaft (`split_paddles()`).
 
 Migration `0058_material_size.sql` adds `materials.size` and moves the size
 out of `variant` on untouched catalogue rows (`updated_by IS NULL`, matched by
