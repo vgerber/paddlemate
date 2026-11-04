@@ -130,6 +130,8 @@ export type MaterialSort = components["schemas"]["MaterialSort"];
 export type MaterialTree = components["schemas"]["MaterialTree"];
 export type MaterialTreeCategory =
   components["schemas"]["MaterialTreeCategory"];
+export type MaterialUse = components["schemas"]["MaterialUse"];
+export type MaterialTreeUse = components["schemas"]["MaterialTreeUse"];
 export type MaterialTreeDiscipline =
   components["schemas"]["MaterialTreeDiscipline"];
 export type MaterialTreeBrand = components["schemas"]["MaterialTreeBrand"];

@@ -127,6 +127,11 @@ pub(super) fn push_filters(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filters: &
         qb.push_bind(discipline);
         qb.push("]::material_discipline[]");
     }
+    if let Some(use_) = filters.use_ {
+        qb.push(" AND m.disciplines && ");
+        qb.push_bind(use_.disciplines());
+        qb.push("::material_discipline[]");
+    }
     if let Some(construction) = filters.construction {
         qb.push(" AND m.construction = ");
         qb.push_bind(construction);

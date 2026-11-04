@@ -81,7 +81,7 @@ export default function MaterialTree({
   total?: number;
 }) {
   const query = useMaterialTree(treeFilters(search));
-  const path = pathOf(search);
+  const path = pathOf(search, query.data);
   const brandOpen = path.category && path.discipline && path.brand;
   const models = useBrandModels(toMaterialFilters(search), Boolean(brandOpen));
   const [toggled, setToggled] = useState<Map<string, boolean>>(new Map());
@@ -167,7 +167,9 @@ export default function MaterialTree({
           onToggle={setOpen}
           renderRow={(row) => <RowContent row={row} />}
         />
-        {rows.some((row) => row.kind === "discipline") && (
+        {rows.some(
+          (row) => row.kind === "discipline" || row.kind === "use",
+        ) && (
           <Typography
             data-testid="tree-group-note"
             sx={{ ...labelSx, color: "text.secondary", px: 1, pt: 1 }}

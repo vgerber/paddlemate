@@ -25,6 +25,7 @@ describe("the URL and the API parameters", () => {
     const search = parseMaterialSearch({
       q: "storm",
       category: "kayak",
+      use: "whitewater",
       discipline: "creek",
       construction: "plastic",
       availability: "current",
@@ -36,6 +37,7 @@ describe("the URL and the API parameters", () => {
     expect(toMaterialFilters(search)).toEqual({
       q: "storm",
       category: "kayak",
+      use: "whitewater",
       discipline: "creek",
       construction: "plastic",
       availability: "current",
@@ -48,6 +50,7 @@ describe("the URL and the API parameters", () => {
   test("unknown or hand-edited values read as no filter", () => {
     const search = parseMaterialSearch({
       category: "boat",
+      use: "nope",
       discipline: "nope",
       construction: "stone",
       availability: "discontinued",
@@ -58,6 +61,7 @@ describe("the URL and the API parameters", () => {
     expect(toMaterialFilters(search)).toEqual({
       q: undefined,
       category: undefined,
+      use: undefined,
       discipline: undefined,
       construction: undefined,
       availability: undefined,

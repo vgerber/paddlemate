@@ -270,7 +270,10 @@ async fn the_tree_counts_models_and_entries_per_level(pool: PgPool) {
     assert_eq!(kayak["category"], "kayak");
     assert_eq!(kayak["models"], 5);
     assert_eq!(kayak["entries"], 6);
-    let creek = &kayak["disciplines"][0];
+    let whitewater = &kayak["uses"][0];
+    assert_eq!(whitewater["use"], "whitewater");
+    assert_eq!(whitewater["models"], 4);
+    let creek = &whitewater["disciplines"][0];
     assert_eq!(creek["discipline"], "creek");
     assert_eq!(creek["models"], 3);
     assert_eq!(creek["entries"], 4);
@@ -303,10 +306,11 @@ async fn a_model_in_several_groups_counts_under_each(pool: PgPool) {
     assert_eq!(kayak["models"], 2, "the category counts each model once");
     assert_eq!(kayak["entries"], 3);
     let count = |group: &str| {
-        let d = kayak["disciplines"]
+        let d = kayak["uses"]
             .as_array()
             .unwrap()
             .iter()
+            .flat_map(|u| u["disciplines"].as_array().unwrap())
             .find(|d| d["discipline"] == group)
             .unwrap();
         (

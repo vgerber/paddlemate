@@ -139,3 +139,93 @@ describe("browseLabel", () => {
     );
   });
 });
+
+const withUses: MaterialTree = {
+  categories: [
+    {
+      category: "kayak",
+      models: 8,
+      entries: 10,
+      disciplines: [],
+      uses: [
+        {
+          use: "whitewater",
+          models: 6,
+          entries: 8,
+          disciplines: [
+            {
+              discipline: "creek",
+              models: 5,
+              entries: 6,
+              brands: [{ brand: "Pyranha", models: 5, entries: 6 }],
+            },
+          ],
+        },
+        { use: "racing", models: 2, entries: 2, disciplines: [] },
+      ],
+    },
+    { category: "paddle", models: 3, entries: 3, disciplines: [] },
+  ],
+};
+
+describe("kayak uses", () => {
+  test("a use sits between the category and its groups", () => {
+    const rows = treeRows(
+      withUses,
+      { category: "kayak", use: "whitewater", discipline: "creek" },
+      none,
+      undefined,
+    );
+    expect(rows.map((r) => [r.kind, r.level, r.label])).toEqual([
+      ["category", 1, "Kayaks"],
+      ["use", 2, "Whitewater"],
+      ["discipline", 3, "Creek"],
+      ["brand", 4, "Pyranha"],
+      ["use", 2, "Racing"],
+      ["category", 1, "Paddles"],
+    ]);
+  });
+
+  test("an older link without a use finds it in the tree", () => {
+    const rows = treeRows(
+      withUses,
+      { category: "kayak", discipline: "creek" },
+      none,
+      undefined,
+    );
+    expect(rows.find((r) => r.label === "Creek")?.selected).toBe(true);
+    expect(
+      crumbs({ category: "kayak", discipline: "creek" }, withUses).map(
+        (c) => c.label,
+      ),
+    ).toEqual(["Kayaks", "Whitewater", "Creek"]);
+  });
+
+  test("labels and totals follow the use", () => {
+    expect(
+      browseLabel(
+        { category: "kayak", use: "whitewater", discipline: "creek" },
+        withUses,
+      ),
+    ).toBe("Kayaks \u00b7 Whitewater \u00b7 Creek");
+    expect(
+      selectedTotals(withUses, { category: "kayak", use: "whitewater" }),
+    ).toEqual({ models: 6, entries: 8 });
+    expect(selectedTotals(withUses, { category: "kayak" })).toEqual({
+      models: 8,
+      entries: 10,
+    });
+  });
+
+  test("selecting a use clears the levels below it", () => {
+    expect(nodeId({ category: "kayak", use: "racing" })).toBe("kayak/racing");
+    expect(pathPatch({ category: "kayak", use: "racing", brand: "X" })).toEqual(
+      {
+        category: "kayak",
+        use: "racing",
+        discipline: undefined,
+        brand: undefined,
+      },
+    );
+  });
+});

@@ -63,6 +63,47 @@ pub enum MaterialDiscipline {
 }
 
 impl MaterialDiscipline {
+    /// Every group, for the places that need the whole list.
+    pub const ALL: [Self; 17] = [
+        Self::Creek,
+        Self::RiverRunner,
+        Self::HalfSlice,
+        Self::Playboat,
+        Self::Slalom,
+        Self::Downriver,
+        Self::Touring,
+        Self::Sea,
+        Self::Expedition,
+        Self::Recreational,
+        Self::Crossover,
+        Self::Freestyle,
+        Self::Other,
+        Self::Whitewater,
+        Self::Wildwater,
+        Self::Canoe,
+        Self::Polo,
+    ];
+
+    /// The use a kayak group belongs to. Exhaustive on purpose: a new group
+    /// must be placed here.
+    pub fn use_of(self) -> MaterialUse {
+        match self {
+            Self::Creek | Self::RiverRunner | Self::Playboat | Self::HalfSlice => {
+                MaterialUse::Whitewater
+            }
+            Self::Slalom | Self::Downriver => MaterialUse::Racing,
+            Self::Crossover | Self::Sea | Self::Touring | Self::Expedition | Self::Recreational => {
+                MaterialUse::Touring
+            }
+            Self::Other
+            | Self::Polo
+            | Self::Freestyle
+            | Self::Whitewater
+            | Self::Wildwater
+            | Self::Canoe => MaterialUse::Other,
+        }
+    }
+
     /// Classes only a paddle can have; boats never use them.
     const PADDLE_ONLY: [Self; 4] = [Self::Whitewater, Self::Wildwater, Self::Canoe, Self::Polo];
     /// Paddles are grouped by use: these are all the classes a paddle may have.
@@ -85,6 +126,29 @@ impl MaterialDiscipline {
         } else {
             !Self::PADDLE_ONLY.contains(&self)
         }
+    }
+}
+
+/// What a kayak is used for: the level above its group in the browse tree.
+/// Derived from the group (`MaterialDiscipline::use_of`), never stored.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum MaterialUse {
+    Whitewater,
+    Racing,
+    Touring,
+    Other,
+}
+
+impl MaterialUse {
+    /// The groups that fall under this use.
+    pub fn disciplines(self) -> Vec<MaterialDiscipline> {
+        MaterialDiscipline::ALL
+            .into_iter()
+            .filter(|d| d.use_of() == self)
+            .collect()
     }
 }
 
@@ -410,6 +474,9 @@ pub struct MaterialFilters {
     pub category: Option<MaterialCategory>,
     /// Entries filed under this group, among others or as the only one.
     pub discipline: Option<MaterialDiscipline>,
+    /// Entries filed under any group of this use (kayak uses).
+    #[serde(rename = "use")]
+    pub use_: Option<MaterialUse>,
     pub construction: Option<MaterialConstruction>,
     pub availability: Option<MaterialAvailability>,
     /// Exact brand, case-insensitive.
@@ -983,6 +1050,18 @@ pub struct MaterialTreeDiscipline {
     pub brands: Vec<MaterialTreeBrand>,
 }
 
+/// A use inside the kayak category of the browse tree.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MaterialTreeUse {
+    #[serde(rename = "use")]
+    pub use_: MaterialUse,
+    /// Distinct models in any of the use's groups.
+    pub models: i64,
+    pub entries: i64,
+    /// Most models first.
+    pub disciplines: Vec<MaterialTreeDiscipline>,
+}
+
 /// A category of the browse tree. A model filed under several groups counts
 /// under each of them, so the group counts can add up to more than the
 /// category's own, which counts every model once.
@@ -991,11 +1070,16 @@ pub struct MaterialTreeCategory {
     pub category: MaterialCategory,
     pub models: i64,
     pub entries: i64,
+    /// Groups directly under the category; empty when the category has uses.
     /// Most models first.
     pub disciplines: Vec<MaterialTreeDiscipline>,
+    /// Only kayaks: uses (whitewater, racing, touring, other) in that order,
+    /// each with its groups. Absent for every other category.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uses: Option<Vec<MaterialTreeUse>>,
 }
 
-/// The wiki as a browse tree: category, discipline, brand.
+/// The wiki as a browse tree: category, (use for kayaks), discipline, brand.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MaterialTree {
     pub categories: Vec<MaterialTreeCategory>,
