@@ -28,7 +28,7 @@ pub async fn get_tree(
 }
 
 doc_fn!(get_tree_docs, op =>
-    op.description("The wiki as a browse tree: category, discipline, brand, each with model and entry counts. Takes the filters of the model list except category, discipline and brand (the levels the tree offers); paging and sort are ignored.")
+    op.description("The wiki as a browse tree: category, use (kayaks only), discipline, brand, each with model and entry counts. Takes the filters of the model list except category, use, discipline and brand (the levels the tree offers); paging and sort are ignored.")
         .response::<200, Json<MaterialTree>>()
         .tag("Materials")
 );

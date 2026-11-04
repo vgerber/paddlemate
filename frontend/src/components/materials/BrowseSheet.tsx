@@ -14,11 +14,12 @@ import { useBackToClose } from "@/lib/hooks/ui/useBackToClose";
 import { useMaterialTree } from "@/lib/hooks/useMaterials";
 import { ChevronRightIcon, CloseIcon, MaterialIcon } from "@/lib/icons";
 import type { MaterialWikiSearch } from "@/lib/materials/search";
-import { disciplineLabel } from "@/lib/materials/specs";
+import { disciplineLabel, USE_LABELS } from "@/lib/materials/specs";
 import {
   CATEGORY_PLURALS,
   GROUP_COUNT_NOTE,
   pathOf,
+  resolvePath,
   selectedTotals,
   type TreePath,
   treeFilters,
@@ -40,18 +41,53 @@ interface Choice {
 function levelAt(tree: MaterialTree | undefined, at: TreePath) {
   const cats = tree?.categories ?? [];
   const cat = cats.find((c) => c.category === at.category);
-  const disc = cat?.disciplines.find((d) => d.discipline === at.discipline);
+  const use = cat?.uses?.find((u) => u.use === at.use);
+  const groups = use ? use.disciplines : cat?.disciplines;
+  const disc = groups?.find((d) => d.discipline === at.discipline);
   if (cat && disc) {
+    const name = disciplineLabel(disc.discipline, cat.category);
     return {
-      title: disciplineLabel(disc.discipline, cat.category),
-      trail: CATEGORY_PLURALS[cat.category],
-      all: `All ${disciplineLabel(disc.discipline, cat.category)}`,
+      title: name,
+      trail: use
+        ? `${CATEGORY_PLURALS[cat.category]} \u00b7 ${USE_LABELS[use.use]}`
+        : CATEGORY_PLURALS[cat.category],
+      all: `All ${name}`,
       rows: disc.brands.map(
         (b): Choice => ({
           label: b.brand,
           count: b.models,
           path: { ...at, brand: b.brand },
           deeper: false,
+        }),
+      ),
+    };
+  }
+  if (cat && use) {
+    return {
+      title: USE_LABELS[use.use],
+      trail: CATEGORY_PLURALS[cat.category],
+      all: `All ${USE_LABELS[use.use]}`,
+      rows: use.disciplines.map(
+        (d): Choice => ({
+          label: disciplineLabel(d.discipline, cat.category),
+          count: d.models,
+          path: { ...at, discipline: d.discipline },
+          deeper: d.brands.length > 0,
+        }),
+      ),
+    };
+  }
+  if (cat?.uses) {
+    return {
+      title: CATEGORY_PLURALS[cat.category],
+      trail: "All gear",
+      all: `All ${CATEGORY_PLURALS[cat.category]}`,
+      rows: cat.uses.map(
+        (u): Choice => ({
+          label: USE_LABELS[u.use],
+          count: u.models,
+          path: { category: cat.category, use: u.use },
+          deeper: u.disciplines.length > 0,
         }),
       ),
     };
@@ -80,14 +116,18 @@ function levelAt(tree: MaterialTree | undefined, at: TreePath) {
         label: CATEGORY_PLURALS[c.category],
         count: c.models,
         path: { category: c.category },
-        deeper: c.disciplines.length > 0,
+        deeper: (c.uses ? c.uses.length : c.disciplines.length) > 0,
       }),
     ),
   };
 }
 
+/** The level above `at`: a group goes up to its use (kayaks) or category. */
 function up(at: TreePath): TreePath {
-  if (at.discipline) return { category: at.category };
+  if (at.discipline) {
+    return { category: at.category, use: at.use };
+  }
+  if (at.use) return { category: at.category };
   return {};
 }
 
@@ -101,12 +141,15 @@ function Content({
   onClose: () => void;
 }) {
   const query = useMaterialTree(treeFilters(search));
-  const here = pathOf(search);
+  const here = pathOf(search, query.data);
   // Opens one level above what is picked, so the pick is in view.
-  const [at, setAt] = useState<TreePath>({
+  const [opened, setAt] = useState<TreePath>({
     category: here.category,
+    use: here.use,
     discipline: here.discipline,
   });
+  // An older link names the discipline only; the tree supplies its use.
+  const at = resolvePath(opened, query.data);
   const level = levelAt(query.data, at);
   const totals = selectedTotals(query.data, at);
   const pick = (path: TreePath) => {
@@ -237,7 +280,7 @@ const rowSx = {
 } as const;
 
 /** The tree as a phone sheet, one level at a time: tap a category to see its
- * types, a type to see its brands. The first row of each level picks the whole
+ * uses (kayaks), types and brands. The first row of each level picks the whole
  * level ("All Kayaks"); a brand picks itself. Picking narrows the list and
  * closes the sheet. */
 export default function BrowseSheet({

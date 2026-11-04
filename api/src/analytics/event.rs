@@ -13,7 +13,7 @@ use crate::query::materials::MAX_COMPARE_IDS;
 use serde::{Serialize, de::DeserializeOwned};
 
 use crate::models::material::{
-    MaterialCategory, MaterialConstruction, MaterialDiscipline, MaterialSort,
+    MaterialCategory, MaterialConstruction, MaterialDiscipline, MaterialSort, MaterialUse,
 };
 
 /// Stored when a feature parameter holds something outside its enum.
@@ -116,6 +116,7 @@ pub fn allowed_query(raw: &str) -> BTreeMap<String, String> {
         let value = match key.as_ref() {
             "category" => known::<MaterialCategory>(&value),
             "discipline" => known::<MaterialDiscipline>(&value),
+            "use" => known::<MaterialUse>(&value),
             "construction" => known::<MaterialConstruction>(&value),
             "sort" => known::<MaterialSort>(&value),
             "ids" => compare_count(&value),
@@ -147,7 +148,11 @@ mod tests {
 
     #[test]
     fn known_values_are_kept_and_unknown_become_other() {
-        let q = allowed_query("category=sup&discipline=half_slice&construction=Zebra&sort=x");
+        let q = allowed_query(
+            "category=sup&discipline=half_slice&use=racing&construction=Zebra&sort=x",
+        );
+        assert_eq!(q["use"], "racing");
+        assert_eq!(allowed_query("use=Bob")["use"], OTHER);
         assert_eq!(q["category"], "sup");
         assert_eq!(q["discipline"], "half_slice");
         assert_eq!(q["construction"], OTHER);

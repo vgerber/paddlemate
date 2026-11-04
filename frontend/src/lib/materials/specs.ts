@@ -3,6 +3,7 @@ import {
   type MaterialCategory,
   type MaterialConstruction,
   type MaterialDiscipline,
+  type MaterialUse,
   type PaddleShaft,
   type PaddleShaftMaterial,
 } from "@/lib/api";
@@ -177,6 +178,16 @@ export function disciplinesFor(
   if (category) return BOAT_DISCIPLINES;
   return DISCIPLINES;
 }
+
+/** What a kayak is used for, in tree order. */
+export const USES: MaterialUse[] = ["whitewater", "racing", "touring", "other"];
+
+export const USE_LABELS: Record<MaterialUse, string> = {
+  whitewater: "Whitewater",
+  racing: "Racing",
+  touring: "Touring",
+  other: "Other",
+};
 
 const PADDLE_CLASS_LABELS: Partial<Record<MaterialDiscipline, string>> = {
   touring: "Touring and sea",

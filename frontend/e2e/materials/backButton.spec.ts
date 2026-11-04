@@ -29,12 +29,15 @@ async function openCreek(page: Page) {
     .getByRole("button", { name: /^Kayaks/ })
     .click();
   await browse(page)
+    .getByRole("button", { name: /^Whitewater/ })
+    .click();
+  await browse(page)
     .getByRole("button", { name: /^Creek/ })
     .click();
 }
 
 test.describe("back button on a phone", () => {
-  test("Browse steps Creek, Kayaks, root, closed, then leaves @small", async ({
+  test("Browse steps Creek, Whitewater, Kayaks, root, closed, then leaves @small", async ({
     page,
   }) => {
     await openCreek(page);
@@ -42,8 +45,15 @@ test.describe("back button on a phone", () => {
     await page.goBack();
     await expect(sheet.getByRole("button", { name: /^Creek/ })).toBeVisible();
     await expect(
-      sheet.getByRole("button", { name: /^All Creek/ }),
-    ).toBeHidden();
+      sheet.getByRole("button", { name: /^All Whitewater/ }),
+    ).toBeVisible();
+    await page.goBack();
+    await expect(
+      sheet.getByRole("button", { name: /^Whitewater/ }),
+    ).toBeVisible();
+    await expect(
+      sheet.getByRole("button", { name: /^All Kayaks/ }),
+    ).toBeVisible();
     await page.goBack();
     await expect(sheet.getByRole("button", { name: /^Canoes/ })).toBeVisible();
     await page.goBack();
@@ -64,6 +74,10 @@ test.describe("back button on a phone", () => {
     await expectTouchTargets(back);
     // One level up, not straight to the root.
     await back.click();
+    await expect(
+      browse(page).getByRole("button", { name: /^All Whitewater/ }),
+    ).toBeVisible();
+    await browse(page).getByRole("button", { name: "Back" }).click();
     await expect(
       browse(page).getByRole("button", { name: /^All Kayaks/ }),
     ).toBeVisible();
@@ -138,7 +152,7 @@ test.describe("Browse chip", () => {
     await expect(chip).toContainText("All gear");
     await expectTouchTargets(chip);
     await page.goto("/materials?category=kayak&discipline=creek");
-    await expect(chip).toContainText("Kayaks · Creek");
+    await expect(chip).toContainText("Kayaks · Whitewater · Creek");
     const search = await page.getByLabel("Brand or model").boundingBox();
     const vp = page.viewportSize();
     expect(search && vp && search.width > vp.width - 110).toBe(true);

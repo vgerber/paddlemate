@@ -4,21 +4,26 @@ import type {
   MaterialFilters,
   MaterialModel,
   MaterialTree,
+  MaterialTreeCategory,
+  MaterialTreeDiscipline,
+  MaterialUse,
 } from "@/lib/api";
 import { type MaterialWikiSearch } from "./search";
-import { CATEGORIES, disciplineLabel } from "./specs";
+import { CATEGORIES, disciplineLabel, USE_LABELS } from "./specs";
 
-/** The level of the browse tree a node sits on. */
 /** Said wherever group counts show: a model is counted once in its category
  * and once in each group it belongs to. */
 export const GROUP_COUNT_NOTE =
   "A model in several groups is counted in each; its category counts it once.";
 
-export type TreeKind = "category" | "discipline" | "brand" | "model";
+/** The level of the browse tree a node sits on. */
+export type TreeKind = "category" | "use" | "discipline" | "brand" | "model";
 
-/** The tree's own levels in a search: what a node selects. */
+/** The tree's own levels in a search: what a node selects. Only kayaks have
+ * a use between the category and the discipline. */
 export interface TreePath {
   category?: MaterialCategory;
+  use?: MaterialUse;
   discipline?: MaterialDiscipline;
   brand?: string;
 }
@@ -37,19 +42,45 @@ export const CATEGORY_PLURALS: Record<MaterialCategory, string> = {
 export function pathPatch(path: TreePath): TreePath {
   return {
     category: path.category,
+    use: path.category ? path.use : undefined,
     discipline: path.category ? path.discipline : undefined,
     brand: path.category && path.discipline ? path.brand : undefined,
   };
 }
 
+/** The use a discipline falls under in a category, from the tree. */
+function usageOf(
+  cat: MaterialTreeCategory,
+  discipline: MaterialDiscipline,
+): MaterialUse | undefined {
+  return cat.uses?.find((u) =>
+    u.disciplines.some((d) => d.discipline === discipline),
+  )?.use;
+}
+
+/** A path with its use filled in when only the discipline is named, as in an
+ * older link (`?category=kayak&discipline=creek`). */
+export function resolvePath(
+  path: TreePath,
+  tree: MaterialTree | undefined,
+): TreePath {
+  if (!path.category || !path.discipline || path.use || !tree) return path;
+  const cat = tree.categories.find((c) => c.category === path.category);
+  const use = cat && usageOf(cat, path.discipline);
+  return use ? { ...path, use } : path;
+}
+
 /** Where a search stands in the tree. */
-export function pathOf(search: MaterialWikiSearch): TreePath {
-  return pathPatch(search);
+export function pathOf(
+  search: MaterialWikiSearch,
+  tree?: MaterialTree,
+): TreePath {
+  return resolvePath(pathPatch(search), tree);
 }
 
 /** A node's id: its path joined, stable across reloads and cases. */
 export function nodeId(path: TreePath): string {
-  return [path.category, path.discipline, path.brand?.toLowerCase()]
+  return [path.category, path.use, path.discipline, path.brand?.toLowerCase()]
     .filter(Boolean)
     .join("/");
 }
@@ -58,7 +89,7 @@ export function nodeId(path: TreePath): string {
 export interface TreeRow {
   id: string;
   kind: TreeKind;
-  /** 1 for a category, 4 for a model. */
+  /** 1 for a category, one more for each level below. */
   level: number;
   label: string;
   /** Models below the node; absent on a model, which shows its sizes. */
@@ -88,40 +119,29 @@ export function treeRows(
   toggled: ReadonlyMap<string, boolean>,
   models: MaterialModel[] | undefined,
 ): TreeRow[] {
-  const selectedPath = pathOf(search);
+  const selectedPath = pathOf(search, tree);
   const selectedId = nodeId(selectedPath);
   const isOpen = (id: string) => toggled.get(id) ?? onPath(id, selectedId);
   const rows: TreeRow[] = [];
-  const categories = [...(tree?.categories ?? [])].sort(
-    (a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category),
-  );
-  for (const cat of categories) {
-    const catPath = { category: cat.category };
-    const catId = nodeId(catPath);
-    const catOpen = isOpen(catId) && cat.disciplines.length > 0;
-    rows.push({
-      id: catId,
-      kind: "category",
-      level: 1,
-      label: CATEGORY_PLURALS[cat.category],
-      count: cat.models,
-      expandable: cat.disciplines.length > 0,
-      expanded: catOpen,
-      selected: selectedId === catId,
-      path: catPath,
-    });
-    if (!catOpen) continue;
-    for (const disc of cat.disciplines) {
-      const discPath = { ...catPath, discipline: disc.discipline };
+
+  const pushGroups = (
+    cat: MaterialTreeCategory,
+    groups: MaterialTreeDiscipline[],
+    base: TreePath,
+    parentId: string,
+    level: number,
+  ) => {
+    for (const disc of groups) {
+      const discPath = { ...base, discipline: disc.discipline };
       const discId = nodeId(discPath);
       const discOpen = isOpen(discId) && disc.brands.length > 0;
       rows.push({
         id: discId,
         kind: "discipline",
-        level: 2,
+        level,
         label: disciplineLabel(disc.discipline, cat.category),
         count: disc.models,
-        parentId: catId,
+        parentId,
         expandable: disc.brands.length > 0,
         expanded: discOpen,
         selected: selectedId === discId,
@@ -136,7 +156,7 @@ export function treeRows(
         rows.push({
           id: brandId,
           kind: "brand",
-          level: 3,
+          level: level + 1,
           label: brand.brand,
           count: brand.models,
           parentId: discId,
@@ -152,7 +172,7 @@ export function treeRows(
           rows.push({
             id: `${brandId}/#${first.id}`,
             kind: "model",
-            level: 4,
+            level: level + 2,
             label: [model.model, model.variant].filter(Boolean).join(" "),
             sizes: model.sizes
               .map((s) => s.size)
@@ -168,6 +188,50 @@ export function treeRows(
         }
       }
     }
+  };
+
+  const categories = [...(tree?.categories ?? [])].sort(
+    (a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category),
+  );
+  for (const cat of categories) {
+    const catPath = { category: cat.category };
+    const catId = nodeId(catPath);
+    const children = cat.uses ? cat.uses.length : cat.disciplines.length;
+    const catOpen = isOpen(catId) && children > 0;
+    rows.push({
+      id: catId,
+      kind: "category",
+      level: 1,
+      label: CATEGORY_PLURALS[cat.category],
+      count: cat.models,
+      expandable: children > 0,
+      expanded: catOpen,
+      selected: selectedId === catId,
+      path: catPath,
+    });
+    if (!catOpen) continue;
+    if (!cat.uses) {
+      pushGroups(cat, cat.disciplines, catPath, catId, 2);
+      continue;
+    }
+    for (const use of cat.uses) {
+      const usePath = { ...catPath, use: use.use };
+      const useId = nodeId(usePath);
+      const useOpen = isOpen(useId) && use.disciplines.length > 0;
+      rows.push({
+        id: useId,
+        kind: "use",
+        level: 2,
+        label: USE_LABELS[use.use],
+        count: use.models,
+        parentId: catId,
+        expandable: use.disciplines.length > 0,
+        expanded: useOpen,
+        selected: selectedId === useId,
+        path: usePath,
+      });
+      if (useOpen) pushGroups(cat, use.disciplines, usePath, useId, 3);
+    }
   }
   return rows;
 }
@@ -179,8 +243,11 @@ export interface Crumb {
 }
 
 /** The selected path as crumbs, outermost first. */
-export function crumbs(search: MaterialWikiSearch): Crumb[] {
-  const path = pathOf(search);
+export function crumbs(
+  search: MaterialWikiSearch,
+  tree?: MaterialTree,
+): Crumb[] {
+  const path = pathOf(search, tree);
   const out: Crumb[] = [];
   if (path.category) {
     out.push({
@@ -188,10 +255,20 @@ export function crumbs(search: MaterialWikiSearch): Crumb[] {
       patch: { category: path.category },
     });
   }
+  if (path.use) {
+    out.push({
+      label: USE_LABELS[path.use],
+      patch: { category: path.category, use: path.use },
+    });
+  }
   if (path.discipline) {
     out.push({
       label: disciplineLabel(path.discipline, path.category),
-      patch: { category: path.category, discipline: path.discipline },
+      patch: {
+        category: path.category,
+        use: path.use,
+        discipline: path.discipline,
+      },
     });
   }
   if (path.brand) out.push({ label: path.brand, patch: path });
@@ -199,9 +276,12 @@ export function crumbs(search: MaterialWikiSearch): Crumb[] {
 }
 
 /** What the Browse chip says: where the list stands in the tree. */
-export function browseLabel(search: MaterialWikiSearch): string {
-  const steps = crumbs(search);
-  return steps.length ? steps.map((c) => c.label).join(" \u00b7 ") : "All gear";
+export function browseLabel(
+  search: MaterialWikiSearch,
+  tree?: MaterialTree,
+): string {
+  const steps = crumbs(search, tree);
+  return steps.length ? steps.map((c) => c.label).join(" · ") : "All gear";
 }
 
 function totals(node: { models: number; entries: number }) {
@@ -212,10 +292,13 @@ function totals(node: { models: number; entries: number }) {
  * path it is the whole tree. */
 export function selectedTotals(
   tree: MaterialTree | undefined,
-  search: MaterialWikiSearch,
+  search: TreePath,
 ): { models: number; entries: number } | undefined {
   if (!tree) return undefined;
-  const { category, discipline, brand } = pathOf(search);
+  const { category, use, discipline, brand } = resolvePath(
+    pathPatch(search),
+    tree,
+  );
   if (!category) {
     return tree.categories.reduce(
       (sum, c) => ({
@@ -225,16 +308,26 @@ export function selectedTotals(
       { models: 0, entries: 0 },
     );
   }
+  const none = { models: 0, entries: 0 };
   const cat = tree.categories.find((c) => c.category === category);
-  if (!cat) return { models: 0, entries: 0 };
-  if (!discipline) return totals(cat);
-  const disc = cat.disciplines.find((d) => d.discipline === discipline);
-  if (!disc) return { models: 0, entries: 0 };
+  if (!cat) return none;
+  let node: { models: number; entries: number } = totals(cat);
+  let groups: MaterialTreeDiscipline[] = cat.disciplines;
+  if (cat.uses) {
+    if (!use) return node;
+    const hit = cat.uses.find((u) => u.use === use);
+    if (!hit) return none;
+    node = totals(hit);
+    groups = hit.disciplines;
+  }
+  if (!discipline) return node;
+  const disc = groups.find((d) => d.discipline === discipline);
+  if (!disc) return none;
   if (!brand) return totals(disc);
   const hit = disc.brands.find(
     (b) => b.brand.toLowerCase() === brand.toLowerCase(),
   );
-  return hit ? totals(hit) : { models: 0, entries: 0 };
+  return hit ? totals(hit) : none;
 }
 
 /** The filters the tree honours: the search text and the measures, never its

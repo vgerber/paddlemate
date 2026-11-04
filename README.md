@@ -71,7 +71,7 @@ water levels, and a shared logbook.
   readings stay as the gauge reports them.
 - **Material wiki** - a shared gear catalog under Tools: models with their
   sizes (S, M, L) as one row each, browsable through a category tree
-  (category, group, brand; a boat can be filed under several groups), searchable by brand and model, filterable by
+  (category, for kayaks their use, group, brand; a boat can be filed under several groups), searchable by brand and model, filterable by
   construction, whether the maker still makes them, and the paddler weight
   they fit, and comparable side by side property for property. It
   comes pre-filled with whitewater kayaks and paddles, with credited photos,

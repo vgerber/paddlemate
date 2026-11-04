@@ -13,6 +13,7 @@ import { AVAILABILITY_LABELS } from "@/lib/materials/availability";
 import { formatFits } from "@/lib/materials/facts";
 import {
   crumbs,
+  pathOf,
   pathPatch,
   selectedTotals,
   type TreePath,
@@ -47,16 +48,18 @@ export default function MaterialsDesktop(props: MaterialsViewProps) {
   const [units] = useUnits();
   const { text, setText, query, items } = useWikiList(search, onChange);
   const tree = useMaterialTree(treeFilters(search));
-  const totals = selectedTotals(tree.data, search);
+  const totals = selectedTotals(tree.data, pathOf(search, tree.data));
   const select = (path: TreePath) => onChange(pathPatch(path));
-  const steps = crumbs(search);
+  const steps = crumbs(search, tree.data);
   const title = steps.at(-1)?.label ?? "Material wiki";
 
   return (
     <Box
       sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
     >
-      <Breadcrumb crumbs={wikiTrail(search, select, props.onTools)} />
+      <Breadcrumb
+        crumbs={wikiTrail(search, select, props.onTools, tree.data)}
+      />
       <Box sx={{ flexShrink: 0 }}>
         <HeaderCard testId="wiki-header">
           <PanelHeader

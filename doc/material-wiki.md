@@ -30,15 +30,20 @@ way the river search is - `pyrhana` finds Pyranha - and typo tolerance starts
 at four characters.
 
 **Browse by category.** On a desktop the left side of the page is a tree:
-Kayaks, Canoes, Packrafts, SUPs, Paddles; under each the types (creek, river
-runner, ...; paddles are grouped by use instead: whitewater, freestyle, slalom,
-wildwater, touring and sea, canoe, polo, other); under each type the brands, each with its number of models.
+Kayaks, Canoes, Packrafts, SUPs, Paddles. Kayaks first split by what they are
+used for: Whitewater (creek, river runner, playboat, half slice), Racing
+(slalom, downriver), Touring (crossover, sea, touring, expedition,
+recreational) and Other (everything else); a use with no models is left out.
+Under each use are the types, and under each type the brands, each with its
+number of models. The other categories have no use level: canoes and packrafts
+list their types directly, and paddles are grouped by use instead (whitewater,
+freestyle, slalom, wildwater, touring and sea, canoe, polo, other).
 A model filed under several groups (a boat its maker calls both a creeker and a
-river runner) shows under each of them; a note under the tree says so, and a
-category counts every model once.
-Pick a brand and its models list under it, with their sizes; Kayaks, Creek,
-Pyranha shows the nine Pyranha creek boats. The trail above the list
-(Tools, Material wiki, Kayaks, Creek, Pyranha) goes back up a step, the
+river runner) shows under each of them, and under each use it reaches; a note
+under the tree says so, and a category counts every model once.
+Pick a brand and its models list under it, with their sizes; Kayaks,
+Whitewater, Creek, Pyranha shows the nine Pyranha creek boats. The trail above
+the list (Tools, Material wiki, Kayaks, Whitewater, Creek, Pyranha) goes back up a step, the
 heading says where you are with "9 models, 21 sizes", and the address holds
 the path, so the back button undoes a pick and a path is a link. The tree
 follows the keyboard like a file browser: Up and Down move, Right opens, Left
@@ -49,8 +54,9 @@ two to four across, under a header card with the heading, the counts and the
 sort.
 
 On a phone the **Browse** button beside the search opens the tree one level at
-a time: tap Kayaks to see its types, a type to see its brands; the top row
-("All Kayaks") picks the whole level, a brand picks itself, and the sheet
+a time: tap Kayaks to see its uses, a use to see its types, a type to see its
+brands (Kayaks, Whitewater, Creek, brand); the top row
+("All Kayaks", "All Whitewater") picks the whole level, a brand picks itself, and the sheet
 closes. The path shows as chips under the search, each a way back up.
 
 The **Filters** chip on a phone, and the sidebar under the tree on a desktop,
@@ -278,6 +284,30 @@ NULL elements and applies the category rule to every element; duplicates are
 refused in `MaterialBody::validation_error` (400, target `disciplines`), since
 a CHECK cannot compare elements. A GIN index serves the filter.
 
+### Kayak uses
+
+The use is derived, never stored: `MaterialDiscipline::use_of` in
+`api/src/models/material.rs` maps every group to a `MaterialUse`
+(`whitewater`, `racing`, `touring`, `other`; the match is exhaustive, so a new
+group must be placed). Whitewater is creek, river runner, playboat and half
+slice; racing is slalom and downriver; touring is crossover, sea, touring,
+expedition and recreational; every other group, freestyle included, is other.
+`use=` on `/materials` and `/materials/models` keeps entries with any group in
+that use (`disciplines && ARRAY[...]`) and combines with the other filters; the
+tree ignores it, like category, discipline and brand.
+
+`/materials/tree` gives the kayak category a `uses` array (whitewater, racing,
+touring, other order, empty uses omitted) whose items carry `use`, `models`,
+`entries` and the `disciplines` with their brands; the kayak category's own
+`disciplines` is then empty. Every other category has no `uses` key and keeps
+its groups in `disciplines`. A use's `models` counts distinct models, and the
+query gets the group-to-use mapping as a bound array, so the Rust enum is the
+only place that knows it. The app carries `use` in the address
+(`?category=kayak&use=whitewater&discipline=creek`); a link without it still
+works and the tree fills the use in (`resolvePath` in `lib/materials/tree.ts`).
+Analytics records the `use` parameter like `discipline` (outside the enum:
+`other`).
+
 `discipline=` on the list, models and tree matches any group of the entry. The
 tree puts a model under each of its groups and counts it once in its category
 (`COUNT(DISTINCT)` over the unnested groups), so group counts can add up to
@@ -454,7 +484,7 @@ caller. An admin's write applies (201, 200, 204); anyone else's is stored as a
 | --- | --- | --- |
 | GET | `/materials` | Paginated search - see the filters below |
 | GET | `/materials/models` | Paginated models (category, brand, model, variant) with their sizes - the filters below; `total` counts models, a model lists only the sizes that match; `ids` is ignored |
-| GET | `/materials/tree` | The browse tree: categories, their groups (a model counts under each of its groups), their brands, each with `models` and `entries`; takes the model filters except category, discipline and brand (and ignores paging and sort) |
+| GET | `/materials/tree` | The browse tree: categories, for kayaks their uses, their groups (a model counts under each of its groups), their brands, each with `models` and `entries`; takes the model filters except category, discipline and brand (and ignores paging and sort) |
 | GET | `/materials/brands` | Brands with entry counts, `category` narrows them |
 | GET | `/materials/{material_id}` | One entry |
 | POST | `/materials` | Add an entry: admin 201, others 202; 409 on a duplicate, 429 over the caps |
@@ -513,7 +543,7 @@ Writes use the shared write rate limit. Known limits: an approved photo is
 not re-checked against the per-model cap, and an admin who takes down a photo
 under review leaves its proposal pending (approving it then does nothing).
 
-The list takes `q`, `category`, `discipline`, `construction`, `brand`,
+The list takes `q`, `category`, `discipline`, `use` (kayak uses), `construction`, `brand`,
 `min_length_cm`/`max_length_cm`, `min_volume_l`/`max_volume_l`,
 `min_weight_kg`/`max_weight_kg`, `fits_paddler_kg`, `availability`
 (`current`, `discontinued` or `unknown`; also on `/materials/models` and

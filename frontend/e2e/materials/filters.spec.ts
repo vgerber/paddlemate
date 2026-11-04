@@ -17,8 +17,10 @@ interface Model {
 interface TreeNode {
   category?: string;
   discipline?: string;
+  use?: string;
   models: number;
   disciplines?: TreeNode[];
+  uses?: TreeNode[];
 }
 
 const keyOf = (m: Model) =>
@@ -71,7 +73,9 @@ test.describe("wiki filters", () => {
     );
     const tree = (await res.json()) as { categories: TreeNode[] };
     const kayak = tree.categories.find((c) => c.category === "kayak");
-    const creek = kayak?.disciplines?.find((d) => d.discipline === "creek");
+    const creek = kayak?.uses
+      ?.flatMap((u) => u.disciplines ?? [])
+      .find((d) => d.discipline === "creek");
     expect(creek?.models).toBeGreaterThan(0);
 
     const list = await modelPage(

@@ -5,14 +5,17 @@ import {
   type MaterialDiscipline,
   type MaterialFilters,
   type MaterialSort,
+  type MaterialUse,
 } from "@/lib/api";
-import { CATEGORIES, CONSTRUCTIONS, DISCIPLINES } from "./specs";
+import { CATEGORIES, CONSTRUCTIONS, DISCIPLINES, USES } from "./specs";
 
 /** The wiki list route's search-param shape. It is the filter state and the
  * comparison at once, so a filtered list with entries picked is one link. */
 export interface MaterialWikiSearch {
   q?: string;
   category?: MaterialCategory;
+  /** Kayaks only: the use the discipline falls under. */
+  use?: MaterialUse;
   discipline?: MaterialDiscipline;
   construction?: MaterialConstruction;
   /** Only "current" is offered: the "Still made" filter. */
@@ -32,6 +35,7 @@ export const EMPTY_MATERIAL_SEARCH: {
 } = {
   q: undefined,
   category: undefined,
+  use: undefined,
   discipline: undefined,
   construction: undefined,
   availability: undefined,
@@ -112,6 +116,7 @@ export function parseMaterialSearch(
   return {
     q: searchText(raw.q),
     category: oneOf(raw.category, CATEGORIES),
+    use: oneOf(raw.use, USES),
     discipline: oneOf(raw.discipline, DISCIPLINES),
     construction: oneOf(raw.construction, CONSTRUCTIONS),
     availability: oneOf(raw.availability, FILTER_AVAILABILITIES),
@@ -131,6 +136,7 @@ export function toMaterialFilters(search: MaterialWikiSearch): MaterialFilters {
   return {
     q: search.q,
     category: search.category,
+    use: search.use,
     discipline: search.discipline,
     construction: search.construction,
     availability: search.availability,

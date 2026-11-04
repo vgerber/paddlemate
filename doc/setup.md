@@ -214,7 +214,7 @@ text. The code never reads the client address for analytics.
 | Stored | How long |
 |---|---|
 | time, route template (`/api/v1/waterways/{id}`, never the real path), method, status, latency, response size, client kind (anonymous, api_token, app), `browser` and `os` | 90 days; hourly counts per route, status class and client for 3 years |
-| feature filters: `category`, `discipline`, `construction`, `sort` (a value outside the known list is stored as `other`), and for a comparison only how many entries `ids` asks for (1-8), never which | 90 days |
+| feature filters: `category`, `discipline`, `use`, `construction`, `sort` (a value outside the known list is stored as `other`), and for a comparison only how many entries `ids` asks for (1-8), never which | 90 days |
 
 `browser` (chrome, safari, firefox, edge, samsung, other_browser, app, curl,
 python, other) and `os` (android, ios, windows, macos, linux, other) are coarse

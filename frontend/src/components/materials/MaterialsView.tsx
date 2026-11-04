@@ -6,10 +6,16 @@ import ListPaneHeader from "@/components/ListPaneHeader";
 import { fabRoom } from "@/components/PaneFab";
 import FilterChip from "@/components/search/FilterChip";
 import SearchField from "@/components/search/SearchField";
+import { useMaterialTree } from "@/lib/hooks/useMaterials";
 import { AVAILABILITY_LABELS } from "@/lib/materials/availability";
 import { formatFits } from "@/lib/materials/facts";
 import { activeFilterCount } from "@/lib/materials/search";
-import { browseLabel, pathPatch, type TreePath } from "@/lib/materials/tree";
+import {
+  browseLabel,
+  pathPatch,
+  type TreePath,
+  treeFilters,
+} from "@/lib/materials/tree";
 import { useUnits } from "@/lib/prefs/units";
 import { humanize, sentenceCase } from "@/lib/text/format";
 import { theme } from "@/lib/theme/theme";
@@ -28,6 +34,7 @@ function PhoneWiki(props: MaterialsViewProps) {
   const [browseOpen, setBrowseOpen] = useState(false);
   const { text, setText, query, items, total } = useWikiList(search, onChange);
   const [units] = useUnits();
+  const tree = useMaterialTree(treeFilters(search));
   const filterCount = activeFilterCount(search);
   const select = (path: TreePath) => onChange(pathPatch(path));
 
@@ -55,12 +62,12 @@ function PhoneWiki(props: MaterialsViewProps) {
         />
         <Breadcrumb
           chips
-          crumbs={wikiSteps(search, select)}
+          crumbs={wikiSteps(search, select, tree.data)}
           lead={
             <>
               <FilterChip
                 testId="browse-button"
-                label={browseLabel(search)}
+                label={browseLabel(search, tree.data)}
                 set={false}
                 dropdown
                 onClick={() => setBrowseOpen(true)}

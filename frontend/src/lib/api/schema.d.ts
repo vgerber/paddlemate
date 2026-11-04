@@ -379,7 +379,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description The wiki as a browse tree: category, discipline, brand, each with model and entry counts. Takes the filters of the model list except category, discipline and brand (the levels the tree offers); paging and sort are ignored. */
+        /** @description The wiki as a browse tree: category, use (kayaks only), discipline, brand, each with model and entry counts. Takes the filters of the model list except category, use, discipline and brand (the levels the tree offers); paging and sort are ignored. */
         get: operations["get_tree"];
         put?: never;
         post?: never;
@@ -2887,6 +2887,8 @@ export interface components {
             /** @description Filter by brand or model, diacritic- and typo-tolerant. */
             q?: string | null;
             sort?: components["schemas"]["MaterialSort"];
+            /** @description Entries filed under any group of this use (kayak uses). */
+            use?: components["schemas"]["MaterialUse"] | null;
         };
         /** @description A mirrored product photo. Only fetched images are ever returned. */
         MaterialImage: {
@@ -2956,7 +2958,7 @@ export interface components {
          * @enum {string}
          */
         MaterialSort: "name" | "newest" | "added" | "length" | "volume" | "weight";
-        /** @description The wiki as a browse tree: category, discipline, brand. */
+        /** @description The wiki as a browse tree: category, (use for kayaks), discipline, brand. */
         MaterialTree: {
             categories: components["schemas"]["MaterialTreeCategory"][];
         };
@@ -2981,12 +2983,20 @@ export interface components {
          */
         MaterialTreeCategory: {
             category: components["schemas"]["MaterialCategory"];
-            /** @description Most models first. */
+            /**
+             * @description Groups directly under the category; empty when the category has uses.
+             *      Most models first.
+             */
             disciplines: components["schemas"]["MaterialTreeDiscipline"][];
             /** Format: int64 */
             entries: number;
             /** Format: int64 */
             models: number;
+            /**
+             * @description Only kayaks: uses (whitewater, racing, touring, other) in that order,
+             *      each with its groups. Absent for every other category.
+             */
+            uses?: components["schemas"]["MaterialTreeUse"][] | null;
         };
         /** @description A discipline inside one category of the browse tree. */
         MaterialTreeDiscipline: {
@@ -2998,6 +3008,25 @@ export interface components {
             /** Format: int64 */
             models: number;
         };
+        /** @description A use inside the kayak category of the browse tree. */
+        MaterialTreeUse: {
+            /** @description Most models first. */
+            disciplines: components["schemas"]["MaterialTreeDiscipline"][];
+            /** Format: int64 */
+            entries: number;
+            /**
+             * Format: int64
+             * @description Distinct models in any of the use's groups.
+             */
+            models: number;
+            use: components["schemas"]["MaterialUse"];
+        };
+        /**
+         * @description What a kayak is used for: the level above its group in the browse tree.
+         *      Derived from the group (`MaterialDiscipline::use_of`), never stored.
+         * @enum {string}
+         */
+        MaterialUse: "whitewater" | "racing" | "touring" | "other";
         /** @enum {string} */
         MeasurementType: "water_level" | "discharge" | "temperature";
         /**
@@ -5011,11 +5040,11 @@ export interface operations {
                     /**
                      * @example [
                      *       {
-                     *         "created_at": "2026-11-01T18:13:09.796525139Z",
-                     *         "expires_at": "2027-01-30T18:13:09.796527359Z",
+                     *         "created_at": "2026-11-04T19:03:23.869370526Z",
+                     *         "expires_at": "2027-02-02T19:03:23.869372796Z",
                      *         "id": 1,
                      *         "is_active": true,
-                     *         "last_used_at": "2026-11-01T18:13:09.796540829Z",
+                     *         "last_used_at": "2026-11-04T19:03:23.869387156Z",
                      *         "name": "CI/CD Pipeline",
                      *         "user_id": "user-uuid"
                      *       }
@@ -5046,8 +5075,8 @@ export interface operations {
                 content: {
                     /**
                      * @example {
-                     *       "created_at": "2026-11-01T18:13:09.796682059Z",
-                     *       "expires_at": "2027-01-30T18:13:09.796682559Z",
+                     *       "created_at": "2026-11-04T19:03:23.869559426Z",
+                     *       "expires_at": "2027-02-02T19:03:23.869559996Z",
                      *       "id": 1,
                      *       "name": "CI/CD Pipeline",
                      *       "token": "pm_a1b2c3d4e5f6..."
@@ -5743,6 +5772,8 @@ export interface operations {
                 /** @description Filter by brand or model, diacritic- and typo-tolerant. */
                 q?: string | null;
                 sort?: components["schemas"]["MaterialSort"];
+                /** @description Entries filed under any group of this use (kayak uses). */
+                use?: components["schemas"]["MaterialUse"] | null;
             };
             header?: never;
             path?: never;
@@ -5893,6 +5924,8 @@ export interface operations {
                 /** @description Filter by brand or model, diacritic- and typo-tolerant. */
                 q?: string | null;
                 sort?: components["schemas"]["MaterialSort"];
+                /** @description Entries filed under any group of this use (kayak uses). */
+                use?: components["schemas"]["MaterialUse"] | null;
             };
             header?: never;
             path?: never;
@@ -5943,6 +5976,8 @@ export interface operations {
                 /** @description Filter by brand or model, diacritic- and typo-tolerant. */
                 q?: string | null;
                 sort?: components["schemas"]["MaterialSort"];
+                /** @description Entries filed under any group of this use (kayak uses). */
+                use?: components["schemas"]["MaterialUse"] | null;
             };
             header?: never;
             path?: never;
@@ -5950,7 +5985,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The wiki as a browse tree: category, discipline, brand. */
+            /** @description The wiki as a browse tree: category, (use for kayaks), discipline, brand. */
             200: {
                 headers: {
                     [name: string]: unknown;

@@ -483,11 +483,17 @@ fn tree_path(tree: &Value, f: &[&str]) -> (i64, i64) {
     let Some(cat) = cat else { return (0, 0) };
     let mut node = cat;
     if let Some(d) = f.get(1) {
-        let disc = cat["disciplines"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|x| x["discipline"] == *d);
+        // Kayaks keep their groups under a use.
+        let groups: Vec<&Value> = match cat.get("uses") {
+            Some(uses) => uses
+                .as_array()
+                .unwrap()
+                .iter()
+                .flat_map(|u| u["disciplines"].as_array().unwrap())
+                .collect(),
+            None => cat["disciplines"].as_array().unwrap().iter().collect(),
+        };
+        let disc = groups.into_iter().find(|x| x["discipline"] == *d);
         let Some(disc) = disc else { return (0, 0) };
         node = disc;
         if let Some(b) = f.get(2) {
