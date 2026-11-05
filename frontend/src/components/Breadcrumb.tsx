@@ -47,7 +47,8 @@ export default function Breadcrumb({
     );
   }
   return (
-    <Box component="nav" aria-label="Breadcrumb">
+    // The trail sits above a header card; keep the card gap below it.
+    <Box component="nav" aria-label="Breadcrumb" sx={{ mb: 1 }}>
       <Box
         component="ol"
         sx={{
